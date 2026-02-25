@@ -1,0 +1,208 @@
+/* auth.css */
+.auth-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+/* ================= LEFT SIDE ================= */
+.auth-left {
+  /* KUNCI PERBAIKAN: flex: 0 0 45% mengunci lebar tepat di 45%, tidak boleh menyusut */
+  flex: 0 0 55%; 
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.auth-overlay {
+  background: rgba(35, 74, 102, 0.85); /* Warna biru gelap transparan */
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.auth-left-content {
+  color: white;
+  max-width: 500px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-logo {
+  margin-bottom: 20px;
+}
+
+.logo-icon-large {
+  font-size: 70px;
+  font-weight: bold;
+  color: #a3e635; /* Hijau muda */
+  line-height: 1;
+}
+
+.auth-left-content h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+}
+
+.auth-left-content p {
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-bottom: 60px;
+}
+
+.copyright {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ================= RIGHT SIDE ================= */
+.auth-right {
+  flex: 1; /* Mengambil sisa ruang layar (55%) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background-color: #ffffff;
+}
+
+.auth-box {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto; /* Memastikan form selalu di tengah */
+}
+
+.auth-header {
+  margin-bottom: 30px;
+}
+
+.auth-header h2 {
+  font-size: 24px;
+  color: #234a66;
+  margin-bottom: 5px;
+}
+
+.auth-header p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* ================= FORMS ================= */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #234a66;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: #234a66;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1);
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link-text {
+  font-size: 12px;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.link-text:hover {
+  text-decoration: underline;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.checkbox-group label {
+  font-size: 13px;
+  color: #475569;
+  cursor: pointer;
+}
+
+/* ================= BUTTONS & FOOTER ================= */
+.btn-primary {
+  background-color: #234a66;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #1a364b;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 35px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .auth-container {
+    flex-direction: column;
+  }
+  .auth-left {
+    display: none; /* Sembunyikan gambar biru di HP/Tablet kecil */
+  }
+}

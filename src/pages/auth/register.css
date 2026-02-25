@@ -1,0 +1,251 @@
+/* register.css */
+.register-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+/* LEFT SIDE */
+.register-left {
+  flex: 4; /* Porsi desain sekitar 40% */
+  background-color: #234a66;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.register-left-content {
+  max-width: 400px;
+}
+
+.register-left-content h1 {
+  font-size: 28px;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.register-left-content p {
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+/* RIGHT SIDE */
+.register-right {
+  flex: 6; /* Porsi desain sekitar 60% */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background-color: #ffffff;
+}
+
+.register-box {
+  width: 100%;
+  max-width: 480px;
+}
+
+.register-header {
+  margin-bottom: 30px;
+}
+
+.register-header h2 {
+  font-size: 22px;
+  color: #234a66;
+  margin-bottom: 5px;
+}
+
+.register-header p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* STEPPER */
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.step-line {
+  flex: auto;
+  height: 2px;
+  background-color: #e2e8f0;
+  margin: 16px 10px 0 10px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.step-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.step span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.step.active .step-circle {
+  background-color: #234a66;
+  color: white;
+}
+
+.step.active span {
+  color: #234a66;
+  font-weight: 700;
+}
+
+/* FORMS (mengikuti style login namun disesuaikan) */
+.form-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.helper-text {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* STEP 3 - CONFIRMATION CARD */
+.confirmation-card {
+  background-color: #f0f7ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 30px 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.icon-wrapper {
+  font-size: 32px;
+  margin-bottom: 15px;
+}
+
+.confirmation-card h3 {
+  font-size: 18px;
+  color: #234a66;
+  margin-bottom: 10px;
+}
+
+.confirmation-card p {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.checkbox-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.checkbox-box input {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-box span {
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* BUTTONS */
+.button-row {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.btn-secondary,
+.btn-light,
+.btn-success {
+  padding: 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  flex: 1;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background-color: #f1f5f9;
+  color: #234a66;
+  border: none;
+}
+.btn-secondary:hover { background-color: #e2e8f0; }
+
+.btn-light {
+  background-color: #eef2f6;
+  color: #475569;
+  border: none;
+}
+
+.btn-success {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+}
+.btn-success:hover { background-color: #16a34a; }
+
+/* FOOTER */
+.register-footer {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .register-container { flex-direction: column; }
+  .register-left { display: none; }
+  .form-row { flex-direction: column; gap: 0; }
+  .button-row { flex-direction: column; }
+}
