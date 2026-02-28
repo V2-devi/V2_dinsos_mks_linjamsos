@@ -1,0 +1,435 @@
+/* =======================================================
+   1. PENGATURAN UMUM & NAVBAR
+   ======================================================= */
+.nav-link-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.nav-link-btn:hover {
+  color: #94a3b8;
+}
+
+.branding-container-small {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.branding-logo-small {
+  width: 36px;
+  height: auto;
+  object-fit: contain;
+}
+
+.branding-text-block-small {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.branding-text-block-small span {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: white;
+}
+
+/* =======================================================
+   2. KONTEN UTAMA & FILTER PENCARIAN
+   ======================================================= */
+.data-user-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.filter-search-wrapper {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.filter-search-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #eef2f6;
+  border-radius: 12px;
+  border: 1px solid #94a3b8;
+  width: 100%;
+  padding: 10px 20px;
+}
+
+.custom-select-box select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: transparent;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  padding: 10px 40px 10px 16px;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  min-width: 180px;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='8 15 12 19 16 15'%3E%3C/polyline%3E%3Cpolyline points='16 9 12 5 8 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.custom-select-box select:focus {
+  border-color: #234a66;
+  background-color: #ffffff;
+}
+
+.custom-search-box {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  padding: 0 16px;
+  width: 350px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.custom-search-box:focus-within {
+  border-color: #234a66;
+  background-color: #ffffff;
+}
+
+.custom-search-box .search-icon {
+  color: #64748b;
+  margin-right: 12px;
+}
+
+.custom-search-box input {
+  flex: 1;
+  background-color: transparent;
+  border: none;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #334155;
+  outline: none;
+}
+
+.custom-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .filter-search-container {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+  .custom-select-box, 
+  .custom-search-box {
+    width: 100%;
+  }
+  .custom-select-box select {
+    width: 100%;
+  }
+}
+
+/* =======================================================
+   3. TOMBOL & TABEL
+   ======================================================= */
+.action-row-right {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.btn-add-staff {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f1f5f9;
+  color: #234a66;
+  border: 1px solid #cbd5e1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-staff:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.plus-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.table-wrapper {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.action-buttons-table {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.action-btn-icon {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.action-btn-icon:hover {
+  transform: scale(1.2);
+}
+
+/* =======================================================
+   4. LAYOUT POP-UP (MODAL) ANTI-GAGAL
+   ======================================================= */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 20px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background-color: #eef2f6;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  /* Mencegah form meluber keluar layar */
+  max-height: 90vh; 
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+  margin: 0 auto;
+  animation: slideUpModal 0.3s ease-out;
+}
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ukuran khusus Pop-up */
+.modal-large { max-width: 700px; }
+.modal-small { max-width: 450px; }
+.modal-success {
+  max-width: 400px;
+  background-color: #eef2f6 !important;
+  border-top: 8px solid #234a66;
+  border-radius: 8px;
+}
+
+/* Header Pop-up */
+.modal-header {
+  background-color: #234a66;
+  color: white;
+  padding: 16px 24px;
+}
+
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header-title h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Body Pop-up (Area yang bisa di-scroll) */
+.modal-body {
+  padding: 24px;
+  overflow-y: auto; /* Memunculkan scrollbar otomatis di dalam form jika kepanjangan */
+  flex: 1;
+}
+
+/* =======================================================
+   5. FORM DI DALAM POP-UP
+   ======================================================= */
+.modal-section {
+  margin-bottom: 20px;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  color: #3b82f6;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group-modal label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #234a66;
+}
+
+.form-group-modal input {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #94a3b8;
+  font-size: 13px;
+  outline: none;
+  background-color: #f8fafc;
+}
+
+.form-group-modal input:focus {
+  border-color: #234a66;
+}
+
+.input-readonly {
+  background-color: #e2e8f0 !important;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* Radio Button */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 500 !important;
+}
+
+.radio-label input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #234a66;
+}
+
+/* =======================================================
+   6. TOMBOL AKSI POP-UP (SIMPAN, BATAL, HAPUS)
+   ======================================================= */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.btn-modal-cancel,
+.btn-modal-submit,
+.btn-modal-danger {
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 150px;
+  transition: all 0.2s;
+}
+
+.btn-modal-cancel {
+  background-color: #eef2f6;
+  color: #234a66;
+  border: 1px solid #234a66;
+}
+
+.btn-modal-cancel:hover { background-color: #e2e8f0; }
+
+.btn-modal-submit {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+}
+
+.btn-modal-submit:hover { background-color: #16a34a; }
+
+.btn-modal-danger {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+}
+
+.btn-modal-danger:hover { background-color: #dc2626; }
+
+/* Ikon Konfirmasi & Hapus */
+.warning-icon-large {
+  font-size: 50px;
+  margin-bottom: 15px;
+}
+
+.success-icon-circle {
+  width: 60px;
+  height: 60px;
+  background-color: #22c55e;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+}
+
+.text-center { text-align: center; }
+
+@media (max-width: 600px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

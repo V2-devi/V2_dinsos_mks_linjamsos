@@ -2,7 +2,7 @@ import React from "react";
 import "./dashboard.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
-function Admin() {
+function Admin({goToDataUser, goToProfile}) {
   // Data sementara (dummy) sesuai dengan gambar desain Anda
   const dummyData = [
     { nik: "7370999999999999", pass: "firli12", phone: "089999999999", name: "Devi Permata", email: "deviper@gmail.com", address: "Gowa", status: "Aktif" },
@@ -18,7 +18,7 @@ function Admin() {
         <div className="navbar-left">
           
           <div className="nav-logo">
-            <img src={logoLinjamsos} alt="Logo Linjamsos" className="logo-image-small"/>             
+            <img src={logoLinjamsos} alt="Logo Linjamsos" className="logo-image"/>             
           </div>
           
           <span className="nav-title">PERLINDUNGAN DAN JAMINAN SOSIAL</span>
@@ -41,7 +41,9 @@ function Admin() {
         <div className="welcome-banner">
           <div className="banner-text">
             <h2>SELAMAT DATANG FIRLIANY FIRDAUS</h2>
-            <button className="btn-light-outline">Lihat Akun Anda →</button>
+            <button className="btn-light-outline" onClick={goToProfile}>
+              Lihat Akun Anda →
+              </button>
           </div>
           <div className="banner-icon">
             {/* Ikon User Lingkaran (Mirip desain) */}
@@ -110,7 +112,9 @@ function Admin() {
           </div>
           
           <div className="table-footer">
-            <button className="btn-outline">Lihat Selengkapnya →</button>
+            <button className="btn-outline" onClick={goToDataUser}>
+              Lihat Selengkapnya →
+              </button>
           </div>
         </div>
 
