@@ -433,3 +433,109 @@
     gap: 12px;
   }
 }
+
+/* =======================================================
+   7. POP-UP NOTIFIKASI (KANAN ATAS)
+   ======================================================= */
+
+/* Overlay transparan: tidak mengubah warna layar, hanya agar bisa di-klik batal */
+.notif-overlay-transparent {
+  position: fixed !important;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9998 !important; 
+}
+
+/* Kotak Notifikasi Melayang */
+.notif-popup {
+  position: absolute !important;
+  top: 75px !important; /* Tepat di bawah navbar */
+  right: 40px !important; /* Sejajar dengan tombol lonceng */
+  width: 420px;
+  background-color: #eef2f6; /* Warna biru pucat sesuai desain */
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #cbd5e1;
+  z-index: 9999 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideDownNotif 0.2s ease-out;
+}
+
+@keyframes slideDownNotif {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header Pemberitahuan */
+.notif-header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid #cbd5e1;
+  background-color: #eef2f6;
+}
+
+.notif-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #234a66;
+  margin: 0;
+}
+
+/* Body Notifikasi (Bisa di-scroll jika kepanjangan) */
+.notif-body {
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #eef2f6;
+}
+
+/* Item per notifikasi */
+.notif-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #cbd5e1;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item:hover {
+  background-color: #e2e8f0;
+}
+
+.notif-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.notif-title-row h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #234a66;
+  margin: 0;
+}
+
+.notif-title-row span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.notif-item p {
+  font-size: 13px;
+  color: #3b82f6; /* Warna biru terang sesuai desain */
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsif untuk Notifikasi di Layar HP */
+@media (max-width: 600px) {
+  .notif-popup {
+    right: 20px !important;
+    width: calc(100vw - 40px);
+  }
+}
