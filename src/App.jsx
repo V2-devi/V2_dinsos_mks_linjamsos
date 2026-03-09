@@ -5,10 +5,11 @@ import Register from "./pages/auth/register.jsx";
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
+import StaffDashboard from "./pages/staff/staffdashboard.jsx";
 
 function App() {
-  // SEMENTARA kita set ke "login" agar langsung muncul di browser saat di-refresh
-  const [page, setPage] = useState("admin");
+  //  UBAH SEMENTARA KE "staff" AGAR BISA MELIHAT HASILNYA SAAT DI-REFRESH
+  const [page, setPage] = useState("staff");
   
   return (
     <>
@@ -36,9 +37,14 @@ function App() {
         />
       )}
 
-        {page === "adminprofile" && (
+      {page === "adminprofile" && (
         <AdminProfile goBack={() => setPage("admin")} 
         />
+      )}
+
+      {/* 3. TAMBAHKAN RUTE UNTUK HALAMAN STAFF */}
+      {page === "staff" && (
+        <StaffDashboard />
       )}
     </>
   );
