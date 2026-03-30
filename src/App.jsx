@@ -1,52 +1,68 @@
-import { useState } from "react";
-// Sesuaikan path (jalur folder) di bawah ini dengan struktur folder Anda
+import React from "react";
+// Import sistem Router dari React Router DOM
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+
+// Sesuaikan path import dengan struktur folder Anda
 import Login from "./pages/auth/login.jsx";
 import Register from "./pages/auth/register.jsx";
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
-import StaffDashboard from "./pages/staff/staffdashboard.jsx";
+import StaffDashboard from "./pages/staff/staffdashboard.jsx"; 
 
-function App() {
-  //  UBAH SEMENTARA KE "staff" AGAR BISA MELIHAT HASILNYA SAAT DI-REFRESH
-  const [page, setPage] = useState("staff");
-  
+// Kita buat komponen pembantu agar bisa menggunakan fitur useNavigate
+function AppRoutes() {
+  const navigate = useNavigate();
+
   return (
-    <>
-      {page === "login" && (
-        <Login goToRegister={() => setPage("register")} />
-      )}
+    <Routes>
+      {/* Jika user membuka localhost:5173/ saja, otomatis diarahkan ke /login */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {page === "register" && (
-        <Register goToLogin={() => setPage("login")} />
-      )}
+      {/* RUTE AUTH */}
+      <Route 
+        path="/login" 
+        element={<Login goToRegister={() => navigate("/register")} />} 
+      />
+      <Route 
+        path="/register" 
+        element={<Register goToLogin={() => navigate("/login")} />} 
+      />
 
-      {/* Menambahkan rute untuk halaman Admin */}
-      {page === "admin" && (
-        <Admin 
-          // kiirm fungsi prop untuk pindadh ke halaman DataUser
-          goToDataUser={()=> setPage("datauser")}
-          goToProfile={() => setPage("adminprofile")} 
+      {/* RUTE ADMIN */}
+      <Route 
+        path="/admin" 
+        element={
+          <Admin 
+            goToDataUser={() => navigate("/datauser")}
+            goToProfile={() => navigate("/adminprofile")} 
           />
-      )}
+        } 
+      />
+      <Route 
+        path="/datauser" 
+        element={<DataUser goBack={() => navigate("/admin")} />} 
+      />
+      <Route 
+        path="/adminprofile" 
+        element={<AdminProfile goBack={() => navigate("/admin")} />} 
+      />
 
-      {page === "datauser" && (
-        <DataUser
-        // kirim fungsi prop untuk kembali ke halaman Admin
-        goBack={() => setPage("admin")}
-        />
-      )}
+      {/* RUTE STAFF / PENGISI DATA */}
+      <Route 
+        path="/staff" 
+        element={<StaffDashboard />} 
+      />
+    </Routes>
+  );
+}
 
-      {page === "adminprofile" && (
-        <AdminProfile goBack={() => setPage("admin")} 
-        />
-      )}
-
-      {/* 3. TAMBAHKAN RUTE UNTUK HALAMAN STAFF */}
-      {page === "staff" && (
-        <StaffDashboard />
-      )}
-    </>
+// Komponen Utama App
+function App() {
+  return (
+    <Router>
+      <AppRoutes />
+    </Router>
   );
 }
 
