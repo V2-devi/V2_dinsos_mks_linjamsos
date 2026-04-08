@@ -5,12 +5,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "r
 // Sesuaikan path import dengan struktur folder Anda
 import Login from "./pages/auth/login.jsx";
 import Register from "./pages/auth/register.jsx";
+// PASTIKAN ANDA MENGIMPORT FILE LUPA PASSWORD DI SINI:
+import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
+
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
 import StaffDashboard from "./pages/staff/staffdashboard.jsx"; 
 
-// Kita buat komponen pembantu agar bisa menggunakan fitur useNavigate
 function AppRoutes() {
   const navigate = useNavigate();
 
@@ -20,14 +22,10 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* RUTE AUTH */}
-      <Route 
-        path="/login" 
-        element={<Login goToRegister={() => navigate("/register")} />} 
-      />
-      <Route 
-        path="/register" 
-        element={<Register goToLogin={() => navigate("/login")} />} 
-      />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      {/* RUTE LUPA PASSWORD BARU */}
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* RUTE ADMIN */}
       <Route 
@@ -39,20 +37,11 @@ function AppRoutes() {
           />
         } 
       />
-      <Route 
-        path="/datauser" 
-        element={<DataUser goBack={() => navigate("/admin")} />} 
-      />
-      <Route 
-        path="/adminprofile" 
-        element={<AdminProfile goBack={() => navigate("/admin")} />} 
-      />
+      <Route path="/datauser" element={<DataUser goBack={() => navigate("/admin")} />} />
+      <Route path="/adminprofile" element={<AdminProfile goBack={() => navigate("/admin")} />} />
 
       {/* RUTE STAFF / PENGISI DATA */}
-      <Route 
-        path="/staff" 
-        element={<StaffDashboard />} 
-      />
+      <Route path="/staff" element={<StaffDashboard />} />
     </Routes>
   );
 }

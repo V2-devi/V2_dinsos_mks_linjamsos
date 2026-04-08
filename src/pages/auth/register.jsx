@@ -98,14 +98,18 @@ function Register({ goToLogin }) {
                 <input type="text" placeholder="18 digit angka" />
               </div>
 
-              <div className="form-group">
-                <label>Role*</label>
-                <select defaultValue="">
-                  <option value="" disabled>Pilih salah satu role</option>
-                  <option value="admin">Admin</option>
-                  <option value="staff">Staff Kelurahan</option>
+              <div className="form-group-modal">
+              <label style={{ fontSize: '13px', fontWeight: '600', color: '#234a66', marginBottom: '6px', display: 'block' }}>
+                Role*
+              </label>
+              <div className="select-container-custom">
+                <select required defaultValue="">
+                  <option value="" disabled hidden>Pilih salah satu role</option>
+                  <option value="pengisi_data">Staff / Pengisi Data</option>
+                  <option value="verifikator">Verifikator</option>
                 </select>
               </div>
+            </div>
 
               <div className="form-group">
                 <label>No.Hp</label>

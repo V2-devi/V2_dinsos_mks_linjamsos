@@ -249,3 +249,43 @@
   .form-row { flex-direction: column; gap: 0; }
   .button-row { flex-direction: column; }
 }
+
+/* =======================================================
+   DROPDOWN ROLE (PENGUSULAN AKUN)
+   ======================================================= */
+.select-container-custom {
+  position: relative;
+  width: 100%;
+}
+
+.select-container-custom select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #94a3b8; /* Warna garis abu-abu kebiruan default */
+  font-size: 13px;
+  color: #334155;
+  outline: none;
+  background-color: #f8fafc;
+  
+  /* Menghilangkan panah bawaan browser yang jelek */
+  appearance: none;
+  -webkit-appearance: none;
+  
+  /* Menambahkan ikon panah custom yang rapi */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  
+  /* Efek transisi halus */
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* EFEK KOTAK BIRU SAAT DIKLIK */
+.select-container-custom select:focus {
+  border-color: #234a66; /* Berubah jadi biru gelap */
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1); /* Memberikan efek cahaya/glow biru tipis di luar kotak */
+}

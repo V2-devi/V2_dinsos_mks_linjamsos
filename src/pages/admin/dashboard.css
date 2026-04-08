@@ -261,3 +261,62 @@
   .welcome-banner { flex-direction: column; text-align: center; gap: 20px; padding: 30px 20px; }
   .stats-container { flex-direction: column; }
 }
+
+/* ================= NOTIFIKASI DROPDOWN ================= */
+.notif-dropdown-custom {
+  position: absolute;
+  top: 40px; 
+  right: 0;
+  width: 320px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-header-custom {
+  padding: 15px;
+  background-color: #234a66;
+  color: white;
+  text-align: center;
+}
+.notif-header-custom h3 { margin: 0; font-size: 15px; font-weight: 700; }
+
+.notif-body-custom {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notif-item-custom {
+  padding: 15px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.notif-item-custom:hover { background-color: #f8fafc; }
+.notif-item-custom:last-child { border-bottom: none; }
+
+.notif-title-row-custom {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.notif-title-row-custom h4 { margin: 0; font-size: 13px; color: #1e293b; font-weight: 700; }
+.notif-title-row-custom span { font-size: 11px; color: #94a3b8; }
+.notif-item-custom p { margin: 0; font-size: 12px; color: #475569; line-height: 1.4; }
+
+.notif-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}

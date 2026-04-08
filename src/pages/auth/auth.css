@@ -1,18 +1,29 @@
-/* auth.css */
-.auth-container {
-  display: flex;
-  width: 100%;
-  min-height: 100vh;
-  background-color: #ffffff;
+/* =======================================================
+   1. PENGATURAN UMUM CONTAINER
+   ======================================================= */
+* {
+  box-sizing: border-box;
 }
 
-/* ================= LEFT SIDE ================= */
+.auth-container {
+  display: flex;
+  width: 100vw;
+  min-height: 100vh;
+  background-color: #ffffff;
+  overflow-x: hidden;
+}
+
+/* =======================================================
+   2. BAGIAN KIRI (BRANDING & GAMBAR)
+   ======================================================= */
 .auth-left {
-  /* KUNCI PERBAIKAN: flex: 0 0 45% mengunci lebar tepat di 45%, tidak boleh menyusut */
-  flex: 0 0 55%; 
+  flex: 0 0 55%; /* Mengunci area kiri persis 55% dari layar */
+  position: relative;
+  /* Ganti URL di bawah ini jika Anda ingin menembak gambar dari CSS langsung */
+  /* background-image: url('../../assets/bg_dinsos.jpg'); */
   background-size: cover;
   background-position: center;
-  position: relative;
+  background-repeat: no-repeat;
 }
 
 .auth-overlay {
@@ -20,6 +31,7 @@
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px;
@@ -35,39 +47,38 @@
 }
 
 .auth-logo {
-  margin-bottom: 20px;
-}
-
-.logo-icon-large {
-  font-size: 70px;
-  font-weight: bold;
-  color: #a3e635; /* Hijau muda */
-  line-height: 1;
+  width: 80px; /* Sesuaikan ukuran logo */
+  margin-bottom: 25px;
 }
 
 .auth-left-content h1 {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 20px;
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 15px;
   line-height: 1.4;
   letter-spacing: 0.5px;
 }
 
 .auth-left-content p {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
   opacity: 0.9;
-  margin-bottom: 60px;
+  margin-bottom: 40px;
 }
 
 .copyright {
+  position: absolute;
+  bottom: 30px;
   font-size: 12px;
   opacity: 0.7;
+  color: white;
 }
 
-/* ================= RIGHT SIDE ================= */
+/* =======================================================
+   3. BAGIAN KANAN (FORM AREA)
+   ======================================================= */
 .auth-right {
-  flex: 1; /* Mengambil sisa ruang layar (55%) */
+  flex: 1; /* Mengambil sisa layar (45%) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,65 +88,109 @@
 
 .auth-box {
   width: 100%;
-  max-width: 400px;
-  margin: 0 auto; /* Memastikan form selalu di tengah */
+  max-width: 420px; /* Membatasi lebar form agar rapi di tengah */
+  margin: 0 auto;
 }
 
 .auth-header {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
 }
 
 .auth-header h2 {
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: 800;
   color: #234a66;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .auth-header p {
   font-size: 14px;
   color: #64748b;
+  margin: 0;
 }
 
-/* ================= FORMS ================= */
+/* =======================================================
+   4. INPUT FORM & LABEL
+   ======================================================= */
 .form-group {
   margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #234a66;
-  margin-bottom: 8px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 14px;
-  outline: none;
-  background-color: #f8fafc;
-  transition: all 0.2s ease;
-}
-
-.form-group input:focus {
-  border-color: #234a66;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1);
 }
 
 .label-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  margin-bottom: 8px;
 }
 
+.form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #234a66;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  color: #334155;
+  outline: none;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.form-group input::placeholder {
+  color: #94a3b8;
+}
+
+.form-group input:focus {
+  border-color: #234a66;
+  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1); /* Efek glow biru saat aktif */
+}
+
+/* --- DROPDOWN ROLE (Pengusulan Akun) --- */
+.select-container-custom {
+  position: relative;
+  width: 100%;
+}
+
+.select-container-custom select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  color: #334155;
+  outline: none;
+  background-color: #ffffff;
+  appearance: none;
+  -webkit-appearance: none;
+  
+  /* Ikon panah custom */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.select-container-custom select:focus {
+  border-color: #234a66;
+  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1);
+}
+
+/* =======================================================
+   5. TAUTAN & CHECKBOX
+   ======================================================= */
 .link-text {
   font-size: 12px;
   color: #3b82f6;
   text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .link-text:hover {
@@ -145,8 +200,8 @@
 .checkbox-group {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 30px;
+  gap: 8px;
+  margin-bottom: 25px;
 }
 
 .checkbox-group label {
@@ -155,54 +210,72 @@
   cursor: pointer;
 }
 
-/* ================= BUTTONS & FOOTER ================= */
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #234a66;
+  cursor: pointer;
+}
+
+/* =======================================================
+   6. TOMBOL
+   ======================================================= */
 .btn-primary {
+  width: 100%;
   background-color: #234a66;
   color: white;
   border: none;
   padding: 14px;
   border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  margin-top: 5px;
 }
 
 .btn-primary:hover {
-  background-color: #1a364b;
+  background-color: #1a364b; /* Biru lebih gelap saat disentuh */
 }
 
-.btn-block {
-  width: 100%;
-}
-
+/* =======================================================
+   7. FOOTER FORM (Belum punya akun?)
+   ======================================================= */
 .auth-footer {
   text-align: center;
   margin-top: 35px;
   font-size: 13px;
   color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .link-btn {
   background: none;
   border: none;
   color: #3b82f6;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 8px;
   font-size: 14px;
+  padding: 0;
 }
 
 .link-btn:hover {
   text-decoration: underline;
 }
 
-/* ================= RESPONSIVE ================= */
+/* =======================================================
+   8. RESPONSIVE (Layar HP & Tablet)
+   ======================================================= */
 @media (max-width: 900px) {
   .auth-container {
     flex-direction: column;
   }
   .auth-left {
-    display: none; /* Sembunyikan gambar biru di HP/Tablet kecil */
+    display: none; /* Menyembunyikan gambar pada layar sempit agar fokus ke login */
+  }
+  .auth-right {
+    padding: 30px 20px;
   }
 }
