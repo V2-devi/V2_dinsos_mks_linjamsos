@@ -36,6 +36,30 @@
   color: #a3e635; /* Hijau logo */
 }
 
+/* KODE STANDAR LOGO NAVBAR (DIPERBAIKI) */
+.branding-container-small { 
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+}
+.branding-logo-small { 
+  width: 45px; 
+  height: auto; 
+  object-fit: contain; 
+}
+.branding-text-block-small { 
+  display: flex; 
+  flex-direction: column; 
+  line-height: 1.2; 
+}
+.branding-text-block-small span { 
+  font-family: 'Inter', sans-serif;
+  font-weight: 800; 
+  font-size: 16px;  
+  color: white; 
+  letter-spacing: 0.5px; 
+}
+
 .nav-title {
   font-size: 14px;
   font-weight: 700;

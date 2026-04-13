@@ -36,9 +36,9 @@ function AdminDashboard() {
       {/* Sesuai dengan class .admin-navbar di CSS Anda */}
       <nav className="admin-navbar">
         <div className="navbar-left">
-          <div className="nav-logo">
-            <img src={logoLinjamsos} alt="Logo" style={{ width: '40px', marginRight: '15px' }} />
-            <div className="nav-title" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="branding-container-small">
+            <img src={logoLinjamsos} alt="Logo" className="branding-logo-small" />
+            <div className="branding-text-block-small">
               <span>PERLINDUNGAN DAN</span>
               <span>JAMINAN SOSIAL</span>
             </div>
