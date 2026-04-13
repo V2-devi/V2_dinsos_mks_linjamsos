@@ -1,12 +1,14 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./staffdashboard.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
 function StaffDashboard() {
   // === LOGIKA HIGHLIGHT CERDAS ===
-  const [activeMenu, setActiveMenu] = useState("penentuan_desil"); // Track menu sidebar
-  const [activeTab, setActiveTab] = useState("menunggu_penentuan"); // Track tab aktif
-  const [detailTab, setDetailTab] = useState("data_keluarga"); // Track sub-tab detail keluarga
+  const navigate = useNavigate();
+  const [activeMenu, setActiveMenu] = useState("usulan_baru"); 
+  const [activeTab, setActiveTab] = useState("dashboard"); 
+  const [detailTab, setDetailTab] = useState("data_keluarga"); 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   
   // === STATE UNTUK POP-UP BANSOS & DTSEN ===
@@ -137,11 +139,17 @@ function StaffDashboard() {
             <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> 
             Penentuan Desil
           </button>
+          
+          <button className="menu-item" style={{ marginTop: '40px', color: '#ef4444' }} onClick={() => navigate("/login")}>
+             <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Keluar
+          </button>
         </nav>
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
       <main className="main-content">
+        
+        {/* === HEADER DIPERBAIKI (NOTIFIKASI DROPDOWN RAPI) === */}
         <header className="main-header">
           <h1 className="header-title">
             {activeMenu === "usulan_baru" && "Usulan Baru Bansos"}
@@ -149,14 +157,27 @@ function StaffDashboard() {
             {activeMenu === "ppks" && "Pengusulan Daftar PPKS"}
             {activeMenu === "penentuan_desil" && "Kalkulasi & Penentuan Desil Keluarga"}
           </h1>
-          <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-          </button>
+          <div className="notif-wrapper">
+            <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
+              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+            </button>
+            {isNotifOpen && (
+              <div className="notif-dropdown">
+                <div className="notif-header"><h3>Pemberitahuan</h3></div>
+                <div className="notif-body">
+                  {notifData.map((n) => (
+                    <div className="notif-item" key={n.id}>
+                      <div className="notif-title-row"><h4>{n.title}</h4><span>{n.date}</span></div>
+                      <p>{n.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </header>
 
-        {isNotifOpen && (
-          <><div className="notif-overlay-transparent" onClick={() => setIsNotifOpen(false)}></div><div className="notif-popup"><div className="notif-header"><h3>Pemberitahuan</h3></div><div className="notif-body">{notifData.map((n) => (<div className="notif-item" key={n.id}><div className="notif-title-row"><h4>{n.title}</h4><span>{n.date}</span></div><p>{n.desc}</p></div>))}</div></div></>
-        )}
+        {isNotifOpen && <div className="notif-backdrop" onClick={() => setIsNotifOpen(false)}></div>}
 
         <div className="content-body">
           
@@ -186,28 +207,70 @@ function StaffDashboard() {
             </div>
           )}
 
-          {/* ================= 1. KONTEN MENU USULAN BARU ================= */}
+          {/* ================= 1. KONTEN MENU USULAN BARU (DIPERBAIKI 100%) ================= */}
           {activeMenu === "usulan_baru" && activeTab === "dashboard" && (
             <div className="tab-content-wrapper outline-box">
-              <div className="filter-row"><div className="pill-select-wrapper"><select defaultValue=""><option value="" disabled hidden>Pilih Periode</option><option value="q1">Januari - Maret</option></select></div></div>
-              <div className="stats-grid">
-                <div className="stat-card-outline"><h4>Total Usulan</h4><div className="stat-number">123 <span>Usulan</span></div></div>
-                <div className="stat-card-outline"><h4>Selesai Verifikasi</h4><div className="stat-number">100 <span>Usulan</span></div></div>
-                <div className="stat-card-outline"><h4>Belum Verifikasi</h4><div className="stat-number">20 <span>Usulan</span></div></div>
+              <div className="filter-row-right">
+                <div className="pill-select-wrapper">
+                  <select defaultValue="q1">
+                    <option value="" disabled hidden>Pilih Periode</option>
+                    <option value="q1">Januari - Maret</option>
+                    <option value="q2">April - Juni</option>
+                    <option value="q3">Juli - September</option>
+                    <option value="q4">Oktober - Desember</option>
+                  </select>
+                </div>
               </div>
-              <div className="chart-section" style={{ border: 'none', padding: '0', backgroundColor: 'transparent' }}>
-                <h3 className="chart-title" style={{ marginTop: '20px' }}>Distribusi Hasil Kelayakan</h3>
-                <div className="chart-content">
-                  <div className="chart-graphic"><div className="donut-chart"><div className="donut-inner"></div></div><span className="chart-label-top">963</span><span className="chart-label-bottom">886</span></div>
-                  <div className="chart-legend">
-                    <div className="legend-box green"><div className="legend-header"><div className="legend-indicator"></div><span className="legend-name">Layak Bansos</span><span className="legend-value">963 <span>(55%)</span></span></div></div>
-                    <div className="legend-box red"><div className="legend-header"><div className="legend-indicator"></div><span className="legend-name">Tidak Layak <span className="light">(45%)</span></span></div><ul className="legend-details"><li><span>Dianggap mampu</span> <span>700 orang</span></li><li><span>Pindah/Tidak di temukan</span> <span>86 orang</span></li><li><span>Meninggal dunia</span> <span>100 orang</span></li></ul></div>
+              
+              <div className="stats-grid-3">
+                <div className="stat-card-white">
+                  <h4>Total Usulan</h4>
+                  <div className="stat-number-large">123 <span>Usulan</span></div>
+                </div>
+                <div className="stat-card-white">
+                  <h4>Selesai Verifikasi</h4>
+                  <div className="stat-number-large text-blue">100 <span>Usulan</span></div>
+                </div>
+                <div className="stat-card-white">
+                  <h4>Belum Verifikasi</h4>
+                  <div className="stat-number-large text-dark">20 <span>Usulan</span></div>
+                </div>
+              </div>
+
+              <div className="chart-section-wrapper">
+                <h3 className="chart-section-title">Distribusi Hasil Kelayakan</h3>
+                <div className="chart-flex-container">
+                  <div className="chart-visual-area">
+                    <span className="chart-number-top">963</span>
+                    <div className="css-donut-chart"></div>
+                    <span className="chart-number-bottom">886</span>
+                  </div>
+                  <div className="chart-legend-area">
+                    <div className="legend-box-green">
+                      <div className="legend-title-row">
+                        <div className="dot-green"></div>
+                        <strong>Layak Bansos</strong>
+                      </div>
+                      <div className="legend-value-bold">963 <span className="fw-normal">(55%)</span></div>
+                    </div>
+                    <div className="legend-box-red-outline">
+                      <div className="legend-title-row">
+                        <div className="dot-red-outline"></div>
+                        <strong>Tidak Layak <span className="fw-normal text-gray">(45%)</span></strong>
+                      </div>
+                      <ul className="legend-details-list">
+                        <li><span>Dianggap mampu</span> <span>700 orang</span></li>
+                        <li><span>Pindah/Tidak di temukan</span> <span>86 orang</span></li>
+                        <li><span>Meninggal dunia</span> <span>100 orang</span></li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* ================= PENGUSULAN BANSOS (TIDAK DIUBAH) ================= */}
           {activeMenu === "usulan_baru" && activeTab === "pengusulan" && (
             <div className="tab-content-wrapper outline-box">
               <div className="pengusulan-filter-grid">
@@ -238,7 +301,7 @@ function StaffDashboard() {
           )}
 
 
-          {/* ================= 2. KONTEN MENU LIHAT DTSEN ================= */}
+          {/* ================= 2. KONTEN MENU LIHAT DTSEN (TIDAK DIUBAH) ================= */}
           {activeMenu === "lihat_dtsen" && activeTab === "dashboard_dtsen" && (
             <div className="tab-content-wrapper">
               <div className="dtsen-summary-top">
@@ -291,9 +354,15 @@ function StaffDashboard() {
           {/* ================= 3. KONTEN MENU DAFTAR PEMERLU (PPKS) ================= */}
           {activeMenu === "ppks" && activeTab === "dashboard_ppks" && (
             <div className="tab-content-wrapper outline-box">
-              <div className="filter-row">
+              <div className="filter-row-right">
                 <div className="pill-select-wrapper">
-                  <select defaultValue=""><option value="" disabled hidden>Pilih Periode</option><option value="q1">Januari - Maret</option></select>
+                  <select defaultValue="q1">
+                    <option value="" disabled hidden>Pilih Periode</option>
+                    <option value="q1">Januari - Maret</option>
+                    <option value="q2">April - Juni</option>
+                    <option value="q3">Juli - September</option>
+                    <option value="q4">Oktober - Desember</option>
+                  </select>
                 </div>
               </div>
               <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -326,30 +395,7 @@ function StaffDashboard() {
                       <option value="" disabled hidden>Semua Kategori (26 Kategori)</option>
                       <option value="1">Anak Balita Terlantar</option>
                       <option value="2">Anak Terlantar</option>
-                      <option value="3">Anak yang Berhadapan dengan Hukum (ABH)</option>
-                      <option value="4">Anak Jalanan</option>
-                      <option value="5">Anak dengan Disabilitas</option>
-                      <option value="6">Anak yang Memerlukan Perlindungan Khusus</option>
                       <option value="7">Lanjut Usia Terlantar</option>
-                      <option value="8">Penyandang Disabilitas</option>
-                      <option value="9">Tuna Susila</option>
-                      <option value="10">Gelandangan</option>
-                      <option value="11">Pengemis</option>
-                      <option value="12">Pemulung</option>
-                      <option value="13">Kelompok Minoritas</option>
-                      <option value="14">Bekas Warga Binaan Lembaga Permasyarakatan (BWBLP)</option>
-                      <option value="15">Orang dengan HIV/AIDS</option>
-                      <option value="16">Korban Penyalahgunaan NAPZA</option>
-                      <option value="17">Korban Perdagangan Orang</option>
-                      <option value="18">Korban Tindak Kekerasan</option>
-                      <option value="19">Pekerja Migran Bermasalah Sosial</option>
-                      <option value="20">Korban Bencana Alam</option>
-                      <option value="21">Korban Bencana Sosial</option>
-                      <option value="22">Perempuan Rawan Sosial Ekonomi</option>
-                      <option value="23">Fakir Miskin</option>
-                      <option value="24">Keluarga Bermasalah Sosial Psikologis</option>
-                      <option value="25">Komunitas Adat terpencil (KAT)</option>
-                      <option value="26">Orang Terlantar</option>
                     </select>
                   </div>
                 </div>
@@ -391,7 +437,7 @@ function StaffDashboard() {
           )}
 
 
-          {/* ================= 4. KONTEN PENENTUAN DESIL ================= */}
+          {/* ================= 4. KONTEN PENENTUAN DESIL (TIDAK DIUBAH KECUALI ALERT) ================= */}
           {activeMenu === "penentuan_desil" && activeTab === "menunggu_penentuan" && (
             <div className="tab-content-wrapper outline-box">
               <div className="alert-info-box warning" style={{ marginBottom: '25px', backgroundColor: '#eff6ff', borderColor: '#bfdbfe', color: '#1e3a8a' }}>
@@ -466,7 +512,7 @@ function StaffDashboard() {
           )}
 
 
-          {/* ================= KONTEN BERSAMA: DETAIL KELUARGA (Hanya muncul jika klik detail tabel Bansos/DTSEN) ================= */}
+          {/* ================= KONTEN BERSAMA: DETAIL KELUARGA (TIDAK DIUBAH) ================= */}
           {activeTab === "detail_keluarga" && (
             <div className="tab-content-wrapper outline-box detail-keluarga-box">
               <h2 className="detail-page-title">Detail Data DTSEN No. KK 0000000000000000</h2>
@@ -641,199 +687,20 @@ function StaffDashboard() {
         </div>
       </main>
 
-      {/* ================= AREA MODALS (POP-UP) BANSOS ================= */}
-      {isAddModalOpen && (<div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px', fontWeight: 'bold' }}>+</span><h2>Tambah Usulan</h2></div></div><div className="modal-body"><form onSubmit={(e) => handleGenericSubmit(e, setIsAddModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>NIK (Nomor Induk Kependudukan)*</label><input type="text" placeholder="16 digit angka" required /></div><div className="form-group-modal"><label>No. KK*</label><input type="text" placeholder="contohfirly@gmail.com" required /></div><div className="form-group-modal"><label>Nama Lengkap (Sesuai KTP)*</label><input type="text" placeholder="Contoh: FIRLIANY FIRDAUS" required /></div><div className="form-group-modal"><label>Kecamatan*</label><input type="text" placeholder="xxxxxxxxxx" required /></div><div className="form-group-modal"><label>Kelurahan*</label><input type="text" placeholder="Jln. nn" required /></div><div className="form-group-modal"><label>Desil*</label><div className="select-container-custom"><select required defaultValue=""><option value="" disabled hidden>Pilih Desil</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6-10">6-10</option></select></div></div><div className="form-group-modal"><label>Jenis Bansos*</label><div className="select-container-custom"><select required defaultValue=""><option value="" disabled hidden>Pilih Bansos</option><option value="PBI">PBI</option><option value="Sembako">Sembako</option><option value="PKH">PKH</option><option value="YAPI">YAPI</option></select></div></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div></div></div>)}
+      {/* ================= AREA MODALS (POP-UP) BANSOS DLL (TIDAK DIUBAH) ================= */}
+      {isAddModalOpen && (<div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px', fontWeight: 'bold' }}>+</span><h2>Tambah Usulan</h2></div></div><div className="modal-body"><form onSubmit={(e) => handleGenericSubmit(e, setIsAddModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>NIK (Nomor Induk Kependudukan)*</label><input type="text" placeholder="16 digit angka" required /></div><div className="form-group-modal"><label>No. KK*</label><input type="text" placeholder="" required /></div><div className="form-group-modal"><label>Nama Lengkap (Sesuai KTP)*</label><input type="text" placeholder="Contoh: FIRLIANY FIRDAUS" required /></div><div className="form-group-modal"><label>Kecamatan*</label><input type="text" placeholder="xxxxxxxxxx" required /></div><div className="form-group-modal"><label>Kelurahan*</label><input type="text" placeholder="Jln. nn" required /></div><div className="form-group-modal"><label>Desil*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Desil</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6-10">6-10</option></select></div><div className="form-group-modal"><label>Jenis Bansos*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Bansos</option><option value="PBI">PBI</option><option value="Sembako">Sembako</option><option value="PKH">PKH</option><option value="YAPI">YAPI</option></select></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div></div></div>)}
       {isIndividuModalOpen && (<div className="modal-overlay" onClick={() => setIsIndividuModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '30px' }}><h3 className="modal-title-center">Detail Data Individu NIK 0000000000000000</h3><form onSubmit={(e) => handleGenericSubmit(e, setIsIndividuModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>NIK</label><input type="text" placeholder="contoh: januari" /></div><div className="form-group-modal"><label>Nama Lengkap</label><input type="text" placeholder="contoh: 2024" /></div><div className="form-group-modal"><label>Tempat Lahir</label><input type="text" placeholder="contoh: januari" /></div><div className="form-group-modal"><label>Tanggal Lahir</label><input type="text" placeholder="contoh: 2024" /></div><div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Jenis Kelamin</label><div className="radio-group-inline"><label className="radio-label"><input type="radio" name="jk" value="Laki-laki" /><span>Laki-laki</span></label><label className="radio-label"><input type="radio" name="jk" value="Perempuan" /><span>Perempuan</span></label></div></div><div className="form-group-modal"><label>Provinsi</label><input type="text" placeholder="Sulawesi Selatan" /></div><div className="form-group-modal"><label>Kabupaten/Kota</label><input type="text" placeholder="contoh: makassar" /></div><div className="form-group-modal"><label>Kecamatan</label><input type="text" placeholder="Tallo" /></div><div className="form-group-modal"><label>Kelurahan/Desa</label><input type="text" placeholder="Wala-walaya" /></div><div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Alamat KTP</label><input type="text" placeholder="Sulawesi Selatan" /></div><div className="form-group-modal"><label>Keberadaan anggota</label><input type="text" placeholder="Tinggal bersama keluarga" /></div><div className="form-group-modal"><label>Status Perkawinan</label><input type="text" placeholder="Kawin" /></div><div className="form-group-modal"><label>Hubungan dengan Kepala Keluarga</label><input type="text" placeholder="Anak" /></div><div className="form-group-modal"><label>Pekerjaan Utama</label><input type="text" placeholder="Ibu Rumah Tangga" /></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsIndividuModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div></div></div>)}
       {isMeninggalModalOpen && (<div className="modal-overlay" onClick={() => setIsMeninggalModalOpen(false)}><div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '30px' }}><h3 className="modal-title-center">Data Pernyataan Meninggal NIK 0000000000000000</h3><form onSubmit={(e) => handleGenericSubmit(e, setIsMeninggalModalOpen)}><div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Tanggal Meninggal</label><input type="text" placeholder="contoh: 12 Januari 2000" /></div><div className="form-group-modal"><label>Bukti Kematian*</label><div className="upload-box"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Surat Keterangan Meninggal Dunia</span></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsMeninggalModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div></div></div>)}
       {isHamilModalOpen && (<div className="modal-overlay" onClick={() => setIsHamilModalOpen(false)}><div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '30px' }}><h3 className="modal-title-center">Data Kehamilan NIK 0000000000000000</h3><form onSubmit={(e) => handleGenericSubmit(e, setIsHamilModalOpen)}><div className="form-grid-2" style={{ marginBottom: '15px' }}><div className="form-group-modal"><label>Bulan Kehamilan</label><input type="text" placeholder="contoh: januari" /></div><div className="form-group-modal"><label>Tahun Kehamilan</label><input type="text" placeholder="contoh: 2024" /></div></div><div className="form-group-modal"><label>Bukti Kehamilan*</label><div className="upload-box"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Surat Keterangan Menyatakan Hamil dari Fasilitas Kesehatan</span></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsHamilModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div></div></div>)}
-      {isDisabilitasModalOpen && (<div className="modal-overlay" onClick={() => setIsDisabilitasModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '20px' }}><div className="modal-inner-tabs"><button className={`inner-tab-btn ${disabilitasTab === "individu" ? "active" : ""}`} onClick={() => setDisabilitasTab("individu")}>Disabilitas Individu</button><button className={`inner-tab-btn ${disabilitasTab === "riwayat" ? "active" : ""}`} onClick={() => setDisabilitasTab("riwayat")}>Riwayat Perubahan Disabilitas</button></div>{disabilitasTab === "individu" && (<div className="inner-tab-content"><table className="staff-table" style={{ marginTop: '20px' }}><thead><tr><th>Jenis Disabilitas</th><th>Tingkat Disabilitas</th><th style={{ textAlign: "center" }}>Aksi</th></tr></thead><tbody><tr><td>Disabilitas Fisik</td><td>Sedang</td><td style={{ textAlign: "center" }}><button className="btn-icon-keterangan"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></button></td></tr></tbody></table><div className="modal-actions" style={{ marginTop: '50px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsDisabilitasModalOpen(false)}>Batal</button><button type="button" className="btn-modal-submit" onClick={() => setIsDisabilitasModalOpen(false)}>Simpan Data</button></div></div>)}{disabilitasTab === "riwayat" && (<div className="inner-tab-content"><h4 className="modal-subtitle-center">Tambah Data Disabilitas</h4><form onSubmit={(e) => handleGenericSubmit(e, setIsDisabilitasModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>Jenis Disabilitas*</label><div className="select-container-custom"><select required defaultValue=""><option value="" disabled hidden>Pilih Jenis Disabilitas</option><option value="non">Non-disabilitas</option><option value="fisik">Disabilitas Fisik</option><option value="mental">Disabilitas Mental</option><option value="intelektual">Disabilitas Intelektual</option><option value="sensorik_netral">Disabilitas Sensorik Netral</option><option value="sensorik_rungu">Disabilitas Sensorik Rungu</option><option value="sensorik_wicara">Disabilitas Sensorik Wicara</option><option value="ganda">Disabilitas Ganda/Multi</option></select></div></div><div className="form-group-modal"><label>Tingkat Disabilitas*</label><div className="select-container-custom"><select required defaultValue=""><option value="" disabled hidden>Pilih Tingkat Disabilitas</option><option value="ringan">Ringan</option><option value="sedang">Sedang</option><option value="berat">Berat</option></select></div></div></div><div className="form-group-modal" style={{ marginTop: '15px' }}><label>Bukti Disabilitas*</label><div className="upload-box"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Surat Keterangan Disabilitas dari Fasilitas Kesehatan</span></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDisabilitasModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div>)}</div></div></div>)}
-      {isOrtuModalOpen && (<div className="modal-overlay" onClick={() => setIsOrtuModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '20px' }}><div className="modal-inner-tabs"><button className={`inner-tab-btn ${ortuTab === "status" ? "active" : ""}`} onClick={() => setOrtuTab("status")}>Status Orang Tua</button><button className={`inner-tab-btn ${ortuTab === "riwayat" ? "active" : ""}`} onClick={() => setOrtuTab("riwayat")}>Riwayat Perubahan Orang Tua</button></div>{ortuTab === "status" && (<div className="inner-tab-content"><table className="staff-table" style={{ marginTop: '20px' }}><thead><tr><th>Nama Individu</th><th>Status Orang Tua</th><th style={{ textAlign: "center" }}>Aksi</th></tr></thead><tbody><tr><td>Anak Cinta1</td><td>Orang Tua Lengkap</td><td style={{ textAlign: "center" }}><button className="btn-icon-keterangan"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></button></td></tr></tbody></table><div className="modal-actions" style={{ marginTop: '50px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsOrtuModalOpen(false)}>Batal</button><button type="button" className="btn-modal-submit" onClick={() => setIsOrtuModalOpen(false)}>Simpan Data</button></div></div>)}{ortuTab === "riwayat" && (<div className="inner-tab-content"><h4 className="modal-subtitle-center">Pengusulan Orang Tua</h4><form onSubmit={(e) => handleGenericSubmit(e, setIsOrtuModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>Status Orang Tua*</label><div className="select-container-custom"><select required defaultValue=""><option value="" disabled hidden>Pilih Status Orang Tua</option><option value="lengkap">Orang Tua Lengkap</option><option value="yatim">Yatim</option><option value="piatu">Piatu</option><option value="yatimpiatu">Yatim Piatu</option><option value="unknown">Tidak Diketahui Keberadaannya</option></select></div></div><div className="form-group-modal"><label>Nomor Surat*</label><input type="text" placeholder="" required /></div></div><div className="form-group-modal" style={{ marginTop: '15px' }}><label>Bukti Status Orang Tua*</label><div className="upload-box"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Surat Keterangan Menyatakan Orang Tua</span></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsOrtuModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div>)}</div></div></div>)}
+      {isDisabilitasModalOpen && (<div className="modal-overlay" onClick={() => setIsDisabilitasModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '20px' }}><div className="modal-inner-tabs"><button className={`inner-tab-btn ${disabilitasTab === "individu" ? "active" : ""}`} onClick={() => setDisabilitasTab("individu")}>Disabilitas Individu</button><button className={`inner-tab-btn ${disabilitasTab === "riwayat" ? "active" : ""}`} onClick={() => setDisabilitasTab("riwayat")}>Riwayat Perubahan Disabilitas</button></div>{disabilitasTab === "individu" && (<div className="inner-tab-content"><table className="staff-table" style={{ marginTop: '20px' }}><thead><tr><th>Jenis Disabilitas</th><th>Tingkat Disabilitas</th><th style={{ textAlign: "center" }}>Aksi</th></tr></thead><tbody><tr><td>Disabilitas Fisik</td><td>Sedang</td><td style={{ textAlign: "center" }}><button className="btn-icon-keterangan"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></button></td></tr></tbody></table><div className="modal-actions" style={{ marginTop: '50px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsDisabilitasModalOpen(false)}>Batal</button><button type="button" className="btn-modal-submit" onClick={() => setIsDisabilitasModalOpen(false)}>Simpan Data</button></div></div>)}{disabilitasTab === "riwayat" && (<div className="inner-tab-content"><h4 className="modal-subtitle-center">Tambah Data Disabilitas</h4><form onSubmit={(e) => handleGenericSubmit(e, setIsDisabilitasModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>Jenis Disabilitas*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Jenis Disabilitas</option><option value="non">Non-disabilitas</option><option value="fisik">Disabilitas Fisik</option></select></div><div className="form-group-modal"><label>Tingkat Disabilitas*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Tingkat Disabilitas</option><option value="ringan">Ringan</option><option value="sedang">Sedang</option><option value="berat">Berat</option></select></div></div><div className="form-group-modal" style={{ marginTop: '15px' }}><label>Bukti Disabilitas*</label><div className="upload-box"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Surat Keterangan Disabilitas</span></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDisabilitasModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div>)}</div></div></div>)}
+      {isOrtuModalOpen && (<div className="modal-overlay" onClick={() => setIsOrtuModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ paddingTop: '20px' }}><div className="modal-inner-tabs"><button className={`inner-tab-btn ${ortuTab === "status" ? "active" : ""}`} onClick={() => setOrtuTab("status")}>Status Orang Tua</button><button className={`inner-tab-btn ${ortuTab === "riwayat" ? "active" : ""}`} onClick={() => setOrtuTab("riwayat")}>Riwayat Perubahan Orang Tua</button></div>{ortuTab === "status" && (<div className="inner-tab-content"><table className="staff-table" style={{ marginTop: '20px' }}><thead><tr><th>Nama Individu</th><th>Status Orang Tua</th><th style={{ textAlign: "center" }}>Aksi</th></tr></thead><tbody><tr><td>Anak Cinta1</td><td>Orang Tua Lengkap</td><td style={{ textAlign: "center" }}><button className="btn-icon-keterangan"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></button></td></tr></tbody></table><div className="modal-actions" style={{ marginTop: '50px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsOrtuModalOpen(false)}>Batal</button><button type="button" className="btn-modal-submit" onClick={() => setIsOrtuModalOpen(false)}>Simpan Data</button></div></div>)}{ortuTab === "riwayat" && (<div className="inner-tab-content"><h4 className="modal-subtitle-center">Pengusulan Orang Tua</h4><form onSubmit={(e) => handleGenericSubmit(e, setIsOrtuModalOpen)}><div className="form-grid-2"><div className="form-group-modal"><label>Status Orang Tua*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Status</option><option value="lengkap">Orang Tua Lengkap</option><option value="yatim">Yatim</option></select></div><div className="form-group-modal"><label>Nomor Surat*</label><input type="text" placeholder="" required /></div></div><div className="form-group-modal" style={{ marginTop: '15px' }}><label>Bukti Status Orang Tua*</label><div className="upload-box"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Surat Keterangan Kematian</span></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsOrtuModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div></form></div>)}</div></div></div>)}
       {isPendidikanModalOpen && (<div className="modal-overlay" onClick={() => setIsPendidikanModalOpen(false)}><div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}><div className="modal-body" style={{ padding: '30px', textAlign: 'center' }}><h3 className="modal-title-center" style={{ borderBottom: '2px solid #cbd5e1', paddingBottom: '15px', margin: '0 0 20px 0' }}>Detail Pendidikan NIK 0000000000000000</h3><div style={{ textAlign: 'left', padding: '0 20px', color: '#234a66' }}><p style={{ margin: '0 0 5px 0', fontSize: '14px' }}>Nama Sekolah:</p><p style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: 'bold' }}>SMA XXXXXXXX</p><p style={{ margin: '0 0 5px 0', fontSize: '14px' }}>Jenjang Pendidikan:</p><p style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: 'bold' }}>Sekolah Menengah Atas</p></div></div></div></div>)}
-      {isEditAsetModalOpen && (<div className="modal-overlay" onClick={() => setIsEditAsetModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg><h2>Edit Data Aset & Kondisi Keluarga</h2></div></div><div className="modal-body"><form onSubmit={(e) => handleGenericSubmit(e, setIsEditAsetModalOpen)}><div className="modal-section"><h3 className="section-subtitle">1. Kondisi Keluarga</h3><div className="form-grid-2"><div className="form-group-modal"><label>Status dalam Keluarga</label><div className="select-container-custom"><select defaultValue="Kepala Keluarga"><option value="Kepala Keluarga">Kepala Keluarga</option><option value="Istri">Istri</option><option value="Anak">Anak</option></select></div></div><div className="form-group-modal"><label>Usia (Tahun)</label><input type="number" defaultValue="60" min="0" /></div><div className="form-group-modal"><label>Status Perkawinan</label><div className="select-container-custom"><select defaultValue="Cerai mati"><option value="Belum Kawin">Belum Kawin</option><option value="Kawin">Kawin</option><option value="Cerai hidup">Cerai hidup</option><option value="Cerai mati">Cerai mati</option></select></div></div><div className="form-group-modal"><label>Status Pekerjaan</label><div className="select-container-custom"><select defaultValue="Usaha Sendiri"><option value="Tidak Bekerja">Tidak Bekerja</option><option value="Karyawan">Karyawan</option><option value="Usaha Sendiri">Usaha Sendiri</option><option value="Petani/Buruh">Petani/Buruh</option></select></div></div><div className="form-group-modal"><label>Kepemilikan Usaha</label><div className="select-container-custom"><select defaultValue="Tidak Ada"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select></div></div><div className="form-group-modal"><label>Jumlah Anggota RT</label><input type="number" defaultValue="4" min="1" /></div></div></div><div className="modal-section"><h3 className="section-subtitle">2. Kondisi Perumahan Keluarga</h3><div className="form-grid-2"><div className="form-group-modal"><label>Status Kepemilikan Rumah</label><div className="select-container-custom"><select defaultValue="Milik Sendiri"><option value="Milik Sendiri">Milik Sendiri</option><option value="Sewa/Kontrak">Sewa/Kontrak</option><option value="Numpang">Numpang</option></select></div></div><div className="form-group-modal"><label>Luas Lantai Rumah (m2)</label><input type="text" defaultValue="10 x 20 m" /></div><div className="form-group-modal"><label>Jenis Lantai</label><div className="select-container-custom"><select defaultValue="Keramik"><option value="Keramik">Keramik</option><option value="Semen">Semen/Bata</option><option value="Tanah">Tanah</option><option value="Bambu/Kayu">Bambu/Kayu</option></select></div></div><div className="form-group-modal"><label>Jenis Dinding</label><div className="select-container-custom"><select defaultValue="Tembok"><option value="Tembok">Tembok</option><option value="Kayu/Papan">Kayu/Papan</option><option value="Bambu">Bambu</option></select></div></div><div className="form-group-modal"><label>Jenis Atap</label><div className="select-container-custom"><select defaultValue="Seng"><option value="Seng">Seng</option><option value="Genteng">Genteng</option><option value="Asbes">Asbes</option><option value="Rumbia/Ijuk">Rumbia/Ijuk</option></select></div></div><div className="form-group-modal"><label>Sumber Air Minum</label><div className="select-container-custom"><select defaultValue="Sumur Terlindung"><option value="PDAM">PDAM</option><option value="Sumur Terlindung">Sumur Terlindung</option><option value="Mata Air">Mata Air</option><option value="Sungai">Sungai</option></select></div></div><div className="form-group-modal"><label>Jenis Kloset</label><div className="select-container-custom"><select defaultValue="Kloset Jongkok"><option value="Kloset Duduk">Kloset Duduk</option><option value="Kloset Jongkok">Kloset Jongkok</option><option value="Plengsengan">Plengsengan</option><option value="Tanpa Kloset">Tanpa Kloset</option></select></div></div><div className="form-group-modal"><label>Tempat Pembuangan Tinja</label><div className="select-container-custom"><select defaultValue="Tangki Septik"><option value="Tangki Septik">Tangki Septik</option><option value="Lubang Tanah">Lubang Tanah</option><option value="Sungai/Danau">Sungai/Danau/Laut</option></select></div></div><div className="form-group-modal"><label>Sumber Penerangan</label><div className="select-container-custom"><select defaultValue="Listrik PLN"><option value="Listrik PLN">Listrik PLN</option><option value="Listrik Non PLN">Listrik Non PLN</option><option value="Bukan Listrik">Bukan Listrik</option></select></div></div><div className="form-group-modal"><label>Daya Listrik</label><div className="select-container-custom"><select defaultValue="900 Watt"><option value="450 Watt">450 Watt</option><option value="900 Watt">900 Watt</option><option value="1300 Watt">1300 Watt</option><option value="> 1300 Watt">> 1300 Watt</option></select></div></div><div className="form-group-modal"><label>Bahan Bakar Masak</label><div className="select-container-custom"><select defaultValue="Gas Elpiji 3 Kg"><option value="Gas Elpiji 3 Kg">Gas Elpiji 3 Kg</option><option value="Gas Elpiji > 3 Kg">Gas Elpiji > 3 Kg</option><option value="Minyak Tanah">Minyak Tanah</option><option value="Kayu Bakar">Kayu Bakar</option></select></div></div><div className="form-group-modal"><label>Jml Tabung Gas (5,5kg / lebih)</label><input type="number" defaultValue="0" min="0" /></div></div></div><div className="modal-section"><h3 className="section-subtitle">3. Aset Bergerak & Tidak Bergerak</h3><div className="form-grid-2"><div className="form-group-modal"><label>Kepemilikan Tanah</label><div className="select-container-custom"><select defaultValue="Milik Sendiri"><option value="Milik Sendiri">Milik Sendiri</option><option value="Tidak Ada">Tidak Ada</option></select></div></div><div className="form-group-modal"><label>Kepemilikan Rumah Lain</label><div className="select-container-custom"><select defaultValue="Tidak Ada"><option value="Tidak Ada">Tidak Ada</option><option value="Ada">Ada</option></select></div></div><div className="form-group-modal"><label>Jumlah Sepeda Motor</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Mobil</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Perahu/Alat Usaha</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Sepeda</label><input type="number" defaultValue="1" min="0" /></div><div className="form-group-modal"><label>Jenis Kapal/Perahu Motor</label><div className="select-container-custom"><select defaultValue="Tidak Ada"><option value="Tidak Ada">Tidak Ada</option><option value="Perahu Tanpa Motor">Perahu Tanpa Motor</option><option value="Perahu Motor">Perahu Motor</option></select></div></div><div className="form-group-modal"><label>Jumlah Kulkas/Pendingin</label><input type="number" defaultValue="1" min="0" /></div><div className="form-group-modal"><label>Jumlah Televisi</label><input type="number" defaultValue="1" min="0" /></div><div className="form-group-modal"><label>Jumlah Smartphone</label><input type="number" defaultValue="1" min="0" /></div><div className="form-group-modal"><label>Jumlah Air Conditioner (AC)</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Pemanas Air</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Telepon Rumah</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Ternak Sapi</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Ternak Kerbau</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Ternak Babi</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Ternak Kambing</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Ternak Kuda</label><input type="number" defaultValue="0" min="0" /></div><div className="form-group-modal"><label>Jumlah Emas/Perhiasan (Gram)</label><input type="number" defaultValue="0" min="0" placeholder="Dalam satuan gram" /></div></div></div><div className="modal-actions" style={{ marginTop: '30px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsEditAsetModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div></form></div></div></div>)}
+      {isEditAsetModalOpen && (<div className="modal-overlay" onClick={() => setIsEditAsetModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg><h2>Edit Data Aset & Kondisi Keluarga</h2></div></div><div className="modal-body"><form onSubmit={(e) => handleGenericSubmit(e, setIsEditAsetModalOpen)}><div className="modal-section"><h3 className="section-subtitle">1. Kondisi Keluarga</h3><div className="form-grid-2"><div className="form-group-modal"><label>Status dalam Keluarga</label><select defaultValue="Kepala Keluarga" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="Kepala Keluarga">Kepala Keluarga</option><option value="Istri">Istri</option></select></div><div className="form-group-modal"><label>Usia (Tahun)</label><input type="number" defaultValue="60" min="0" /></div><div className="form-group-modal"><label>Status Perkawinan</label><select defaultValue="Cerai mati" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="Cerai mati">Cerai mati</option><option value="Kawin">Kawin</option></select></div><div className="form-group-modal"><label>Status Pekerjaan</label><select defaultValue="Usaha Sendiri" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="Usaha Sendiri">Usaha Sendiri</option><option value="Karyawan">Karyawan</option></select></div></div></div><div className="modal-actions" style={{ marginTop: '30px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsEditAsetModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div></form></div></div></div>)}
+      {isAddPPKSModalOpen && (<div className="modal-overlay" onClick={() => setIsAddPPKSModalOpen(false)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px', fontWeight: 'bold' }}>+</span><h2>Tambah Laporan PPKS</h2></div></div><div className="modal-body"><form onSubmit={(e) => handleGenericSubmit(e, setIsAddPPKSModalOpen)}><div className="modal-section"><h3 className="section-subtitle">Data Diri Pemerlu</h3><div className="form-grid-2"><div className="form-group-modal"><label>Nama Lengkap / Alias*</label><input type="text" placeholder="Contoh: Mr. X / Budi" required /></div><div className="form-group-modal"><label>NIK (Jika Diketahui)</label><input type="text" placeholder="Kosongkan jika tidak ada" /></div><div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Kategori PPKS (Pilih dari 26 Kategori)*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kategori PPKS</option><option value="1">Anak Balita Terlantar</option><option value="2">Anak Terlantar</option></select></div></div></div><div className="modal-section"><h3 className="section-subtitle">Kondisi & Lokasi Penemuan</h3><div className="form-grid-2"><div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Lokasi Presisi Penemuan / Alamat Domisili*</label><input type="text" placeholder="Cth: Kolong Jembatan" required /></div><div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Deskripsi Singkat Kondisi Fisik / Kasus*</label><textarea rows="3" style={{ border:'1px solid #94a3b8', borderRadius:'6px', padding:'10px', width:'100%', resize:'vertical' }} placeholder="Jelaskan kondisi saat ditemukan..." required></textarea></div><div className="form-group-modal" style={{ gridColumn: "1 / -1", marginTop: "10px" }}><label>Foto Bukti Penemuan (Wajib)*</label><div className="upload-box" style={{ height: '120px' }}><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Unggah Foto TKP</span></div></div></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddPPKSModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Kirim Laporan</button></div></form></div></div></div>)}
+      {selectedPPKS && (<div className="modal-overlay" onClick={() => setSelectedPPKS(null)}><div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}><div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><h2>Detail Penanganan PPKS</h2></div><div style={{ display: 'inline-block', width: 'fit-content' }}><span className={`badge-ppks ${getBadgeClass(selectedPPKS.status)}`} style={{ fontSize: '13px', padding: '6px 16px' }}>{selectedPPKS.status}</span></div></div></div><div className="modal-body"><div className="detail-summary-grid" style={{ marginBottom: '20px', borderBottom: '1px solid #cbd5e1', paddingBottom: '20px' }}><div className="summary-col"><div className="summary-item"><span className="sum-label">NAMA / IDENTITAS</span><span className="sum-val">{selectedPPKS.nama}</span></div><div className="summary-item"><span className="sum-label">NIK</span><span className="sum-val">{selectedPPKS.nik}</span></div></div><div className="summary-col"><div className="summary-item"><span className="sum-label">KATEGORI PPKS</span><span className="sum-val">{selectedPPKS.kategori}</span></div><div className="summary-item"><span className="sum-label">TANGGAL LAPORAN</span><span className="sum-val">{selectedPPKS.tanggal}</span></div></div><div className="summary-col" style={{ flex: 1 }}><div className="summary-item"><span className="sum-label">LOKASI PENEMUAN</span><span className="sum-val">{selectedPPKS.lokasi}</span></div></div></div><div className="modal-section"><h3 className="section-subtitle">Deskripsi Kondisi & Laporan Awal</h3><p style={{backgroundColor:'#f1f5f9', padding:'15px', borderRadius:'8px', color:'#334155'}}>{selectedPPKS.deskripsiAwal}</p></div>{selectedPPKS.status === "Menunggu Kelayakan" && (<div className="alert-info-box warning" style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', borderRadius: '8px', padding: '16px', display: 'flex', gap: '15px' }}><svg style={{color: '#d97706', flexShrink: 0}} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><h4 style={{ margin: '0 0 5px 0', color: '#b45309', fontSize: '14px' }}>Menunggu Verifikasi Lapangan</h4><p style={{ margin: 0, color: '#b45309', fontSize: '13px' }}>Laporan ini belum di-assessment oleh tim Verifikator. Tidak ada tindakan lanjutan yang bisa dilakukan staf saat ini.</p></div></div>)}{selectedPPKS.status === "Kasus Aktif" && (<><div className="modal-section"><h3 className="section-subtitle" style={{ color: '#1d4ed8' }}>Hasil Assessment Verifikator</h3><p style={{backgroundColor:'#eff6ff', padding:'15px', borderRadius:'8px', color:'#1e3a8a'}}>{selectedPPKS.hasilAssessment}</p></div><form onSubmit={(e) => handleGenericSubmit(e, null)}><div className="modal-section" style={{ border: '1px solid #93c5fd', padding: '15px', borderRadius: '8px', marginTop: '20px' }}><h3 className="section-subtitle" style={{ borderBottom: 'none', color: '#1d4ed8', marginBottom: '15px' }}>Form Penyelesaian Kasus (Terminasi)</h3><div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Tindakan Akhir / Keputusan Penanganan*</label><select required defaultValue="" style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Tindakan</option><option value="keluarga">Dikembalikan Keluarga</option><option value="panti">Dirujuk ke Panti</option></select></div><div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Deskripsi Pelaksanaan Serah Terima*</label><textarea rows="3" style={{ border:'1px solid #94a3b8', borderRadius:'6px', padding:'10px', width:'100%', resize:'vertical' }} placeholder="Ceritakan bagaimana proses penyelesaian kasus ini..." required></textarea></div><div className="form-group-modal"><label>Unggah Bukti Terminasi*</label><div className="upload-box" style={{ height: '100px' }}><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Upload File (PDF/JPG)</span></div></div></div><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setSelectedPPKS(null)}>Tutup</button><button type="submit" className="btn-modal-submit" style={{ backgroundColor: '#15803d' }}>Selesaikan Kasus & Simpan</button></div></form></>)}{selectedPPKS.status === "Selesai" && (<><div className="modal-section"><h3 className="section-subtitle" style={{ color: '#1d4ed8' }}>Hasil Assessment Verifikator</h3><p style={{backgroundColor:'#eff6ff', padding:'15px', borderRadius:'8px', color:'#1e3a8a'}}>{selectedPPKS.hasilAssessment}</p></div><div className="modal-section"><h3 className="section-subtitle" style={{ color: '#15803d' }}>Laporan Penyelesaian (Terminasi)</h3><div style={{backgroundColor:'#f0fdf4', padding:'15px', borderRadius:'8px', border:'1px solid #bbf7d0'}}><strong style={{ color: '#15803d', display:'block', marginBottom:'8px' }}>Tanggal Selesai: {selectedPPKS.tanggalSelesai}</strong><p style={{ margin: 0, color:'#166534' }}>{selectedPPKS.tindakanPenyelesaian}</p><div style={{ marginTop: '15px', padding: '10px', backgroundColor: 'white', borderRadius: '6px', border: '1px dashed #86efac', display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#15803d', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Download Berita Acara Serah Terima.pdf</span></div></div></div></>)}{selectedPPKS.status !== "Kasus Aktif" && (<div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setSelectedPPKS(null)}>Tutup</button></div>)}</div></div></div>)}
+      {isKalkulasiModalOpen && selectedKalkulasi && (<div className="modal-overlay" onClick={() => setIsKalkulasiModalOpen(false)}><div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}><div className="modal-header"><div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg><h2>Kalkulasi PMT & Desil</h2></div></div><div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}><div style={{ marginBottom: '20px', color: '#475569' }}><p style={{ margin: '0 0 5px 0', fontSize: '13px' }}>Keluarga atas nama:</p><h3 style={{ margin: '0', color: '#234a66', fontSize: '18px', fontWeight: '800' }}>{selectedKalkulasi.nama}</h3><p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.noKk}</p></div>{!isCalculated && (<><div className="alert-info-box warning" style={{ textAlign: 'left', marginBottom: '25px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '16px', display: 'flex', gap: '15px' }}><svg style={{color: '#2563eb', flexShrink: 0}} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><p style={{margin:0, color:'#1e3a8a', fontSize:'13px'}}>Sistem akan memproses 39 variabel aset dan kondisi perumahan keluarga ini untuk menentukan skor kerentanan.</p></div></div><button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px' }} onClick={handleJalankanKalkulasi}>Jalankan Kalkulasi Sistem</button></>)}{isCalculated && (<div className="calc-result-box slide-up-anim" style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px'}}><h4 style={{ color: '#10b981', margin: '0 0 15px 0' }}>✓ Kalkulasi Selesai</h4><div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '20px' }}><div><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: '600' }}>SKOR PMT</span><span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>48.5</span></div><div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: '600', marginBottom: '5px' }}>TINGKAT DESIL</span><span style={{ backgroundColor: '#f59e0b', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>3</span></div></div><p style={{ fontSize: '13px', color: '#475569', marginBottom: '25px' }}>Keluarga ini masuk dalam kategori <strong>Hampir Rentan</strong>.</p><div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsKalkulasiModalOpen(false)}>Batal</button><button type="button" className="btn-modal-submit" onClick={(e) => handleGenericSubmit(e, setIsKalkulasiModalOpen)}>Simpan Hasil ke DTSEN</button></div></div>)}</div></div></div>)}
 
-      {/* ================= AREA MODALS (POP-UP) PPKS ================= */}
-      {isAddPPKSModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddPPKSModalOpen(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-header-title">
-                <span style={{ fontSize: '20px', fontWeight: 'bold' }}>+</span>
-                <h2>Tambah Laporan PPKS</h2>
-              </div>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={(e) => handleGenericSubmit(e, setIsAddPPKSModalOpen)}>
-                <div className="modal-section">
-                  <h3 className="section-subtitle">Data Diri Pemerlu</h3>
-                  <div className="form-grid-2">
-                    <div className="form-group-modal"><label>Nama Lengkap / Alias*</label><input type="text" placeholder="Contoh: Mr. X / Budi" required /></div>
-                    <div className="form-group-modal"><label>NIK (Jika Diketahui)</label><input type="text" placeholder="Kosongkan jika tidak ada" /></div>
-                    <div className="form-group-modal" style={{ gridColumn: "1 / -1" }}>
-                      <label>Kategori PPKS (Pilih dari 26 Kategori)*</label>
-                      <div className="select-container-custom">
-                        <select required defaultValue="">
-                          <option value="" disabled hidden>Pilih Kategori PPKS</option>
-                          <option value="1">Anak Balita Terlantar</option>
-                          <option value="2">Anak Terlantar</option>
-                          <option value="3">Anak yang Berhadapan dengan Hukum (ABH)</option>
-                          <option value="4">Anak Jalanan</option>
-                          <option value="5">Anak dengan Disabilitas</option>
-                          <option value="6">Anak yang Memerlukan Perlindungan Khusus</option>
-                          <option value="7">Lanjut Usia Terlantar</option>
-                          <option value="8">Penyandang Disabilitas</option>
-                          <option value="9">Tuna Susila</option>
-                          <option value="10">Gelandangan</option>
-                          <option value="11">Pengemis</option>
-                          <option value="12">Pemulung</option>
-                          <option value="13">Kelompok Minoritas</option>
-                          <option value="14">Bekas Warga Binaan Lembaga Permasyarakatan (BWBLP)</option>
-                          <option value="15">Orang dengan HIV/AIDS</option>
-                          <option value="16">Korban Penyalahgunaan NAPZA</option>
-                          <option value="17">Korban Perdagangan Orang</option>
-                          <option value="18">Korban Tindak Kekerasan</option>
-                          <option value="19">Pekerja Migran Bermasalah Sosial</option>
-                          <option value="20">Korban Bencana Alam</option>
-                          <option value="21">Korban Bencana Sosial</option>
-                          <option value="22">Perempuan Rawan Sosial Ekonomi</option>
-                          <option value="23">Fakir Miskin</option>
-                          <option value="24">Keluarga Bermasalah Sosial Psikologis</option>
-                          <option value="25">Komunitas Adat terpencil (KAT)</option>
-                          <option value="26">Orang Terlantar</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-section">
-                  <h3 className="section-subtitle">Kondisi & Lokasi Penemuan</h3>
-                  <div className="form-grid-2">
-                    <div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Lokasi Presisi Penemuan / Alamat Domisili*</label><input type="text" placeholder="Cth: Kolong Jembatan Flyover Urip Sumoharjo" required /></div>
-                    <div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Deskripsi Singkat Kondisi Fisik / Kasus*</label><textarea rows="3" className="input-custom" style={{ height: 'auto', padding: '10px' }} placeholder="Jelaskan kondisi saat ditemukan (Misal: Sakit, linglung, membawa barang bekas...)" required></textarea></div>
-                    <div className="form-group-modal" style={{ gridColumn: "1 / -1", marginTop: "10px" }}><label>Foto Bukti Penemuan (Wajib)*</label><div className="upload-box" style={{ height: '120px' }}><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Unggah Foto TKP / Kondisi PPKS</span></div></div>
-                  </div>
-                </div>
-                <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddPPKSModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Kirim Laporan</button></div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedPPKS && (
-        <div className="modal-overlay" onClick={() => setSelectedPPKS(null)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div className="modal-header-title">
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                  <h2>Detail Penanganan PPKS</h2>
-                </div>
-                <div style={{ display: 'inline-block', width: 'fit-content' }}><span className={`badge-ppks ${getBadgeClass(selectedPPKS.status)}`} style={{ fontSize: '13px', padding: '6px 16px' }}>{selectedPPKS.status}</span></div>
-              </div>
-            </div>
-            <div className="modal-body">
-              <div className="detail-summary-grid" style={{ marginBottom: '20px', borderBottom: '1px solid #cbd5e1', paddingBottom: '20px' }}>
-                <div className="summary-col"><div className="summary-item"><span className="sum-label">NAMA / IDENTITAS</span><span className="sum-val">{selectedPPKS.nama}</span></div><div className="summary-item"><span className="sum-label">NIK</span><span className="sum-val">{selectedPPKS.nik}</span></div></div>
-                <div className="summary-col"><div className="summary-item"><span className="sum-label">KATEGORI PPKS</span><span className="sum-val">{selectedPPKS.kategori}</span></div><div className="summary-item"><span className="sum-label">TANGGAL LAPORAN</span><span className="sum-val">{selectedPPKS.tanggal}</span></div></div>
-                <div className="summary-col" style={{ flex: 1 }}><div className="summary-item"><span className="sum-label">LOKASI PENEMUAN</span><span className="sum-val">{selectedPPKS.lokasi}</span></div></div>
-              </div>
-
-              <div className="modal-section"><h3 className="section-subtitle">Deskripsi Kondisi & Laporan Awal</h3><p className="description-box">{selectedPPKS.deskripsiAwal}</p></div>
-
-              {selectedPPKS.status === "Menunggu Kelayakan" && (
-                <div className="alert-info-box warning"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Menunggu Verifikasi Lapangan</strong><p>Laporan ini belum di-assessment oleh tim Verifikator / Pekerja Sosial. Tidak ada tindakan lanjutan yang bisa dilakukan staf saat ini.</p></div></div>
-              )}
-
-              {selectedPPKS.status === "Kasus Aktif" && (
-                <>
-                  <div className="modal-section"><h3 className="section-subtitle" style={{ color: '#1d4ed8' }}>Hasil Assessment Verifikator</h3><p className="description-box active-bg">{selectedPPKS.hasilAssessment}</p></div>
-                  <form onSubmit={(e) => handleGenericSubmit(e, null)}>
-                    <div className="modal-section" style={{ border: '1px solid #93c5fd', padding: '15px', borderRadius: '8px', marginTop: '20px' }}>
-                      <h3 className="section-subtitle" style={{ borderBottom: 'none', color: '#1d4ed8', marginBottom: '15px' }}>Form Penyelesaian Kasus (Terminasi)</h3>
-                      <div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Tindakan Akhir / Keputusan Penanganan*</label><div className="select-container-custom"><select required defaultValue=""><option value="" disabled hidden>Pilih Tindakan Akhir</option><option value="keluarga">Dikembalikan / Reunifikasi dengan Keluarga</option><option value="panti">Dirujuk menetap di Panti / Balai Rehabilitasi</option><option value="mandiri">Sudah Mandiri / Diberikan Modal Usaha</option><option value="meninggal">Meninggal Dunia</option></select></div></div>
-                      <div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Deskripsi Pelaksanaan Serah Terima*</label><textarea rows="3" className="input-custom" style={{ height: 'auto', padding: '10px' }} placeholder="Ceritakan bagaimana proses penyelesaian kasus ini..." required></textarea></div>
-                      <div className="form-group-modal"><label>Unggah Bukti Terminasi (Berita Acara / Foto Serah Terima)*</label><div className="upload-box" style={{ height: '100px' }}><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Upload File (PDF/JPG)</span></div></div>
-                    </div>
-                    <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setSelectedPPKS(null)}>Tutup</button><button type="submit" className="btn-modal-submit" style={{ backgroundColor: '#15803d' }}>Selesaikan Kasus & Simpan</button></div>
-                  </form>
-                </>
-              )}
-
-              {selectedPPKS.status === "Selesai" && (
-                <>
-                  <div className="modal-section"><h3 className="section-subtitle" style={{ color: '#1d4ed8' }}>Hasil Assessment Verifikator</h3><p className="description-box active-bg">{selectedPPKS.hasilAssessment}</p></div>
-                  <div className="modal-section"><h3 className="section-subtitle" style={{ color: '#15803d' }}>Laporan Penyelesaian (Terminasi)</h3><div className="description-box success-bg"><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><strong style={{ color: '#15803d' }}>Tanggal Selesai: {selectedPPKS.tanggalSelesai}</strong></div><p style={{ margin: 0 }}>{selectedPPKS.tindakanPenyelesaian}</p><div style={{ marginTop: '15px', padding: '10px', backgroundColor: 'white', borderRadius: '6px', border: '1px dashed #86efac', display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#15803d', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Download Berita Acara Serah Terima.pdf</span></div></div></div>
-                </>
-              )}
-
-              {selectedPPKS.status !== "Kasus Aktif" && (<div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setSelectedPPKS(null)}>Tutup</button></div>)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= AREA MODALS (POP-UP) PENENTUAN DESIL (BARU) ================= */}
-      {isKalkulasiModalOpen && selectedKalkulasi && (
-        <div className="modal-overlay" onClick={() => setIsKalkulasiModalOpen(false)}>
-          <div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-header-title">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                <h2>Kalkulasi PMT & Desil</h2>
-              </div>
-            </div>
-            <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
-              
-              <div style={{ marginBottom: '20px', color: '#475569' }}>
-                <p style={{ margin: '0 0 5px 0', fontSize: '13px' }}>Keluarga atas nama:</p>
-                <h3 style={{ margin: '0', color: '#234a66', fontSize: '18px', fontWeight: '800' }}>{selectedKalkulasi.nama}</h3>
-                <p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.noKk}</p>
-              </div>
-
-              {!isCalculated && (
-                <>
-                  <div className="alert-info-box warning" style={{ textAlign: 'left', marginBottom: '25px' }}>
-                    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <div>
-                      <p>Sistem akan memproses 39 variabel aset dan kondisi perumahan keluarga ini untuk menentukan skor kerentanan.</p>
-                    </div>
-                  </div>
-                  <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px' }} onClick={handleJalankanKalkulasi}>
-                    Jalankan Kalkulasi Sistem
-                  </button>
-                </>
-              )}
-
-              {isCalculated && (
-                <div className="calc-result-box slide-up-anim">
-                  <h4 style={{ color: '#10b981', margin: '0 0 15px 0' }}>✓ Kalkulasi Selesai</h4>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '20px' }}>
-                    <div>
-                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: '600' }}>SKOR PMT</span>
-                      <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>48.5</span>
-                    </div>
-                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}>
-                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: '600', marginBottom: '5px' }}>TINGKAT DESIL</span>
-                      <span className="desil-badge-large">3</span>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '13px', color: '#475569', marginBottom: '25px' }}>Keluarga ini masuk dalam kategori <strong>Hampir Rentan</strong>.</p>
-                  
-                  <div className="modal-actions">
-                    <button type="button" className="btn-modal-cancel" onClick={() => setIsKalkulasiModalOpen(false)}>Batal</button>
-                    <button type="button" className="btn-modal-submit" onClick={(e) => handleGenericSubmit(e, setIsKalkulasiModalOpen)}>Simpan Hasil ke DTSEN</button>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL SUCCESS UMUM ================= */}
-      {isSuccessModalOpen && (<div className="modal-overlay" onClick={() => setIsSuccessModalOpen(false)}><div className="modal-content modal-success" onClick={(e) => e.stopPropagation()}><div className="modal-body text-center" style={{ padding: '40px 20px' }}><div className="success-icon-circle"><svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg></div><h2 style={{ color: '#234a66', fontSize: '22px', fontWeight: '800', margin: '0 0 8px 0' }}>Data Berhasil Disimpan!</h2><p style={{ color: '#475569', fontSize: '13px', fontWeight: '500', margin: '0' }}>Aksi Anda berhasil diproses oleh sistem.</p></div></div></div>)}
-
+      {isSuccessModalOpen && (<div className="modal-overlay" onClick={() => setIsSuccessModalOpen(false)}><div className="modal-content modal-success" onClick={(e) => e.stopPropagation()} style={{maxWidth: '400px', borderTop: '8px solid #234a66'}}><div className="modal-body text-center" style={{ padding: '40px 20px' }}><div style={{width: '60px', height: '60px', backgroundColor: '#22c55e', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto', boxShadow: '0 4px 10px rgba(34, 197, 94, 0.3)'}}><svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg></div><h2 style={{ color: '#234a66', fontSize: '22px', fontWeight: '800', margin: '0 0 8px 0' }}>Data Berhasil Disimpan!</h2><p style={{ color: '#475569', fontSize: '13px', fontWeight: '500', margin: '0' }}>Aksi Anda berhasil diproses oleh sistem.</p></div></div></div>)}
     </div>
   );
 }

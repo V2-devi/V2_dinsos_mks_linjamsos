@@ -1,0 +1,245 @@
+/* ================= LAYOUT UTAMA (KONSISTEN DENGAN STAFF) ================= */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+
+.verifikator-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: #ffffff;
+  overflow: hidden; 
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar { width: 260px; flex-shrink: 0; background-color: #ffffff; border-right: 1px solid #cbd5e1; display: flex; flex-direction: column; overflow-y: auto; }
+.sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; }
+.sidebar-logo { width: 40px; height: auto; }
+.sidebar-brand-text { display: flex; flex-direction: column; line-height: 1.1; color: #234a66; font-weight: 800; font-size: 12px; }
+
+.sidebar-profile { display: flex; align-items: center; gap: 12px; background-color: #f1f5f9; margin: 20px; padding: 12px; border-radius: 8px; }
+.profile-avatar-small { width: 40px; height: 40px; background-color: #f59e0b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.profile-avatar-small svg { width: 24px; height: 24px; }
+.profile-info { display: flex; flex-direction: column; }
+.profile-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+.profile-nik { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+.sidebar-menu { display: flex; flex-direction: column; padding: 0 10px; gap: 5px; }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: none; background: transparent; color: #334155; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; width: 100%; }
+.menu-item:hover { background-color: #f8fafc; color: #234a66; }
+.menu-item.active, .menu-item.active-group { background-color: #eef2f6; color: #234a66; border-left: 4px solid #234a66; }
+.menu-icon { color: #234a66; }
+.menu-group { margin-bottom: 5px; }
+
+/* ================= KONTEN UTAMA ================= */
+.main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: #f8fafc; }
+.main-header { height: 70px; background-color: #234a66; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; flex-shrink: 0; position: sticky; top: 0; z-index: 40; }
+.header-title { color: white; font-size: 18px; font-weight: 700; margin: 0; }
+.content-body { padding: 30px 40px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+/* ================= NOTIFIKASI DROPDOWN (RAPI) ================= */
+.notif-wrapper { position: relative; display: flex; align-items: center; }
+.nav-bell-btn { background: none; border: none; color: white; cursor: pointer; transition: transform 0.2s; padding: 5px; position: relative; }
+.nav-bell-btn:hover { transform: scale(1.1); }
+.notif-badge-red { position: absolute; top: 0; right: 0; background-color: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+.notif-dropdown { position: absolute; top: 40px; right: 0; width: 350px; background-color: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid #e2e8f0; z-index: 10000; display: flex; flex-direction: column; overflow: hidden; animation: scaleUp 0.2s ease-out; transform-origin: top right; }
+.notif-dropdown::before { content: ""; position: absolute; top: -6px; right: 10px; width: 12px; height: 12px; background-color: #234a66; transform: rotate(45deg); }
+@keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.notif-header { padding: 15px 20px; background-color: #234a66; color: white; }
+.notif-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
+.notif-body { max-height: 300px; overflow-y: auto; background-color: white; }
+.notif-item { padding: 15px 20px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background-color 0.2s;}
+.notif-item:hover { background-color: #f8fafc; }
+.notif-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.notif-title-row h4 { font-size: 13px; font-weight: 700; color: #1e293b; margin: 0; }
+.notif-title-row span { font-size: 11px; font-weight: 600; color: #94a3b8; }
+.notif-item p { font-size: 12px; color: #475569; line-height: 1.5; margin: 0; }
+.notif-backdrop { position: fixed; inset: 0; z-index: 9999; }
+
+/* ================= TABS & KOTAK PUTIH ================= */
+.tabs-container { display: flex; gap: 30px; border-bottom: 1px solid #cbd5e1; margin-bottom: 30px; }
+.tab-btn { background: none; border: none; padding: 10px 0 15px 0; font-size: 15px; font-weight: 600; color: #64748b; cursor: pointer; position: relative; transition: color 0.2s; }
+.tab-btn:hover { color: #1e293b; }
+.tab-btn.active { color: #234a66; }
+.tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background-color: #234a66; }
+
+.outline-box { background-color: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+
+/* ================= FILTER PENCARIAN (GRID) ================= */
+.verifikator-filter-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 30px; align-items: flex-end; }
+.filter-group-top { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
+.filter-group-top label { font-size: 13px; font-weight: 700; color: #234a66; }
+.align-bottom { justify-content: flex-end; flex: 0 0 auto;}
+
+.filter-group-top input, .filter-group-top select { height: 40px; padding: 0 16px; border: 1px solid #94a3b8; border-radius: 8px; outline: none; font-size: 13px; color: #334155; background-color: transparent; width: 100%; transition: border-color 0.2s; }
+.filter-group-top input:focus, .filter-group-top select:focus { border-color: #234a66; }
+.filter-group-top select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 40px; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='8 15 12 19 16 15'%3E%3C/polyline%3E%3Cpolyline points='16 9 12 5 8 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
+
+.btn-search-outline { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 20px; background-color: #eef2f6; border: 1px solid #94a3b8; color: #475569; font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.btn-search-outline:hover { background-color: #e2e8f0; color: #234a66; }
+
+/* ================= TABEL VERIFIKATOR ================= */
+.table-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
+.table-responsive { overflow-x: auto; }
+.verifikator-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+.verifikator-table th { background-color: #234a66; color: white; font-weight: 600; padding: 14px 16px; white-space: nowrap; }
+.verifikator-table td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; color: #334155; background-color: white; }
+.verifikator-table tr:hover td { background-color: #f8fafc; }
+
+/* Badge Status Validasi */
+.badge-status-v { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.badge-status-v.waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde047; }
+.badge-status-v.approved { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.badge-status-v.rejected { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+/* Tombol Review Tabel */
+.btn-review-action { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease; margin: 0 auto; }
+.btn-review-action:hover { background-color: #2563eb; color: white; border-color: #2563eb; }
+
+/* ================= MODAL POP-UP (REVIEW & VALIDASI) ================= */
+.modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background-color: rgba(0, 0, 0, 0.6); display: flex !important; align-items: center !important; justify-content: center !important; z-index: 9999 !important; padding: 20px; animation: fadeInModal 0.2s ease-out; }
+@keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-content { background-color: #ffffff; width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; margin: 0 auto; animation: slideUpModal 0.3s ease-out; }
+@keyframes slideUpModal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.modal-large { max-width: 750px; } 
+
+.modal-header { background-color: #234a66; color: white; padding: 18px 24px; }
+.modal-header-title { display: flex; align-items: center; gap: 12px; }
+.modal-header-title h2 { font-size: 18px; font-weight: 700; margin: 0; }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+
+.section-subtitle { font-size: 14px; color: #3b82f6; font-weight: 600; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #cbd5e1; }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 16px; margin-bottom: 20px; }
+.form-group-modal { display: flex; flex-direction: column; gap: 6px; }
+.form-group-modal label { font-size: 13px; font-weight: 600; color: #234a66; }
+
+/* Readonly Styling untuk Verifikator (Tidak bisa diedit) */
+.input-readonly { padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1 !important; font-size: 13px; outline: none; background-color: #f1f5f9 !important; color: #475569 !important; cursor: not-allowed; font-weight: 500; }
+
+.modal-actions { display: flex; justify-content: center; gap: 16px; margin-top: 10px; }
+.btn-modal-submit, .btn-modal-danger { padding: 12px 30px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; color: white;}
+.btn-modal-submit { background-color: #22c55e; }
+.btn-modal-submit:hover { background-color: #16a34a; }
+.btn-modal-danger { background-color: #ef4444; }
+.btn-modal-danger:hover { background-color: #dc2626; }
+
+@media (max-width: 900px) { .verifikator-filter-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; gap: 12px; } }
+
+/* =======================================================
+   DASHBOARD UTAMA VERIFIKATOR (TO-DO & OVERVIEW)
+   ======================================================= */
+.dashboard-verifikator-wrapper {
+  animation: fadeInModal 0.3s ease-out;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #234a66;
+  margin-bottom: 20px;
+}
+
+/* 1. KARTU TUGAS (PENDING VALIDATION) */
+.task-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.task-card {
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.task-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.task-card-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.bansos-task .task-card-icon { background-color: #fef3c7; color: #d97706; }
+.ppks-task .task-card-icon { background-color: #e0e7ff; color: #4338ca; }
+
+.task-card-info { flex: 1; }
+.task-card-info h4 { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 5px 0; }
+.task-card-info p { font-size: 13px; color: #64748b; margin: 0; }
+
+.task-card-count {
+  padding-right: 20px;
+}
+.task-card-count span {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ef4444; /* Warna merah agar menarik perhatian */
+}
+
+.task-card-btn {
+  position: absolute;
+  bottom: 0; right: 0;
+  background-color: #f8fafc;
+  color: #234a66;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  border-radius: 12px 0 12px 0;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.task-card-btn:hover { background-color: #234a66; color: white; }
+
+
+/* 2. RINGKASAN DTSEN (SAMA SEPERTI DI STAFF) */
+.dtsen-summary-top {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  border-radius: 12px; padding: 30px; margin-bottom: 30px; color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+.dtsen-top-content { display: flex; justify-content: space-between; align-items: center; }
+.dtsen-top-title { font-size: 22px; font-weight: 800; margin: 0 0 5px 0; }
+.dtsen-top-subtitle { font-size: 14px; font-weight: 500; opacity: 0.8; margin: 0; }
+.dtsen-top-number { font-size: 40px; font-weight: 900; }
+.dtsen-top-number span { font-size: 16px; font-weight: 600; opacity: 0.8; }
+
+.decile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.decile-card { background-color: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; transition: transform 0.2s; }
+.decile-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+.dec-head { margin-bottom: 15px; }
+.dec-badge { padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 800; color: white; }
+.dec-title { font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 5px; }
+.dec-val { font-size: 28px; font-weight: 900; color: #1e293b; }
+.dec-val span { font-size: 12px; font-weight: 600; color: #94a3b8; }
+
+.decile-card.d1 { border-top: 5px solid #ef4444; } .d1-bg { background-color: #ef4444; }
+.decile-card.d2 { border-top: 5px solid #f97316; } .d2-bg { background-color: #f97316; }
+.decile-card.d3 { border-top: 5px solid #f59e0b; } .d3-bg { background-color: #f59e0b; }
+.decile-card.d4 { border-top: 5px solid #84cc16; } .d4-bg { background-color: #84cc16; }
+.decile-card.d5 { border-top: 5px solid #22c55e; } .d5-bg { background-color: #22c55e; }
+.decile-card.d6 { border-top: 5px solid #3b82f6; } .d6-bg { background-color: #3b82f6; }
+
+@media (max-width: 900px) { 
+  .task-summary-grid { grid-template-columns: 1fr; }
+  .decile-grid { grid-template-columns: 1fr 1fr; }
+  .dtsen-top-content { flex-direction: column; text-align: center; gap: 15px; }
+}

@@ -13,6 +13,8 @@ import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
 import StaffDashboard from "./pages/staff/staffdashboard.jsx"; 
 
+import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx";
+
 function AppRoutes() {
   const navigate = useNavigate();
 
@@ -42,6 +44,9 @@ function AppRoutes() {
 
       {/* RUTE STAFF / PENGISI DATA */}
       <Route path="/staff" element={<StaffDashboard />} />
+
+      <Route path="/verifikator" element={<VerifikatorDashboard />} />
+
     </Routes>
   );
 }
