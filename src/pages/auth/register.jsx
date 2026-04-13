@@ -1,6 +1,14 @@
 import { useState } from "react";
 import "./register.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
+import API from "./api";
+
+// 
+const handleRegister = async () => {
+  await register(formData);
+  alert("Silakan cek email untuk verifikasi akun");
+};
+//
 
 function Register({ goToLogin }) {
   const [step, setStep] = useState(1);

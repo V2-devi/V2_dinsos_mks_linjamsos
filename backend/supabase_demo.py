@@ -1,13 +1,14 @@
-from supabase import create_client, Client
-from dotenv import load_dotenv
-import os
+# from supabase import create_client, Client
+# from dotenv import load_dotenv
+# import os
 
-load_dotenv()
+# load_dotenv()
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE.KEY")
+# SUPABASE_URL = os.getenv("SUPABASE_URL")
+# SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Insert a new row table row into table
 # new_row = {'nama': 'John Doe'}

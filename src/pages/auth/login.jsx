@@ -5,6 +5,16 @@ import "./auth.css";
 import bgImage from "../../assets/image.png"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
+import { login } from "../services/authService";
+
+const handleLogin = async () => {
+  await login({
+    email,
+    password,
+  });
+};
+
+
 function Login() {
   const navigate = useNavigate(); // Aktifkan fungsi navigasi
 
