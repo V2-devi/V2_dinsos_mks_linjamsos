@@ -1,42 +1,114 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./register.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
-import API from "./api";
+import { register } from "../../services/AuthService";
 
-// 
-const handleRegister = async () => {
-  await register(formData);
-  alert("Silakan cek email untuk verifikasi akun");
-};
-//
-
-function Register({ goToLogin }) {
+function Register() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    nama_lengkap: "",
+    nik: "",
+    nip: "",
+    role: "",
+    no_hp: "",
+    alamat: "",
+    agreed: false,
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!formData.email || !formData.password || !formData.konfirmasi_password) {
+      alert("Mohon lengkapi informasi akun terlebih dahulu.");
+      setStep(1);
+      return;
+    }
+
+    if (formData.password !== formData.konfirmasi_password) {
+      alert("Kata sandi dan konfirmasi kata sandi tidak cocok.");
+      setStep(1);
+      return;
+    }
+
+    if (!formData.nama_lengkap || !formData.nik || !formData.role || !formData.alamat) {
+      alert("Mohon lengkapi data identitas terlebih dahulu.");
+      setStep(2);
+      return;
+    }
+
+    if (!formData.agreed) {
+      alert("Silakan setujui pernyataan untuk melanjutkan.");
+      return;
+    }
+
+    if (loading) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        // konfirmasi_password: formData.konfirmasi_password,
+        nama_lengkap: formData.nama_lengkap,
+        nik: formData.nik,
+        nip: formData.nip,
+        role: formData.role,
+        no_hp: formData.no_hp,
+        alamat: formData.alamat,
+      });
+
+      alert("Silakan cek email untuk verifikasi akun.");
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      const responseData = error?.response?.data;
+      const message =
+        responseData?.details || responseData?.error || error?.message ||
+        "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="register-container">
-      {/* LEFT SIDE */}
       <div className="register-left">
         <div className="register-left-content">
-
           <div className="branding-container">
-            <img src={logoLinjamsos} alt="Logo Linjamsos" className="branding-logo"/>
+            <img src={logoLinjamsos} alt="Logo Linjamsos" className="branding-logo" />
             <div className="branding-text-logo">
               <b>PERLINDUNGAN DAN </b>
               <b>JAMINAN SOSIAL</b>
             </div>
           </div>
 
-          <h1>Satu Data Untuk<br />Perlindungan dan Jaminan Sosial</h1>
+          <h1>
+            Satu Data Untuk
+            <br />Perlindungan dan Jaminan Sosial
+          </h1>
           <p>
-            Pastikan data yang Anda masukkan sesuai dengan Kartu Tanda
-            Penduduk (KTP) dan Kartu Keluarga (KK) terbaru agar verifikasi
-            bantuan berjalan lancar.
+            Pastikan data yang Anda masukkan sesuai dengan Kartu Tanda Penduduk (KTP) dan Kartu Keluarga (KK)
+            terbaru agar verifikasi bantuan berjalan lancar.
           </p>
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
       <div className="register-right">
         <div className="register-box">
           <div className="register-header">
@@ -44,138 +116,202 @@ function Register({ goToLogin }) {
             <p>Lengkapi data di bawah ini untuk memulai.</p>
           </div>
 
-          {/* STEP INDICATOR */}
-          <div className="stepper">
-            <div className={`step ${step >= 1 ? "active" : ""}`}>
-              <div className="step-circle">1</div>
-              <span>Akun</span>
-            </div>
-            <div className="step-line"></div>
-            <div className={`step ${step >= 2 ? "active" : ""}`}>
-              <div className="step-circle">2</div>
-              <span>Identitas</span>
-            </div>
-            <div className="step-line"></div>
-            <div className={`step ${step >= 3 ? "active" : ""}`}>
-              <div className="step-circle">3</div>
-              <span>Verifikasi</span>
-            </div>
-          </div>
-
-          {/* ================= STEP 1: AKUN ================= */}
-          {step === 1 && (
-            <div className="form-content">
-              <div className="form-group">
-                <label>Alamat Email*</label>
-                <input type="email" placeholder="contoh@gmail.com" />
-                <span className="helper-text">*verifikasi masuk ke email Anda</span>
+          <form onSubmit={handleSubmit}>
+            <div className="stepper">
+              <div className={`step ${step >= 1 ? "active" : ""}`}>
+                <div className="step-circle">1</div>
+                <span>Akun</span>
               </div>
+              <div className="step-line"></div>
+              <div className={`step ${step >= 2 ? "active" : ""}`}>
+                <div className="step-circle">2</div>
+                <span>Identitas</span>
+              </div>
+              <div className="step-line"></div>
+              <div className={`step ${step >= 3 ? "active" : ""}`}>
+                <div className="step-circle">3</div>
+                <span>Verifikasi</span>
+              </div>
+            </div>
 
-              <div className="form-row">
+            {step === 1 && (
+              <div className="form-content">
                 <div className="form-group">
-                  <label>Kata Sandi*</label>
-                  <input type="password" placeholder="Minimal 8 karakter" />
+                  <label>Alamat Email*</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="contoh@gmail.com"
+                    required
+                  />
+                  <span className="helper-text">*verifikasi masuk ke email Anda</span>
                 </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Kata Sandi*</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Minimal 8 karakter"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Ulangi Kata Sandi*</label>
+                    <input
+                      type="password"
+                      name="konfirmasi_password"
+                      value={formData.konfirmasi_password}
+                      onChange={handleChange}
+                      placeholder="Ketik ulang sandi"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button type="button" className="btn-primary btn-block" onClick={() => setStep(2)}>
+                  Lanjutkan ke Data diri →
+                </button>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="form-content">
                 <div className="form-group">
-                  <label>Ulangi Kata Sandi*</label>
-                  <input type="password" placeholder="Ketik ulang sandi" />
+                  <label>Nama Lengkap (Sesuai KTP)*</label>
+                  <input
+                    type="text"
+                    name="nama_lengkap"
+                    value={formData.nama_lengkap}
+                    onChange={handleChange}
+                    placeholder="Contoh: FIRLIANY FIRDAUS"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>NIK (Nomor Induk Kependudukan)*</label>
+                  <input
+                    type="int"
+                    name="nik"
+                    value={formData.nik}
+                    onChange={handleChange}
+                    placeholder="16 digit angka"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>NIP (Nomor Induk Pegawai)</label>
+                  <input
+                    type="int"
+                    name="nip"
+                    value={formData.nip}
+                    onChange={handleChange}
+                    placeholder="18 digit angka"
+                  />
+                </div>
+
+                <div className="form-group-modal">
+                  <label
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: "#234a66",
+                      marginBottom: "6px",
+                      display: "block",
+                    }}
+                  >
+                    Role*
+                  </label>
+                  <div className="select-container-custom">
+                    <select name="role" value={formData.role} onChange={handleChange} required>
+                      <option value="" disabled hidden>
+                        Pilih salah satu role
+                      </option>
+                      <option value="pengisi_data">Staff / Pengisi Data</option>
+                      <option value="verifikator">Verifikator</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>No.Hp</label>
+                  <input
+                    type="text"
+                    name="no_hp"
+                    value={formData.no_hp}
+                    onChange={handleChange}
+                    placeholder="+62xxxxxxxxxxxx"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Alamat*</label>
+                  <input
+                    type="text"
+                    name="alamat"
+                    value={formData.alamat}
+                    onChange={handleChange}
+                    placeholder="Jln. xxx"
+                    required
+                  />
+                </div>
+
+                <div className="button-row">
+                  <button type="button" className="btn-secondary" onClick={() => setStep(1)}>
+                    Kembali
+                  </button>
+                  <button type="button" className="btn-primary" onClick={() => setStep(3)}>
+                    Tinjau Data
+                  </button>
                 </div>
               </div>
+            )}
 
-              <button className="btn-primary btn-block" onClick={() => setStep(2)}>
-                Lanjutkan ke Data diri →
-              </button>
-            </div>
-          )}
+            {step === 3 && (
+              <div className="form-content">
+                <div className="confirmation-card">
+                  <div className="icon-wrapper">
+                    <span>📋</span>
+                  </div>
+                  <h3>Konfirmasi Pendaftaran</h3>
+                  <p>Pastikan data Anda benar. Data palsu dapat menyebabkan sanksi hukum.</p>
 
-          {/* ================= STEP 2: IDENTITAS ================= */}
-          {step === 2 && (
-            <div className="form-content">
-              <div className="form-group">
-                <label>Nama Lengkap (Sesuai KTP)*</label>
-                <input type="text" placeholder="Contoh: FIRLIANY FIRDAUS" />
-              </div>
-
-              <div className="form-group">
-                <label>NIK (Nomor Induk Kependudukan)*</label>
-                <input type="text" placeholder="16 digit angka" />
-              </div>
-
-              <div className="form-group">
-                <label>NIP (Nomor Induk Pegawai)</label>
-                <input type="text" placeholder="18 digit angka" />
-              </div>
-
-              <div className="form-group-modal">
-              <label style={{ fontSize: '13px', fontWeight: '600', color: '#234a66', marginBottom: '6px', display: 'block' }}>
-                Role*
-              </label>
-              <div className="select-container-custom">
-                <select required defaultValue="">
-                  <option value="" disabled hidden>Pilih salah satu role</option>
-                  <option value="pengisi_data">Staff / Pengisi Data</option>
-                  <option value="verifikator">Verifikator</option>
-                </select>
-              </div>
-            </div>
-
-              <div className="form-group">
-                <label>No.Hp</label>
-                <input type="text" placeholder="+62xxxxxxxxxxxx" />
-              </div>
-
-              <div className="form-group">
-                <label>Alamat*</label>
-                <input type="text" placeholder="Jln. xxx" />
-              </div>
-
-              <div className="button-row">
-                <button className="btn-secondary" onClick={() => setStep(1)}>
-                  Kembali
-                </button>
-                <button className="btn-primary" onClick={() => setStep(3)}>
-                  Tinjau Data
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ================= STEP 3: VERIFIKASI ================= */}
-          {step === 3 && (
-            <div className="form-content">
-              <div className="confirmation-card">
-                <div className="icon-wrapper">
-                  <span>📋</span> {/* Bisa diganti icon clipboard centang biru */}
+                  <label className="checkbox-box">
+                    <input
+                      type="checkbox"
+                      name="agreed"
+                      checked={formData.agreed}
+                      onChange={handleChange}
+                    />
+                    <span>
+                      Saya menyatakan bahwa data yang saya masukkan adalah benar, valid,
+                      dan dapat dipertanggungjawabkan sesuai hukum yang berlaku.
+                    </span>
+                  </label>
                 </div>
-                <h3>Konfirmasi Pendaftaran</h3>
-                <p>Pastikan data Anda benar. Data palsu dapat menyebabkan sanksi hukum.</p>
-                
-                <label className="checkbox-box">
-                  <input type="checkbox" />
-                  <span>
-                    Saya menyatakan bahwa data yang saya masukkan adalah benar, valid,
-                    dan dapat dipertanggungjawabkan sesuai hukum yang berlaku.
-                  </span>
-                </label>
-              </div>
 
-              <div className="button-row">
-                <button className="btn-light" onClick={() => setStep(2)}>
-                  Ubah Data
-                </button>
-                <button className="btn-success">
-                  DAFTAR SEKARANG
-                </button>
+                <div className="button-row">
+                  <button type="button" className="btn-light" onClick={() => setStep(2)}>
+                    Ubah Data
+                  </button>
+                  <button type="submit" className="btn-success" disabled={loading}>
+                    {loading ? "Memproses..." : "DAFTAR SEKARANG"}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </form>
 
-          {/* FOOTER LINK */}
           <div className="register-footer">
             <p>Sudah punya akun?</p>
-            <button className="link-btn" onClick={goToLogin}>
-              Masuk di sini
-            </button>
+            <button className="link-btn" onClick={() => navigate("/login")}>Masuk di sini</button>
           </div>
         </div>
       </div>

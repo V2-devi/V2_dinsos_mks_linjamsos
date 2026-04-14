@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+# from fastapi import APIRouter
 
-router = APIRouter()
+# router = APIRouter()
 
-@router.get("/")
-def example():
-    return {"message": "template route"}
+# @router.get("/")
+# def example():
+#     return {"message": "template route"}

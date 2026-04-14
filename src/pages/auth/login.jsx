@@ -5,7 +5,7 @@ import "./auth.css";
 import bgImage from "../../assets/image.png"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
-import { login } from "../services/authService";
+import { login } from "../../services/AuthService";
 
 const handleLogin = async () => {
   await login({
