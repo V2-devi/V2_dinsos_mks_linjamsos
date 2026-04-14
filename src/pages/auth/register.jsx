@@ -11,6 +11,7 @@ function Register() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    konfirmasi_password: "",
     nama_lengkap: "",
     nik: "",
     nip: "",
@@ -59,11 +60,13 @@ function Register() {
     }
 
     setLoading(true);
+    
     try {
+      // PANGGILAN API ASLI (Tinggal buka komentar jika API sudah siap)
+      /*
       await register({
         email: formData.email,
         password: formData.password,
-        // konfirmasi_password: formData.konfirmasi_password,
         nama_lengkap: formData.nama_lengkap,
         nik: formData.nik,
         nip: formData.nip,
@@ -71,9 +74,14 @@ function Register() {
         no_hp: formData.no_hp,
         alamat: formData.alamat,
       });
+      */
 
-      alert("Silakan cek email untuk verifikasi akun.");
-      navigate("/login");
+      // Simulasi loading selama 1.5 detik agar terlihat prosesnya
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Pindahkan ke step 4 (Layar Sukses Daftar)
+      setStep(4); 
+
     } catch (error) {
       console.error(error);
       const responseData = error?.response?.data;
@@ -111,28 +119,36 @@ function Register() {
 
       <div className="register-right">
         <div className="register-box">
-          <div className="register-header">
-            <h2>Pendaftaran Akun Baru</h2>
-            <p>Lengkapi data di bawah ini untuk memulai.</p>
-          </div>
+          
+          {/* HEADER FORM HILANG JIKA SUDAH SUKSES (STEP 4) */}
+          {step < 4 && (
+            <div className="register-header">
+              <h2>Pendaftaran Akun Baru</h2>
+              <p>Lengkapi data di bawah ini untuk memulai.</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
-            <div className="stepper">
-              <div className={`step ${step >= 1 ? "active" : ""}`}>
-                <div className="step-circle">1</div>
-                <span>Akun</span>
+            
+            {/* STEPPER HILANG JIKA SUDAH SUKSES (STEP 4) */}
+            {step < 4 && (
+              <div className="stepper">
+                <div className={`step ${step >= 1 ? "active" : ""}`}>
+                  <div className="step-circle">1</div>
+                  <span>Akun</span>
+                </div>
+                <div className="step-line"></div>
+                <div className={`step ${step >= 2 ? "active" : ""}`}>
+                  <div className="step-circle">2</div>
+                  <span>Identitas</span>
+                </div>
+                <div className="step-line"></div>
+                <div className={`step ${step >= 3 ? "active" : ""}`}>
+                  <div className="step-circle">3</div>
+                  <span>Verifikasi</span>
+                </div>
               </div>
-              <div className="step-line"></div>
-              <div className={`step ${step >= 2 ? "active" : ""}`}>
-                <div className="step-circle">2</div>
-                <span>Identitas</span>
-              </div>
-              <div className="step-line"></div>
-              <div className={`step ${step >= 3 ? "active" : ""}`}>
-                <div className="step-circle">3</div>
-                <span>Verifikasi</span>
-              </div>
-            </div>
+            )}
 
             {step === 1 && (
               <div className="form-content">
@@ -175,7 +191,7 @@ function Register() {
                 </div>
 
                 <button type="button" className="btn-primary btn-block" onClick={() => setStep(2)}>
-                  Lanjutkan ke Data diri →
+                  Lanjutkan ke Data diri &rarr;
                 </button>
               </div>
             )}
@@ -197,11 +213,12 @@ function Register() {
                 <div className="form-group">
                   <label>NIK (Nomor Induk Kependudukan)*</label>
                   <input
-                    type="int"
+                    type="text" // Diubah dari 'int' ke 'text' agar tidak ada error di browser
                     name="nik"
                     value={formData.nik}
                     onChange={handleChange}
                     placeholder="16 digit angka"
+                    maxLength="16"
                     required
                   />
                 </div>
@@ -209,11 +226,12 @@ function Register() {
                 <div className="form-group">
                   <label>NIP (Nomor Induk Pegawai)</label>
                   <input
-                    type="int"
+                    type="text" // Diubah dari 'int' ke 'text'
                     name="nip"
                     value={formData.nip}
                     onChange={handleChange}
-                    placeholder="18 digit angka"
+                    placeholder="18 digit angka (Kosongkan jika bukan PNS)"
+                    maxLength="18"
                   />
                 </div>
 
@@ -230,17 +248,17 @@ function Register() {
                     Role*
                   </label>
                   <div className="select-container-custom">
-                    <select name="role" value={formData.role} onChange={handleChange} required>
+                    <select name="role" value={formData.role} onChange={handleChange} required style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none'}}>
                       <option value="" disabled hidden>
                         Pilih salah satu role
                       </option>
-                      <option value="pengisi_data">Staff / Pengisi Data</option>
-                      <option value="verifikator">Verifikator</option>
+                      <option value="Pengisi Data">Staff / Pengisi Data</option>
+                      <option value="Verifikator">Verifikator</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{marginTop: '15px'}}>
                   <label>No.Hp</label>
                   <input
                     type="text"
@@ -302,17 +320,49 @@ function Register() {
                     Ubah Data
                   </button>
                   <button type="submit" className="btn-success" disabled={loading}>
-                    {loading ? "Memproses..." : "DAFTAR SEKARANG"}
+                    {loading ? "Memproses Pendaftaran..." : "DAFTAR SEKARANG"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ================= 🌟 STEP 4: LAYAR KEBERHASILAN 🌟 ================= */}
+            {step === 4 && (
+              <div className="form-content" style={{ animation: 'fadeInModal 0.4s ease-out' }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  
+                  {/* Ikon Sukses */}
+                  <div style={{ width: '80px', height: '80px', backgroundColor: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px auto' }}>
+                    <svg width="40" height="40" fill="none" stroke="#22c55e" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                  
+                  <h2 style={{ color: '#234a66', fontSize: '24px', fontWeight: '800', marginBottom: '15px' }}>Pendaftaran Berhasil!</h2>
+                  
+                  <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '20px', color: '#1e3a8a', fontSize: '14px', lineHeight: '1.6', marginBottom: '30px', textAlign: 'left' }}>
+                    <p style={{ marginTop: 0 }}><strong>Langkah Selanjutnya:</strong></p>
+                    <ol style={{ paddingLeft: '20px', margin: 0 }}>
+                      <li style={{ marginBottom: '8px' }}>Silakan <strong>cek kotak masuk (inbox) atau spam di email Anda</strong> untuk melakukan verifikasi alamat email.</li>
+                      <li>Setelah email diverifikasi, <strong>Admin Pusat akan meninjau</strong> permohonan akses Anda sebagai {formData.role}.</li>
+                      <li>Anda akan menerima email pemberitahuan apabila akun Anda telah aktif dan dapat digunakan.</li>
+                    </ol>
+                  </div>
+
+                  <button type="button" className="btn-primary btn-block" onClick={() => navigate("/login")}>
+                    Kembali ke Halaman Masuk
                   </button>
                 </div>
               </div>
             )}
           </form>
 
-          <div className="register-footer">
-            <p>Sudah punya akun?</p>
-            <button className="link-btn" onClick={() => navigate("/login")}>Masuk di sini</button>
-          </div>
+          {/* FOOTER DIHILANGKAN JIKA SUDAH SUKSES DI STEP 4 */}
+          {step < 4 && (
+            <div className="register-footer">
+              <p>Sudah punya akun?</p>
+              <button className="link-btn" onClick={() => navigate("/login")}>Masuk di sini</button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

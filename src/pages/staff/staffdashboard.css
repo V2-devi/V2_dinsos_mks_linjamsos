@@ -35,7 +35,7 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .sidebar-menu { display: flex; flex-direction: column; padding: 0 10px; gap: 5px; }
 .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: none; background: transparent; color: #334155; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; width: 100%; }
 .menu-item:hover { background-color: #f8fafc; color: #234a66; }
-.menu-item.active { background-color: #eef2f6; color: #234a66; }
+.menu-item.active { background-color: #eef2f6; color: #234a66; border-left: 4px solid #234a66;}
 .menu-icon { color: #234a66; }
 
 .menu-group { margin-bottom: 5px; }
@@ -43,7 +43,7 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .submenu-item { background: none; border: none; text-align: left; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; padding: 4px 0; }
 .submenu-item:hover { color: #234a66; font-weight: 600; }
 .submenu-item.active-submenu { color: #234a66; font-weight: 700; }
-.menu-item.active-group { background-color: #eef2f6; color: #234a66; }
+.menu-item.active-group { background-color: #eef2f6; color: #234a66; border-left: 4px solid #234a66;}
 
 /* ================= KONTEN UTAMA ================= */
 .main-content {
@@ -84,7 +84,8 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 
 /* ================= TABS ================= */
 .tabs-container { display: flex; gap: 30px; border-bottom: 1px solid #cbd5e1; margin-bottom: 30px; }
-.tab-btn { background: none; border: none; padding: 10px 0 15px 0; font-size: 15px; font-weight: 600; color: #64748b; cursor: pointer; position: relative; }
+.tab-btn { background: none; border: none; padding: 10px 0 15px 0; font-size: 15px; font-weight: 600; color: #64748b; cursor: pointer; position: relative; transition: color 0.2s;}
+.tab-btn:hover { color: #1e293b; }
 .tab-btn.active { color: #234a66; }
 .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background-color: #234a66; }
 
@@ -117,7 +118,7 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .text-blue { color: #3b82f6; }
 .text-dark { color: #0f172a; }
 
-/* ================= DASHBOARD USULAN BARU: GRAFIK DONUT ================= */
+/* ================= DASHBOARD USULAN BARU: GRAFIK DONUT (INTERAKTIF) ================= */
 .chart-section-wrapper { background-color: transparent; }
 .chart-section-title { font-size: 16px; font-weight: 700; color: #234a66; margin-bottom: 25px; }
 .chart-flex-container { display: flex; align-items: center; gap: 50px; background-color: #f8fafc; padding: 30px; border-radius: 10px; border: 1px solid #e2e8f0; }
@@ -125,12 +126,16 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .chart-visual-area { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .chart-number-top { font-size: 15px; font-weight: 700; color: #22c55e; }
 .chart-number-bottom { font-size: 15px; font-weight: 700; color: #ef4444; }
+
+/* Modifikasi Pie Chart untuk Style Dinamis dari JSX */
 .css-donut-chart {
   width: 160px; height: 160px; border-radius: 50%;
-  background: conic-gradient(#22c55e 0% 55%, #ef4444 55% 100%);
   position: relative; display: flex; align-items: center; justify-content: center;
+  transition: background 0.5s ease-in-out;
 }
-.css-donut-chart::before { content: ""; position: absolute; width: 90px; height: 90px; background-color: #f8fafc; border-radius: 50%; }
+.css-donut-chart::before { 
+  content: ""; position: absolute; width: 90px; height: 90px; background-color: #f8fafc; border-radius: 50%; 
+}
 
 .chart-legend-area { flex: 1; display: flex; flex-direction: column; gap: 15px; }
 .legend-box-green { background-color: #dcfce7; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -177,8 +182,18 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .filter-group-top label { font-size: 13px; font-weight: 700; color: #234a66; }
 .align-bottom { justify-content: flex-end; }
 
+/* FIX: Input & Select diselaraskan tingginya */
 .input-custom, .filter-group-top select, .select-container-custom select {
-  height: 40px; padding: 0 16px; border: 1px solid #94a3b8; border-radius: 8px; outline: none; font-size: 13px; color: #334155; background-color: transparent; width: 100%; transition: border-color 0.2s;
+  height: 42px; 
+  padding: 0 16px; 
+  border: 1px solid #cbd5e1; 
+  border-radius: 8px; 
+  outline: none; 
+  font-size: 13px; 
+  color: #334155; 
+  background-color: white; 
+  width: 100%; 
+  transition: border-color 0.2s;
 }
 .input-custom:focus, .filter-group-top select:focus, .select-container-custom select:focus { border-color: #234a66; }
 
@@ -189,7 +204,7 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 }
 
 .btn-search-outline {
-  height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 20px; background-color: #eef2f6; border: 1px solid #94a3b8; color: #475569; font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 20px; background-color: #eef2f6; border: 1px solid #94a3b8; color: #475569; font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
 }
 .btn-search-outline:hover { background-color: #e2e8f0; color: #234a66; }
 
@@ -207,7 +222,7 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .staff-table tr:hover td { background-color: #f1f5f9; }
 
 .status-badges-group { display: flex; justify-content: center; gap: 10px; }
-.badge-status { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; color: white; }
+.badge-status { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; color: white; display: inline-block; white-space: nowrap;}
 .badge-status.dark-gray { background-color: #22c55e; }
 .badge-status.light-gray { background-color: #ef4444; }
 
@@ -266,7 +281,8 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .detail-keluarga-box { padding: 30px 40px; }
 .detail-page-title { color: #234a66; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 20px; }
 .detail-inner-tabs { display: flex; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px; }
-.inner-tab-btn { background: none; border: none; padding: 12px 30px; font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer; position: relative; }
+.inner-tab-btn { background: none; border: none; padding: 12px 30px; font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer; position: relative; transition: color 0.2s;}
+.inner-tab-btn:hover { color: #1e293b; }
 .inner-tab-btn.active { color: #234a66; }
 .inner-tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: #234a66; }
 
@@ -324,8 +340,8 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 16px; margin-bottom: 20px; }
 .form-group-modal { display: flex; flex-direction: column; gap: 6px; }
 .form-group-modal label { font-size: 13px; font-weight: 600; color: #234a66; }
-.form-group-modal input { padding: 10px 12px; border-radius: 6px; border: 1px solid #94a3b8; font-size: 13px; outline: none; background-color: #f8fafc; }
-.form-group-modal input:focus { border-color: #234a66; }
+.form-group-modal input, .form-group-modal select, .form-group-modal textarea { padding: 10px 12px; border-radius: 6px; border: 1px solid #94a3b8; font-size: 13px; outline: none; background-color: #f8fafc; font-family: inherit;}
+.form-group-modal input:focus, .form-group-modal select:focus, .form-group-modal textarea:focus { border-color: #234a66; }
 .modal-actions { display: flex; justify-content: center; gap: 16px; margin-top: 10px; }
 .btn-modal-cancel, .btn-modal-submit { padding: 12px 30px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; width: 150px; transition: all 0.2s; }
 .btn-modal-cancel { background-color: #eef2f6; color: #234a66; border: 1px solid #234a66; }
@@ -348,9 +364,12 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
   .aset-grid-3 { grid-template-columns: 1fr 1fr; }
   .decile-grid { grid-template-columns: 1fr 1fr; }
   .dtsen-top-content { flex-direction: column; text-align: center; gap: 15px; }
+  .stats-grid-3 { grid-template-columns: 1fr; }
+  .chart-flex-container { flex-direction: column; }
 }
 @media (max-width: 600px) { 
   .form-grid-2 { grid-template-columns: 1fr; gap: 12px; } 
   .aset-grid-3 { grid-template-columns: 1fr; }
   .decile-grid { grid-template-columns: 1fr; }
+  .pengusulan-filter-grid { grid-template-columns: 1fr; } 
 }
