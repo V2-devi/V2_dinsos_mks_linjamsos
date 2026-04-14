@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
@@ -20,6 +20,19 @@ function Register() {
     alamat: "",
     agreed: false,
   });
+
+  useEffect(() => {
+    const hash = window.location.hash;
+
+    // Deteksi klik dari email Supabase
+    if (hash && hash.includes("access_token")) {
+      setStep(5);
+
+      // bersihkan URL
+      window.history.replaceState({}, document.title, "/register");
+    }
+  }, []);
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -63,7 +76,7 @@ function Register() {
     
     try {
       // PANGGILAN API ASLI (Tinggal buka komentar jika API sudah siap)
-      /*
+      
       await register({
         email: formData.email,
         password: formData.password,
@@ -74,10 +87,10 @@ function Register() {
         no_hp: formData.no_hp,
         alamat: formData.alamat,
       });
-      */
+      
 
       // Simulasi loading selama 1.5 detik agar terlihat prosesnya
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Pindahkan ke step 4 (Layar Sukses Daftar)
       setStep(4); 
@@ -353,6 +366,62 @@ function Register() {
                 </div>
               </div>
             )}
+
+            {/* STEP 5 (DEVI YANG TAMBAH) */}
+            {step === 5 && (
+            <div className="form-content" style={{ animation: 'fadeInModal 0.4s ease-out' }}>
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  backgroundColor: '#dcfce7',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 25px auto'
+                }}>
+                  <svg width="40" height="40" fill="none" stroke="#22c55e" strokeWidth="3" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+
+                <h2 style={{ color: '#234a66', fontSize: '24px', fontWeight: '800', marginBottom: '15px' }}>
+                  Email Berhasil Diverifikasi!
+                </h2>
+
+                <div style={{
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '8px',
+                  padding: '20px',
+                  color: '#1e3a8a',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  marginBottom: '30px',
+                  textAlign: 'left'
+                }}>
+                  <p><strong>Langkah Selanjutnya:</strong></p>
+                  <ul style={{ paddingLeft: '20px' }}>
+                    <li>Akun Anda telah berhasil diverifikasi.</li>
+                    <li>Permintaan akun Anda sedang dalam proses <strong>peninjauan oleh Admin Pusat</strong>.</li>
+                    <li>Anda akan menerima notifikasi setelah akun diaktifkan.</li>
+                  </ul>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-primary btn-block"
+                  onClick={() => navigate("/login")}
+                >
+                  Ke Halaman Login
+                </button>
+              </div>
+            </div>
+          )}
+          
+
           </form>
 
           {/* FOOTER DIHILANGKAN JIKA SUDAH SUKSES DI STEP 4 */}

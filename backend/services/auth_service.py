@@ -1,10 +1,17 @@
 ﻿from config.auth import sign_up, sign_in
 from models.pengguna_model import insert_user_profile
+from config.database import supabase
 
 def register_user(data):
     try:
         # 1. register ke auth
-        auth = sign_up(data["email"], data["password"])
+        auth = supabase.auth.sign_up({
+            "email": data["email"],
+            "password": data["password"],
+            "options": {
+                "email_redirect_to": "http://localhost:5173/register"
+            }
+        })
 
         user = auth.user
         if not user:
