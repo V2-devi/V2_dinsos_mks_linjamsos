@@ -22,6 +22,7 @@ def register_user(data):
         # 2. simpan profil
         insert_user_profile({
             "id": user_id,
+            "email": data["email"],
             "nama_lengkap": data["nama_lengkap"],
             "nik": data["nik"],
             "nip": data["nip"],

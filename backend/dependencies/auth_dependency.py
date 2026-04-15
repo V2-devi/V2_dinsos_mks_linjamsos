@@ -3,7 +3,10 @@ from config.auth import get_user
 
 def get_current_user(authorization: str = Header(...)):
     try:
-        token = authorization.replace("Bearer ", "")
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Invalid auth header")
+
+        token = authorization.split(" ")[1]
         user = get_user(token)
 
         if not user:
@@ -11,5 +14,5 @@ def get_current_user(authorization: str = Header(...)):
 
         return user
 
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")

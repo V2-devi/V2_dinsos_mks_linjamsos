@@ -14,3 +14,4 @@ class RegisterSchema(BaseModel):
 class LoginSchema(BaseModel):
     email: EmailStr
     password: str
+

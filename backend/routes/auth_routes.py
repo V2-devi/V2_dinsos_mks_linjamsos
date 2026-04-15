@@ -13,6 +13,6 @@ def register(user: RegisterSchema):
 def login(user: LoginSchema):
     return login_user(user.dict())
 
-# @router.get("/me")
-# def get_me(user=Depends(get_current_user)):
-#     return user
+# @router.options("/register")
+# def options_register():
+#     return {"message": "OK"}
