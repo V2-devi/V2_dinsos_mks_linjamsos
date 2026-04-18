@@ -9,12 +9,10 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
 @router.post("/")
 async def save_profile(data: ProfileSchema, user=Depends(get_current_user)):
     result = save_profile_service(user.id, data)
-
     return {
         "message": "Profile saved",
         "data": result
     }
-
 
 @router.get("/")
 async def get_profile(user=Depends(get_current_user)):

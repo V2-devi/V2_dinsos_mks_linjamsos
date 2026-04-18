@@ -4,6 +4,7 @@ def save_profile_service(user_id: str, data: dict):
     result = supabase.table("profiles").upsert({
         "id": user_id,
         "nama_lengkap": data.get("nama_lengkap"),
+        "status_pegawai": data.get("status_pegawai"),
         "nik": data.get("nik"),
         "nip": data.get("nik"),
         "email": data.get("email"),
