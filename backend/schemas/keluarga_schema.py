@@ -1,7 +1,8 @@
 from pydantic import BaseModel
+import datetime
 
 class Keluarga(BaseModel):
-  updated_at: timestamp 
+  updated_at: datetime
   skor_pmt: int
   tanggal_hitung_desil: datetime
   nama_kepala_keluarga: str
