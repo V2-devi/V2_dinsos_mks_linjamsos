@@ -1,5 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom"; // Import navigasi
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./auth.css";
 // Pastikan path image Anda benar
 import bgImage from "../../assets/image.png"; 
@@ -7,21 +7,33 @@ import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
 import { login } from "../../services/AuthService";
 
-const handleLogin = async () => {
-  await login({
-    email,
-    password,
-  });
-};
-
-
 function Login() {
-  const navigate = useNavigate(); // Aktifkan fungsi navigasi
+  const [form, setForm] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
-  // Simulasi jika tombol login ditekan (Bisa diarahkan ke /staff atau /admin)
-  const handleLogin = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate("/staff"); 
+
+    try {
+      const res = await login(form);
+      if (res.error) {
+        alert(res.error);
+        return;
+      }
+
+      localStorage.setItem("access_token", res.access_token);
+      navigate("/staff");
+    } catch (error) {
+      alert(error.message || "Login gagal. Silakan coba lagi.");
+    }
   };
 
   return (
@@ -57,8 +69,15 @@ function Login() {
 
           <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label>NIK (Nomor Induk Kependudukan)*</label>
-              <input type="text" placeholder="Contoh: 1234567890000000" maxLength="16" required />
+              <label>Alamat Email*</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="contoh@gmail.com"
+                required
+              />
             </div>
 
             <div className="form-group">
@@ -74,7 +93,14 @@ function Login() {
                   Lupa Kata Sandi?
                 </button>
               </div>
-              <input type="password" placeholder="**********" required />
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="**********"
+                required
+              />
             </div>
 
             <div className="checkbox-group">

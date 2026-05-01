@@ -1,17 +1,13 @@
 import API from "../api/api";
 
+const AUTH_URL = "/auth";
+
 export const register = async (data) => {
-  return await API.post("/auth/register", data);
+  const res = await API.post(`${AUTH_URL}/register`, data);
+  return res.data;
 };
 
 export const login = async (data) => {
-  const res = await API.post("/auth/login", data);
-
-  localStorage.setItem("token", res.data.access_token);
-
-  return res;
-};
-
-export const getProfile = async () => {
-  return await API.get("/users/me");
-};
+  const res = await API.post(`${AUTH_URL}/login`, data);
+  return res.data;
+ };

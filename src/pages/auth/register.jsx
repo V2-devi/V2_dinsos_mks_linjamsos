@@ -265,8 +265,8 @@ function Register() {
                       <option value="" disabled hidden>
                         Pilih salah satu role
                       </option>
-                      <option value="Pengisi Data">Staff / Pengisi Data</option>
-                      <option value="Verifikator">Verifikator</option>
+                      <option value="Pengisi Data">staff</option>
+                      <option value="Verifikator">verifikator</option>
                     </select>
                   </div>
                 </div>
