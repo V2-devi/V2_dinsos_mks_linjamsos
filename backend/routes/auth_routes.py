@@ -19,14 +19,28 @@ def login(data: LoginSchema):
         raise HTTPException(status_code=400, detail=result["error"])
     return result
 
+# @router.get("/verify")
+# def verify_email(email: str):
+#     user_res = get_user_by_email(email)
+#     if not user_res or not user_res.data:
+#         raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+#     user = user_res.data
+#     update_user_profile(user["id"], {"status": "email_verified"})
+#     return {"message": "Email berhasil diverifikasi"}
+
+
 @router.get("/verify")
 def verify_email(email: str):
     user_res = get_user_by_email(email)
+
     if not user_res or not user_res.data:
         raise HTTPException(status_code=404, detail="User tidak ditemukan")
 
-    user = user_res.data
-    update_user_profile(user["id"], {"status": "email_verified"})
+    user = user_res.data[0]
+
+    update_user_profile(user["id"], {"is_active": True})
+
     return {"message": "Email berhasil diverifikasi"}
 
 # @router.options("/register")

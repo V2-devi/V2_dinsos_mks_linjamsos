@@ -8,6 +8,8 @@ import Register from "./pages/auth/register.jsx";
 // PASTIKAN ANDA MENGIMPORT FILE LUPA PASSWORD DI SINI:
 import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
 
+import Verify from "./pages/auth/verify.jsx";
+
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
@@ -26,6 +28,9 @@ function AppRoutes() {
       {/* RUTE AUTH */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      <Route path="/verify" element={<Verify />} />
+
       {/* RUTE LUPA PASSWORD BARU */}
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
