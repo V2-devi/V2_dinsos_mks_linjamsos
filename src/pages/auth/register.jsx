@@ -96,12 +96,17 @@ function Register() {
       setStep(4); 
 
     } catch (error) {
-      console.error(error);
-      const responseData = error?.response?.data;
-      const message =
-        responseData?.details || responseData?.error || error?.message ||
-        "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
-      alert(message);
+        console.log("FULL ERROR:", error);
+        console.log("RESPONSE:", error.response);
+        console.log("DATA:", error.response?.data);
+
+    const message =
+        error.response?.data?.detail ||
+        error.response?.data?.error ||
+        error.message;
+
+    alert(message);
+
     } finally {
       setLoading(false);
     }
@@ -265,8 +270,8 @@ function Register() {
                       <option value="" disabled hidden>
                         Pilih salah satu role
                       </option>
-                      <option value="Pengisi Data">Staff / Pengisi Data</option>
-                      <option value="Verifikator">Verifikator</option>
+                      <option value="staff">staff</option>
+                      <option value="verifikator">verifikator</option>
                     </select>
                   </div>
                 </div>

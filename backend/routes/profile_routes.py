@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter
 from dependencies.auth_dependency import get_current_user
 from services.profile_service import save_profile_service, get_profile_service
-from schemas.auth_schema import ProfileSchema
+from schemas.profile_schema import ProfileSchema
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 

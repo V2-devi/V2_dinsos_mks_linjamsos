@@ -13,4 +13,6 @@ class ProfileSchema(BaseModel):
         alamat_instansi: str
         nama_kepala_dinas: str
         nip_kepala_dinas: str
+
+        
         
