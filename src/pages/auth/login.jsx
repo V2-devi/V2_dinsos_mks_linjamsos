@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
 // Pastikan path image Anda benar
@@ -7,30 +8,20 @@ import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
 import { login } from "../../services/AuthService";
 
-const handleLogin = async () => {
-  await login({
-    email,
-    password,
-  });
-};
-
 function Login() {
-  const navigate = useNavigate(); 
+  const [form, setForm] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-// function Login() {
-//   const [form, setForm] = useState({ email: "", password: "" });
-//   const navigate = useNavigate();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setForm((prev) => ({
-//       ...prev,
-//       [name]: value,
-//     }));
-//   };
 
-//   const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
