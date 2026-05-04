@@ -34,7 +34,7 @@
 
 /* RIGHT SIDE */
 .register-right {
-  flex: 6; /* Porsi desain sekitar 60% */
+  flex: 6; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,7 +115,7 @@
   font-weight: 700;
 }
 
-/* FORMS (mengikuti style login namun disesuaikan) */
+/* Forms  */
 .form-content {
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -141,7 +141,7 @@
   margin-top: 4px;
 }
 
-/* STEP 3 - CONFIRMATION CARD */
+/* Confirmation Card */
 .confirmation-card {
   background-color: #f0f7ff;
   border: 1px solid #bae6fd;
@@ -250,9 +250,7 @@
   .button-row { flex-direction: column; }
 }
 
-/* =======================================================
-   DROPDOWN ROLE (PENGUSULAN AKUN)
-   ======================================================= */
+/* dropdown role */
 .select-container-custom {
   position: relative;
   width: 100%;
@@ -262,23 +260,20 @@
   width: 100%;
   padding: 10px 12px;
   border-radius: 6px;
-  border: 1px solid #94a3b8; /* Warna garis abu-abu kebiruan default */
+  border: 1px solid #94a3b8; 
   font-size: 13px;
   color: #334155;
   outline: none;
   background-color: #f8fafc;
-  
-  /* Menghilangkan panah bawaan browser yang jelek */
+
   appearance: none;
   -webkit-appearance: none;
   
-  /* Menambahkan ikon panah custom yang rapi */
   background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
-  
-  /* Efek transisi halus */
+
   transition: all 0.2s ease;
   cursor: pointer;
 }

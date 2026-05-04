@@ -5,17 +5,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "r
 // Sesuaikan path import dengan struktur folder Anda
 import Login from "./pages/auth/login.jsx";
 import Register from "./pages/auth/register.jsx";
-// PASTIKAN ANDA MENGIMPORT FILE LUPA PASSWORD DI SINI:
 import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
-
-import Verify from "./pages/auth/verify.jsx";
-
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
 import StaffDashboard from "./pages/staff/staffdashboard.jsx"; 
-
+import StaffProfile from "./pages/staff/StaffProfile";
 import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx";
+
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -24,15 +21,11 @@ function AppRoutes() {
     <Routes>
       {/* Jika user membuka localhost:5173/ saja, otomatis diarahkan ke /login */}
       <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* RUTE AUTH */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      <Route path="/verify" element={<Verify />} />
-
-      {/* RUTE LUPA PASSWORD BARU */}
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      
 
       {/* RUTE ADMIN */}
       <Route 
@@ -57,6 +50,7 @@ function AppRoutes() {
       <Route path="/staff" element={<StaffDashboard />} />
 
       <Route path="/verifikator" element={<VerifikatorDashboard />} />
+      <Route path="/staffprofile" element={<StaffProfile />} />
 
     </Routes>
   );

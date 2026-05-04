@@ -1,6 +1,4 @@
-/* =======================================================
-   1. PENGATURAN UMUM CONTAINER
-   ======================================================= */
+/* Pengaturan umum kontainer */
 * {
   box-sizing: border-box;
 }
@@ -13,21 +11,17 @@
   overflow-x: hidden;
 }
 
-/* =======================================================
-   2. BAGIAN KIRI (BRANDING & GAMBAR)
-   ======================================================= */
+/* Bagian kiri (branding dan gambar) */
 .auth-left {
-  flex: 0 0 55%; /* Mengunci area kiri persis 55% dari layar */
+  flex: 0 0 55%; 
   position: relative;
-  /* Ganti URL di bawah ini jika Anda ingin menembak gambar dari CSS langsung */
-  /* background-image: url('../../assets/bg_dinsos.jpg'); */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .auth-overlay {
-  background: rgba(35, 74, 102, 0.85); /* Warna biru gelap transparan */
+  background: rgba(35, 74, 102, 0.85);
   position: absolute;
   inset: 0;
   display: flex;
@@ -47,7 +41,7 @@
 }
 
 .auth-logo {
-  width: 80px; /* Sesuaikan ukuran logo */
+  width: 80px; 
   margin-bottom: 25px;
 }
 
@@ -74,11 +68,9 @@
   color: white;
 }
 
-/* =======================================================
-   3. BAGIAN KANAN (FORM AREA)
-   ======================================================= */
+/* Bagian kanan (Form area)*/
 .auth-right {
-  flex: 1; /* Mengambil sisa layar (45%) */
+  flex: 1; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,7 +80,7 @@
 
 .auth-box {
   width: 100%;
-  max-width: 420px; /* Membatasi lebar form agar rapi di tengah */
+  max-width: 420px;
   margin: 0 auto;
 }
 
@@ -109,9 +101,7 @@
   margin: 0;
 }
 
-/* =======================================================
-   4. INPUT FORM & LABEL
-   ======================================================= */
+/* Input form dan label */
 .form-group {
   margin-bottom: 20px;
 }
@@ -147,10 +137,10 @@
 
 .form-group input:focus {
   border-color: #234a66;
-  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1); /* Efek glow biru saat aktif */
+  box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1); 
 }
 
-/* --- DROPDOWN ROLE (Pengusulan Akun) --- */
+/* Dropdown role */
 .select-container-custom {
   position: relative;
   width: 100%;
@@ -182,9 +172,7 @@
   box-shadow: 0 0 0 3px rgba(35, 74, 102, 0.1);
 }
 
-/* =======================================================
-   5. TAUTAN & CHECKBOX
-   ======================================================= */
+/* Tautan dan checkbox */
 .link-text {
   font-size: 12px;
   color: #3b82f6;
@@ -217,9 +205,7 @@
   cursor: pointer;
 }
 
-/* =======================================================
-   6. TOMBOL
-   ======================================================= */
+/* Tombol */
 .btn-primary {
   width: 100%;
   background-color: #234a66;
@@ -235,12 +221,10 @@
 }
 
 .btn-primary:hover {
-  background-color: #1a364b; /* Biru lebih gelap saat disentuh */
+  background-color: #1a364b;
 }
 
-/* =======================================================
-   7. FOOTER FORM (Belum punya akun?)
-   ======================================================= */
+/* Footer Form (belum punya akun?) */
 .auth-footer {
   text-align: center;
   margin-top: 35px;
@@ -265,15 +249,13 @@
   text-decoration: underline;
 }
 
-/* =======================================================
-   8. RESPONSIVE (Layar HP & Tablet)
-   ======================================================= */
+/* Responsive  */
 @media (max-width: 900px) {
   .auth-container {
     flex-direction: column;
   }
   .auth-left {
-    display: none; /* Menyembunyikan gambar pada layar sempit agar fokus ke login */
+    display: none;
   }
   .auth-right {
     padding: 30px 20px;

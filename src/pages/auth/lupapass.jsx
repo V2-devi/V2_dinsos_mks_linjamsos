@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./auth.css"; 
-
-// Pastikan import gambar sama seperti di login.jsx
 import bgImage from "../../assets/image.png"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png"; 
 
@@ -18,7 +16,7 @@ function ForgotPassword() {
   return (
     <div className="auth-container">
       
-      {/* ================= LEFT SIDE (BRANDING) ================= */}
+      {/* Left side (branding) */}
       {/* Ditambahkan style backgroundImage persis seperti login */}
       <div className="auth-left" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="auth-overlay">
@@ -39,7 +37,7 @@ function ForgotPassword() {
         </div>
       </div>
 
-      {/* ================= RIGHT SIDE (FORM AREA) ================= */}
+      {/* Right side (form area) */}
       <div className="auth-right">
         <div className="auth-box">
           
@@ -54,7 +52,7 @@ function ForgotPassword() {
                 </p>
               </div>
 
-              {/* INPUT FORM (Menggunakan class yang konsisten dengan auth.css) */}
+              {/* INPUT FORM */}
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Email Terdaftar*</label>
@@ -84,7 +82,7 @@ function ForgotPassword() {
             </>
           ) : (
             <>
-              {/* ================= STATE KETIKA SUKSES DIKIRIM ================= */}
+              {/* State ketika sukses dikirim */}
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ 
                   color: '#10b981', 

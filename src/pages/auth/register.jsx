@@ -344,7 +344,7 @@ function Register() {
               </div>
             )}
 
-            {/* ================= 🌟 STEP 4: LAYAR KEBERHASILAN 🌟 ================= */}
+            {/* STEP 4: LAYAR KEBERHASILAN  */}
             {step === 4 && (
               <div className="form-content" style={{ animation: 'fadeInModal 0.4s ease-out' }}>
                 <div style={{ textAlign: 'center', padding: '40px 20px' }}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
 // Pastikan path image Anda benar
@@ -7,19 +7,30 @@ import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
 import { login } from "../../services/AuthService";
 
+const handleLogin = async () => {
+  await login({
+    email,
+    password,
+  });
+};
+
 function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const handleLogin = (e) => {
+// function Login() {
+//   const [form, setForm] = useState({ email: "", password: "" });
+//   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setForm((prev) => ({
+//       ...prev,
+//       [name]: value,
+//     }));
+//   };
+
+//   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
@@ -39,7 +50,7 @@ function Login() {
   return (
     <div className="auth-container">
       
-      {/* ================= LEFT SIDE (BRANDING) ================= */}
+      {/* Left Side (Branding) */}
       <div className="auth-left" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="auth-overlay">
           <div className="auth-left-content">
@@ -59,7 +70,7 @@ function Login() {
         </div>
       </div>
 
-      {/* ================= RIGHT SIDE (FORM) ================= */}
+      {/* Right side (form)*/}
       <div className="auth-right">
         <div className="auth-box">
           <div className="auth-header">
