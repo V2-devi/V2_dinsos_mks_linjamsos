@@ -14,11 +14,9 @@ const handleLogin = async () => {
   });
 };
 
-
 function Login() {
-  const navigate = useNavigate(); // Aktifkan fungsi navigasi
+  const navigate = useNavigate(); 
 
-  // Simulasi jika tombol login ditekan (Bisa diarahkan ke /staff atau /admin)
   const handleLogin = (e) => {
     e.preventDefault();
     navigate("/staff"); 
@@ -27,7 +25,7 @@ function Login() {
   return (
     <div className="auth-container">
       
-      {/* ================= LEFT SIDE (BRANDING) ================= */}
+      {/* Left Side (Branding) */}
       <div className="auth-left" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="auth-overlay">
           <div className="auth-left-content">
@@ -47,7 +45,7 @@ function Login() {
         </div>
       </div>
 
-      {/* ================= RIGHT SIDE (FORM) ================= */}
+      {/* Right side (form)*/}
       <div className="auth-right">
         <div className="auth-box">
           <div className="auth-header">
