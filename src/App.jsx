@@ -44,7 +44,13 @@ function AppRoutes() {
           />
         } 
       />
-      <Route path="/datauser" element={<DataUser goBack={() => navigate("/admin")} />} />
+
+      <Route path="/datauser" element={<DataUser />} />
+
+      {/* <Route path="/datauser" element={<DataUser goBack={() => navigate("/admin")} />} /> */}
+      {/* <Route path="/datauser" element={<h1>TEST DATAUSER</h1>} /> */}
+
+
       <Route path="/adminprofile" element={<AdminProfile goBack={() => navigate("/admin")} />} />
 
       {/* RUTE STAFF / PENGISI DATA */}

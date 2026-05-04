@@ -22,10 +22,10 @@ def register_user(data):
         user = auth.user
         if not user:
             return {"error": "Gagal register"}
-        user_id = user.id
+        id = user.id
 
         insert_user_profile({
-            "id": user_id,
+            "id": id,
             "email": data.email,
             "nama_lengkap": data.nama_lengkap,
             "nik": data.nik,
@@ -40,8 +40,8 @@ def register_user(data):
     except Exception as e:
         return {"error": str(e)}
 
-def approve_user(user_id):
-    return update_user_profile(user_id, {
+def approve_user(id):
+    return update_user_profile(id, {
         "is_active": True,
         "status": "approved"
     })

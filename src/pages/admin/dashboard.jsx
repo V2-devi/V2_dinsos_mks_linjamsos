@@ -31,8 +31,8 @@ function AdminDashboard() {
 
   // === STATE DATA PENGGUNA (TABEL DASHBOARD) ===
   const [users, setUsers] = useState([
-    { id: 1, nik: "7370999999999999", role: "Pengisi Data", pass: "firli12", phone: "089999999999", name: "Devi Permata", email: "deviper@gmail.com", address: "Gowa", status: "Aktif" },
-    { id: 2, nik: "7270888888888888", role: "Verifikator", pass: "dev12", phone: "088888888888", name: "Firliany Firdaus", email: "firli@gmail.com", address: "Gowa", status: "Aktif" }
+    // { id: 1, nik: "7370999999999999", role: "Pengisi Data", pass: "firli12", phone: "089999999999", name: "Devi Permata", email: "deviper@gmail.com", address: "Gowa", status: "Aktif" },
+    // { id: 2, nik: "7270888888888888", role: "Verifikator", pass: "dev12", phone: "088888888888", name: "Firliany Firdaus", email: "firli@gmail.com", address: "Gowa", status: "Aktif" }
   ]);
 
   // === HANDLER FUNGSI ===

@@ -1,8 +1,9 @@
 from config.database import supabase
+from uuid import UUID
 
-def save_profile_service(user_id: str, data: dict):
+def save_profile_service(id: UUID, data: dict):
     result = supabase.table("pengguna").upsert({
-        "id": user_id,
+        "id": id,
 
         "status": "pending",
         "is_active": False,
@@ -26,10 +27,10 @@ def save_profile_service(user_id: str, data: dict):
     return result.data
 
 
-def get_profile_service(user_id: str):
+def get_profile_service(id: UUID):
     result = supabase.table("pengguna") \
         .select("id, nama_lengkap, nik, nip, email, no_hp, alamat, role, instansi, alamat_instansi, nama_kepala_dinas, nip_kepala_dinas") \
-        .eq("id", user_id) \
+        .eq("id", id) \
         .single() \
         .execute()
 
@@ -38,13 +39,24 @@ def get_profile_service(user_id: str):
 def insert_user_profile(data):
     return supabase.table("pengguna").insert(data).execute()
 
-def get_user_profile(user_id):
+# def get_all_users():
+#     return supabase.table("pengguna").select("*").execute()
+
+def get_all_users():
+    # print("AMBIL DATA USER...")
+    
+    res = supabase.table("pengguna").select("*").execute()
+    
+    # print("HASIL:", res)
+    
+    return res
+
+def get_user_profile(id):
     return supabase.table("pengguna") \
         .select("*") \
-        .eq("id", user_id) \
+        .eq("id", id) \
         .single() \
         .execute() \
-
 
 def get_user_by_email(email):
     email = email.strip()
@@ -67,8 +79,8 @@ def get_user_by_email(email):
 
        
 
-def update_user_profile(user_id, data):
+def update_user_profile(id, data):
     return supabase.table("pengguna") \
         .update(data) \
-        .eq("id", user_id) \
+        .eq("id", id) \
         .execute()
