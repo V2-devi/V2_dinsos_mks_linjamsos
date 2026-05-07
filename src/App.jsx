@@ -27,12 +27,9 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-<<<<<<< Updated upstream
-=======
       <Route path="/verify" element={<Verify />} />
 
       {/* RUTE LUPA PASSWORD BARU */}
->>>>>>> Stashed changes
       <Route path="/forgot-password" element={<ForgotPassword />} />
       
 

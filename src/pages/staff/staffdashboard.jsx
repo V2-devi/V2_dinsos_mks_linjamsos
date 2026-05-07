@@ -1136,17 +1136,14 @@ function StaffDashboard() {
                     <div className="form-group-modal"><label>V17 | Daya Listrik</label><div className="select-container-custom"><select name="v17" value={formAset.v17 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Tidak ada</option><option>450 Watt</option><option>900 Watt</option><option>1.300 Watt</option><option>2.200 Watt ke atas</option></select></div></div>
                     <div className="form-group-modal"><label>V18 | Bahan Bakar Memasak</label><div className="select-container-custom"><select name="v18" value={formAset.v18 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Kayu bakar/arang</option><option>Minyak tanah</option><option>Gas elpiji 3 Kg</option><option>Gas elpiji ≥ 5.5 Kg</option><option>Listrik</option></select></div></div>
                     <div className="form-group-modal"><label>V19 | Jumlah Tabung Gas ≥5.5 Kg</label><div className="select-container-custom"><select name="v19" value={formAset.v19 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Tidak ada</option><option>1 tabung atau lebih</option></select></div></div>
-<<<<<<< Updated upstream
                     {/* <div className="form-group-modal"><label>21. Tabung Gas 5.5kg / Kulkas</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
                     <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option><option> 1 Unit</option></select></div></div>
                     <div className="form-group-modal"><label>23. Emas / Perhiasan ( 10 Gram)</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
                     <div className="form-group-modal"><label>24. Lahan Pertanian (Ha)</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>&lt; 0.5 Ha</option><option> 0.5 Ha</option></select></div></div> */}
-=======
                     <div className="form-group-modal"><label>21. Tabung Gas 5.5kg / Kulkas</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
                     <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option><option> 1 Unit</option></select></div></div>
                     <div className="form-group-modal"><label>23. Emas / Perhiasan ( 10 Gram)</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
                     <div className="form-group-modal"><label>24. Lahan Pertanian (Ha)</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>&lt; 0.5 Ha</option><option> 0.5 Ha</option></select></div></div>
->>>>>>> Stashed changes
                   </div>
                 </div>
 
@@ -1218,18 +1215,102 @@ function StaffDashboard() {
         </div>
       )}
 
-      {/* ================= MODAL TAMBAH USULAN BANSOS ================= */}
+{/* ================= MODAL TAMBAH USULAN BANSOS ================= */}
       {isAddModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><h2>Tambah Usulan Baru</h2></div></div>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#234a66', color: 'white', padding: '15px 25px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>Tambah Usulan Baru</h2>
+              <button 
+                type="button"
+                onClick={() => setIsAddModalOpen(false)} 
+                style={{ background: 'none', border: 'none', color: 'white', fontSize: '28px', cursor: 'pointer', padding: 0, lineHeight: 1 }}
+                title="Tutup"
+              >
+                &times;
+              </button>
+            </div>
             <div className="modal-body">
               <form onSubmit={handleAddSubmit}>
+                {/* Baris 1: NIK dan Nama */}
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16"/></div>
-                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} required /></div>
+                  <div className="form-group-modal">
+                    <label>NIK*</label>
+                    <input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16" placeholder="16 digit NIK"/>
+                  </div>
+                  <div className="form-group-modal">
+                    <label>Nama Lengkap*</label>
+                    <input type="text" name="nama" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} required placeholder="Nama sesuai KTP"/>
+                  </div>
                 </div>
-                <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div>
+
+                {/* Baris 2: Kecamatan dan Kelurahan */}
+                <div className="form-grid-2">
+                  <div className="form-group-modal">
+                    <label>Kecamatan*</label>
+                    <div className="select-container-custom">
+                      <select name="kecamatan" value={formData.kecamatan} onChange={(e) => setFormData({...formData, kecamatan: e.target.value})} required>
+                        <option value="" hidden>Pilih Kecamatan</option>
+                        <option value="Biringkanaya">Biringkanaya</option>
+                        <option value="Bontoala">Bontoala</option>
+                        <option value="Makassar">Makassar</option>
+                        <option value="Mamajang">Mamajang</option>
+                        <option value="Manggala">Manggala</option>
+                        <option value="Mariso">Mariso</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group-modal">
+                    <label>Kelurahan/Desa*</label>
+                    <div className="select-container-custom">
+                      <select name="kelurahan" value={formData.kelurahan} onChange={(e) => setFormData({...formData, kelurahan: e.target.value})} required>
+                        <option value="" hidden>Pilih Kelurahan</option>
+                        <option value="Kelurahan A">Kelurahan A</option>
+                        <option value="Kelurahan B">Kelurahan B</option>
+                        {/* Tambahkan kelurahan lainnya di sini */}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Baris 3: Jenis Bansos dan Tanggal Pengusulan */}
+                <div className="form-grid-2">
+                  <div className="form-group-modal">
+                    <label>Jenis Bansos*</label>
+                    <div className="select-container-custom">
+                      <select name="jenis_bansos" value={formData.jenis_bansos} onChange={(e) => setFormData({...formData, jenis_bansos: e.target.value})} required>
+                        <option value="" hidden>Pilih Jenis</option>
+                        <option value="PKH">PKH</option>
+                        <option value="BPNT">BPNT</option>
+                        <option value="PBI-JK">PBI-JK</option>
+                        <option value="BLT">BLT</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group-modal">
+                    <label>Tanggal Pengusulan*</label>
+                    <input type="date" name="tanggal" value={formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value})} required />
+                  </div>
+                </div>
+
+                {/* Baris 4: Alamat (Full Width) */}
+                <div className="form-group-modal">
+                  <label>Alamat Lengkap*</label>
+                  <textarea 
+                    name="alamat" 
+                    value={formData.alamat} 
+                    onChange={(e) => setFormData({...formData, alamat: e.target.value})} 
+                    required 
+                    rows="2" 
+                    placeholder="Nama jalan, RT/RW, No. Rumah"
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  ></textarea>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button>
+                  <button type="submit" className="btn-modal-submit">Simpan Data</button>
+                </div>
               </form>
             </div>
           </div>
