@@ -6,6 +6,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "r
 import Login from "./pages/auth/login.jsx";
 import Register from "./pages/auth/register.jsx";
 import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
+
+import Verify from "./pages/auth/verify.jsx";
+
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
@@ -24,6 +27,12 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
+<<<<<<< Updated upstream
+=======
+      <Route path="/verify" element={<Verify />} />
+
+      {/* RUTE LUPA PASSWORD BARU */}
+>>>>>>> Stashed changes
       <Route path="/forgot-password" element={<ForgotPassword />} />
       
 
