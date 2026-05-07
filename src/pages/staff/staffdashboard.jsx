@@ -127,7 +127,14 @@ function StaffDashboard() {
   const [dtsenData, setDtsenData] = useState([
   ]);
 
-  const [formDtsen, setFormDtsen] = useState({ noKk: "", namaKepala: "", kecamatan: "", kelurahan: "", alamat: "" });
+  const [formDtsen, setFormDtsen] = useState(
+    { noKk: "", 
+      namaKepala: "", 
+      jenisKelamin:"",
+      nikKepala:"",
+      kecamatan: "", 
+      kelurahan: "", 
+      alamat: "" });
 
   const handleAddDtsen = (e) => {
     e.preventDefault();
@@ -139,7 +146,7 @@ function StaffDashboard() {
     };
     setDtsenData([newDtsen, ...dtsenData]);
     setIsAddDtsenModalOpen(false);
-    setFormDtsen({ noKk: "", namaKepala: "", kecamatan: "", kelurahan: "", alamat: "" });
+    setFormDtsen({ noKk: "", namaKepala: "", jenisKelamin:"", nikKepala:"", kecamatan: "", kelurahan: "", alamat: "" });
     showSuccess();
   };
 
@@ -627,14 +634,34 @@ function StaffDashboard() {
 
               <div className="table-wrapper">
                 <div className="table-responsive">
-                  <table className="staff-table">
-                    <thead><tr><th>No. KK</th><th>Nama Kepala Keluarga</th><th>Kelurahan</th><th>Alamat Lengkap</th><th style={{ textAlign: "center" }}>Desil</th><th style={{ textAlign: "center" }}>Detail</th></tr></thead>
+<table className="staff-table">
+                    <thead>
+                      <tr>
+                        <th>No. KK</th>
+                        <th>Nama Kepala Keluarga</th>
+                        <th>Jenis Kelamin</th>
+                        <th>Kecamatan</th>
+                        <th>Kelurahan</th>
+                        <th>Alamat Lengkap</th>
+                        <th style={{ textAlign: "center" }}>Desil</th>
+                        <th style={{ textAlign: "center" }}>Detail</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {dtsenData.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.noKk}</td><td style={{ fontWeight: '600' }}>{item.namaKepala}</td><td>{item.kelurahan}</td><td>{item.alamat}</td>
+                          <td>{item.noKk}</td>
+                          <td style={{ fontWeight: '600' }}>{item.namaKepala}</td>
+                          <td>{item.jenisKelamin || "-"}</td>
+                          <td>{item.kecamatan}</td>
+                          <td>{item.kelurahan}</td>
+                          <td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
-                            {item.desil === 'Belum Dihitung' ? <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Dihitung</span> : <span className="desil-badge-table">{item.desil}</span>}
+                            {item.desil === 'Belum Dihitung' ? (
+                              <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Dihitung</span>
+                            ) : (
+                              <span className="desil-badge-table">{item.desil}</span>
+                            )}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <button className="btn-icon-keterangan" title="Lihat Detail Keluarga" onClick={() => handleOpenDetailDtsen(item)}>
@@ -692,22 +719,81 @@ function StaffDashboard() {
               {detailDtsenInnerTab === "anggota" && (
                 <div className="table-wrapper">
                   <table className="staff-table">
-                    <thead><tr><th>NIK</th><th>Nama Anggota</th><th>Hub. Keluarga</th><th>Jenis Kelamin</th><th>Status Keadaan</th><th style={{ textAlign: "center" }}>Aksi Detail</th></tr></thead>
-                    <tbody>
-                      {selectedDtsenData.anggota.map((ang) => (
-                        <tr key={ang.id}>
-                          <td>{ang.nik}</td><td style={{ fontWeight: '600' }}>{ang.nama}</td><td>{ang.hub}</td><td>{ang.jk}</td>
-                          <td>
-                            {ang.status === "Meninggal" ? <span className="status-badge badge-inactive">Meninggal</span> : <span className="status-badge badge-active">{ang.status}</span>}
-                          </td>
-                          <td style={{ textAlign: "center" }}>
-                            {/* TOMBOL AKSI DETAIL ANGGOTA */}
-                            <button className="btn-icon-keterangan" title="Lihat/Edit Detail Anggota" onClick={() => handleOpenDetailAnggota(ang)}>
-                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                  <thead>
+                    <tr>
+                      <th>NIK</th>
+                      <th>Nama Anggota</th>
+                      <th>Hub. Keluarga</th>
+                      <th>Jenis Kelamin</th>
+                      <th>Kondisi Khusus</th>
+                      <th>Status Keadaan</th>
+                      <th style={{ textAlign: "center" }}>Aksi Detail</th>
+                    </tr>
+                  </thead>
+<tbody>
+                      {selectedDtsenData?.anggota?.map((ang, index) => {
+                        // Logika untuk menggabungkan kondisi khusus
+                        const kondisi = [];
+                        if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
+                        if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
+                        if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
+
+                        return (
+                          <tr key={ang.id || index}>
+                            {/* 1. Kolom NIK (Otomatis ambil nikKepala jika data anggota masih default) */}
+                            <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nikKepala || selectedDtsenData?.noKk) : ang.nik}</td> 
+
+                            {/* 2. Kolom Nama */}
+                            <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama}</td>
+
+                            {/* 3. Kolom Hubungan */}
+                            <td>{ang.hub}</td>
+
+                            {/* 4. Kolom Jenis Kelamin (Otomatis ambil dari form sebelumnya jika masih default) */}
+                            <td>{ang.jk === "-" && index === 0 ? (selectedDtsenData?.jenisKelamin || "-") : ang.jk}</td>
+
+                            {/* 5. Kolom Kondisi Khusus Dinamis */}
+                            <td>
+                              {kondisi.length > 0 ? (
+                                <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                  {kondisi.join(", ")}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>-</span>
+                              )}
+                            </td>
+
+                            {/* 6. Status Keadaan */}
+                            <td>
+                              <span style={{ 
+                                backgroundColor: ang.status === 'Hidup' ? '#22c55e' : '#ef4444', 
+                                color: 'white', 
+                                padding: '4px 10px', 
+                                borderRadius: '4px', 
+                                fontSize: '12px' 
+                              }}>
+                                {ang.status}
+                              </span>
+                            </td>
+
+                            {/* 7. Tombol Aksi Detail dengan ONCLICK YANG DIKEMBALIKAN */}
+                            <td style={{ textAlign: 'center' }}>
+                              <button 
+                                type="button"
+                                className="btn-icon-keterangan" 
+                                title="Lihat Detail"
+                                onClick={() => handleOpenDetailAnggota(ang)} 
+                              >
+                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                   <div style={{ padding: '15px', textAlign: 'right' }}>
@@ -1070,18 +1156,55 @@ function StaffDashboard() {
                 <div className="modal-section" style={{ marginTop: '10px' }}>
                   <h3 className="section-subtitle" style={{ color: '#ef4444', borderColor: '#fca5a5' }}>Kondisi Khusus (Penting Untuk Bansos)</h3>
                   <div className="form-grid-2">
+                    
+                    {/* INPUT STATUS KEHAMILAN */}
                     <div className="form-group-modal">
                       <label>Status Kehamilan (Bagi Perempuan)</label>
-                      <div className="select-container-custom"><select defaultValue="Tidak"><option>Tidak Sedang Hamil</option><option>Sedang Hamil</option></select></div>
+                      <div className="select-container-custom">
+                        <select 
+                          name="hamil" 
+                          value={selectedAnggotaData.hamil || "Tidak Sedang Hamil"} 
+                          onChange={handleEditAnggotaChange}
+                        >
+                          <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
+                          <option value="Sedang Hamil">Sedang Hamil</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {/* INPUT KATEGORI DISABILITAS */}
                     <div className="form-group-modal">
                       <label>Kategori Disabilitas</label>
-                      <div className="select-container-custom"><select defaultValue="Tidak Ada"><option>Tidak Ada Disabilitas</option><option>Disabilitas Fisik</option><option>Disabilitas Sensorik (Netra/Rungu)</option><option>Disabilitas Mental (ODGJ)</option></select></div>
+                      <div className="select-container-custom">
+                        <select 
+                          name="disabilitas" 
+                          value={selectedAnggotaData.disabilitas || "Tidak Ada Disabilitas"} 
+                          onChange={handleEditAnggotaChange}
+                        >
+                          <option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option>
+                          <option value="Disabilitas Fisik">Disabilitas Fisik</option>
+                          <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
+                          <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
+                          <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
+                          <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
+                          <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
+                          <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {/* INPUT PENYAKIT KRONIS */}
                     <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
                       <label>Penyakit Kronis / Menahun</label>
-                      <input type="text" placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." />
+                      <input 
+                        type="text" 
+                        name="penyakit"
+                        value={selectedAnggotaData.penyakit || ""} 
+                        onChange={handleEditAnggotaChange}
+                        placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." 
+                      />
                     </div>
+
                   </div>
                 </div>
 
@@ -1195,21 +1318,87 @@ function StaffDashboard() {
       {isAddDtsenModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddDtsenModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px', fontWeight: 'bold' }}>+</span><h2>Registrasi Keluarga Baru di DTSEN</h2></div></div>
+            
+            <div className="modal-header">
+              <div className="modal-header-title">
+                <span style={{ fontSize: '20px', fontWeight: 'bold', marginRight: '8px' }}>+</span>
+                <h2 style={{ margin: 0 }}>Registrasi Keluarga Baru di DTSEN</h2>
+              </div>
+            </div>
+            
             <div className="modal-body">
-              <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', borderColor: '#fde047', color: '#b45309', marginBottom: '20px', fontSize: '13px' }}>
+              <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', color: '#b45309', marginBottom: '20px', padding: '12px 15px', borderRadius: '8px', fontSize: '13px' }}>
                 Registrasi awal hanya memerlukan identitas dasar Kepala Keluarga. 39 Variabel Aset dapat dilengkapi setelah data ini tersimpan.
               </div>
+              
               <form onSubmit={handleAddDtsen}>
+                
+                {/* Baris 1: KK dan Nama */}
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>No. Kartu Keluarga (KK)*</label><input type="text" name="noKk" value={formDtsen.noKk} onChange={(e) => setFormDtsen({...formDtsen, noKk: e.target.value})} required maxLength="16"/></div>
-                  <div className="form-group-modal"><label>Nama Kepala Keluarga*</label><input type="text" name="namaKepala" value={formDtsen.namaKepala} onChange={(e) => setFormDtsen({...formDtsen, namaKepala: e.target.value})} required /></div>
-                  <div className="form-group-modal"><label>Kecamatan*</label><div className="select-container-custom"><select required value={formDtsen.kecamatan} onChange={(e) => setFormDtsen({...formDtsen, kecamatan: e.target.value})}><option value="" disabled hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option></select></div></div>
-                  <div className="form-group-modal"><label>Kelurahan*</label><div className="select-container-custom"><select required value={formDtsen.kelurahan} onChange={(e) => setFormDtsen({...formDtsen, kelurahan: e.target.value})}><option value="" disabled hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option></select></div></div>
-                  <div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Alamat Lengkap / RT RW*</label><input type="text" value={formDtsen.alamat} onChange={(e) => setFormDtsen({...formDtsen, alamat: e.target.value})} required /></div>
+                  <div className="form-group-modal">
+                    <label>No. Kartu Keluarga (KK)*</label>
+                    <input type="text" name="noKk" value={formDtsen.noKk} onChange={(e) => setFormDtsen({...formDtsen, noKk: e.target.value})} required maxLength="16" placeholder="16 Digit KK" />
+                  </div>
+                  <div className="form-group-modal">
+                    <label>Nama Kepala Keluarga*</label>
+                    <input type="text" name="namaKepala" value={formDtsen.namaKepala} onChange={(e) => setFormDtsen({...formDtsen, namaKepala: e.target.value})} required placeholder="Sesuai KTP" />
+                  </div>
                 </div>
-                <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddDtsenModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Registrasi Awal</button></div>
+
+                {/* Baris 2: Jenis Kelamin dan NIK Kepala Keluarga */}
+                <div className="form-grid-2">
+                  <div className="form-group-modal">
+                    <label>Jenis Kelamin*</label>
+                    <div className="select-container-custom">
+                      <select required value={formDtsen.jenisKelamin} onChange={(e) => setFormDtsen({...formDtsen, jenisKelamin: e.target.value})}>
+                        <option value="" disabled hidden>Pilih Jenis Kelamin</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group-modal">
+                    <label>No. NIK Kepala Keluarga*</label>
+                    <input type="text" name="nikKepala" value={formDtsen.nikKepala} onChange={(e) => setFormDtsen({...formDtsen, nikKepala: e.target.value})} required maxLength="16" placeholder="16 Digit NIK" />
+                  </div>
+                </div>
+
+                {/* Baris 3: Kecamatan dan Kelurahan (Tetap Bersebelahan) */}
+                <div className="form-grid-2">
+                  <div className="form-group-modal">
+                    <label>Kecamatan*</label>
+                    <div className="select-container-custom">
+                      <select required value={formDtsen.kecamatan} onChange={(e) => setFormDtsen({...formDtsen, kecamatan: e.target.value})}>
+                        <option value="" disabled hidden>Pilih Kecamatan</option>
+                        <option value="Tallo">Tallo</option>
+                        <option value="Bontoala">Bontoala</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group-modal">
+                    <label>Kelurahan*</label>
+                    <div className="select-container-custom">
+                      <select required value={formDtsen.kelurahan} onChange={(e) => setFormDtsen({...formDtsen, kelurahan: e.target.value})}>
+                        <option value="" disabled hidden>Pilih Kelurahan</option>
+                        <option value="Wala-walaya">Wala-walaya</option>
+                        <option value="Baraya">Baraya</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Baris 4: Alamat (Lebar Penuh) */}
+                <div className="form-group-modal">
+                  <label>Alamat Lengkap / RT RW*</label>
+                  <input type="text" value={formDtsen.alamat} onChange={(e) => setFormDtsen({...formDtsen, alamat: e.target.value})} required placeholder="Contoh: Jl. Sunu No.10, RT 01/RW 02" />
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: '25px' }}>
+                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddDtsenModalOpen(false)}>Batal</button>
+                  <button type="submit" className="btn-modal-submit">Simpan Registrasi Awal</button>
+                </div>
               </form>
+              
             </div>
           </div>
         </div>
@@ -1251,12 +1440,8 @@ function StaffDashboard() {
                     <div className="select-container-custom">
                       <select name="kecamatan" value={formData.kecamatan} onChange={(e) => setFormData({...formData, kecamatan: e.target.value})} required>
                         <option value="" hidden>Pilih Kecamatan</option>
-                        <option value="Biringkanaya">Biringkanaya</option>
+                        <option value="Biringkanaya">Tallo</option>
                         <option value="Bontoala">Bontoala</option>
-                        <option value="Makassar">Makassar</option>
-                        <option value="Mamajang">Mamajang</option>
-                        <option value="Manggala">Manggala</option>
-                        <option value="Mariso">Mariso</option>
                       </select>
                     </div>
                   </div>
@@ -1265,8 +1450,8 @@ function StaffDashboard() {
                     <div className="select-container-custom">
                       <select name="kelurahan" value={formData.kelurahan} onChange={(e) => setFormData({...formData, kelurahan: e.target.value})} required>
                         <option value="" hidden>Pilih Kelurahan</option>
-                        <option value="Kelurahan A">Kelurahan A</option>
-                        <option value="Kelurahan B">Kelurahan B</option>
+                        <option value="Kelurahan A">Wala-walaya</option>
+                        <option value="Kelurahan B">Baraya</option>
                         {/* Tambahkan kelurahan lainnya di sini */}
                       </select>
                     </div>
