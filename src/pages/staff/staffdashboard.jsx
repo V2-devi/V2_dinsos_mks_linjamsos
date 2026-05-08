@@ -221,12 +221,14 @@ function StaffDashboard() {
   // 🌟 FUNGSI: SIMPAN 39 VARIABEL 🌟
   const handleEditAsetSubmit = (e) => {
     e.preventDefault();
+    const today = new Date();
+    const tglSekarang = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
 
     const updatedDtsenData = dtsenData.map(family => {
       if (family.id === selectedDtsenData.id) {
-        // Simpan data aset ke keluarga ini dan tandai aset sudah lengkap
-        const updatedFamily = { ...family, aset: formAset, asetLengkap: true };
-        setSelectedDtsenData(updatedFamily); // Update tampilan detail saat ini
+        // Tandai aset sudah lengkap dan catat tanggalnya
+        const updatedFamily = { ...family, aset: formAset, asetLengkap: true, tglUpdate: tglSekarang };
+        setSelectedDtsenData(updatedFamily);
         return updatedFamily;
       }
       return family;
@@ -264,6 +266,103 @@ function StaffDashboard() {
     setFilterDesil({ ...filterDesil, [name]: value });
   };
 
+  // =========================================================================
+  // === 🌟 ALGORITMA PMT & PENENTUAN DESIL 🌟 ===
+  // =========================================================================
+  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
+
+  const jalankanAlgoritmaPMT = () => {
+    // 1. Cari data keluarga asli di dtsenData berdasarkan No KK yang diklik
+    const keluargaAsli = dtsenData.find(item => item.noKk === selectedKalkulasi.noKk);
+    const aset = keluargaAsli?.aset || {}; 
+
+    let totalSkor = 0;
+
+    // 2. Kamus Bobot Nilai PMT berdasarkan parameter Dinsos
+    const bobot = {
+      v01: { "Laki-laki": 1.0, "Perempuan": 0.0 },
+      v02: { "< 25 tahun": 0.2, "25 - 40 tahun": 1.0, "41 - 55 tahun": 0.8, "56 - 65 tahun": 0.5, "> 65 tahun": 0.1 },
+      v03: { "Tidak pernah sekolah": 0.0, "Tidak tamat SD": 0.5, "Tamat SD/sederajat": 1.0, "Tamat SMP/sederajat": 1.8, "Tamat SMA/sederajat": 2.5, "Tamat D1/D2/D3": 3.2, "Tamat S1 ke atas": 4.0 },
+      v04: { "Tidak bekerja": 0.0, "Serabutan": 0.5, "Buruh": 1.0, "Usaha sendiri": 1.5, "Karyawan tetap": 2.5 },
+      v05: { "Cerai mati": 0.0, "Cerai hidup": 0.2, "Belum kawin": 0.5, "Kawin": 1.0 },
+      v06: { "≥ 8 jiwa": -2.0, "6 - 7 jiwa": -1.2, "4 - 5 jiwa": -0.5, "3 jiwa": 0.0, "1 - 2 jiwa": 0.5 },
+      v07: { "Menumpang": 0.0, "Sewa": 0.5, "Milik sendiri": 1.5 },
+      v08: { "< 4 m²": 0.0, "4 - 7 m²": 0.5, "8 - 15 m²": 1.5, "> 15 m²": 2.5 },
+      v09: { "Tanah": 0.0, "Bambu": 0.5, "Semen": 1.5, "Keramik": 3.0 },
+      v10: { "Bambu": 0.0, "Kayu": 0.5, "Tembok tidak diplester": 1.0, "Tembok diplester": 2.0 },
+      v11: { "Rumbia": 0.0, "Seng": 0.8, "Genteng tanah liat": 1.5, "Genteng beton": 2.0 },
+      v12: { "Sungai": 0.0, "Sumur tak terlindung": 0.3, "Sumur terlindung": 1.0, "Mata air": 1.2, "Air isi ulang": 1.5, "PDAM": 2.0, "kemasan": 2.5 },
+      v13: { "Tidak ada": 0.0, "Bersama": 0.5, "Milik sendiri": 1.5 },
+      v14: { "Tidak ada": 0.0, "Plengsengan": 0.5, "Leher angsa": 1.5 },
+      v15: { "Sungai": 0.0, "Tangki septik": 1.5, "IPAL komunal": 2.0 },
+      v16: { "Bukan listrik": 0.0, "Listrik Non-PLN": 0.8, "Listrik PLN": 1.5 },
+      v17: { "Tidak ada": 0.0, "450 Watt": 0.5, "900 Watt": 1.0, "1.300 Watt": 1.8, "2.200 Watt": 3.0 },
+      v18: { "Kayu bakar": 0.0, "Minyak tanah": 0.3, "3 Kg": 1.0, "5.5 Kg": 2.0, "Listrik": 2.5 },
+      v19: { "Tidak ada": 0.0, "1 tabung": 3.0 },
+      v20: { "Tidak ada": 0.0, "< 500 m²": 1.0, "≥ 500 m²": 2.5 },
+      v21: { "Tidak ada": 0.0, "Ada": 3.0 },
+      v22: { "Tidak ada": 0.0, "Ada": 2.0 },
+      v23: { "Tidak ada": 0.0, "Ada": 0.5 },
+      v24: { "Tidak ada": 0.0, "Ada": 3.0 },
+      v25: { "Tidak ada": 0.0, "Ada": 5.0 },
+      v26: { "Tidak ada": 0.0, "Ada": 3.0 },
+      v27: { "Tidak ada": 0.0, "Ada": 1.5 },
+      v28: { "Tidak ada": 0.0, "Ada": 2.0 },
+      v29: { "Tidak ada": 0.0, "Ada": 1.2 },
+      v30: { "Tidak ada": 0.0, "Ada": 2.5 },
+      v31: { "Tidak ada": 0.0, "Ada": 4.0 },
+      v32: { "Tidak ada": 0.0, "Ada": 1.5 },
+      v33: { "Tidak ada": 0.0, "Ada": 1.0 },
+      v34: { "Tidak ada": 0.0, "Ada": 0.5 },
+      v35: { "Tidak ada": 0.0, "1 - 2 ekor": 1.5, "≥ 3 ekor": 3.0 },
+      v36: { "Tidak ada": 0.0, "1 - 5 ekor": 0.8, "≥ 6 ekor": 1.5 },
+      v37: { "Tidak ada": 0.0, "1 - 10 ekor": 0.3, "≥ 11 ekor": 0.8 },
+      v38: { "Tidak ada": 0.0, "< 10 gram": 1.0, "≥ 10 gram": 2.5 },
+      v39: { "Tidak ada": 0.0, "< Rp 500.000": 0.5, "Rp 500rb - 5jt": 1.5, "> Rp 5 juta": 3.0 },
+    };
+
+    // 3. Proses Penjumlahan Aman (Menggunakan pencocokan teks pintar / substring)
+    Object.keys(bobot).forEach(kunci => {
+      const jawabanUser = aset[kunci] || "";
+      const opsiCocok = Object.keys(bobot[kunci]).find(opsi => jawabanUser.toLowerCase().includes(opsi.toLowerCase()));
+      if (opsiCocok) {
+        totalSkor += bobot[kunci][opsiCocok];
+      }
+    });
+
+    // 4. Penentuan Kategori Desil
+    let hasilDesil = "1";
+    let hasilKat = "Sangat Rentan / Ekstrem";
+
+    if (totalSkor >= 41.26) { hasilDesil = "6-10"; hasilKat = "Aman / Mampu"; }
+    else if (totalSkor >= 33.01) { hasilDesil = "5"; hasilKat = "Menuju Aman"; }
+    else if (totalSkor >= 24.76) { hasilDesil = "4"; hasilKat = "Rentan Sedang"; }
+    else if (totalSkor >= 16.51) { hasilDesil = "3"; hasilKat = "Hampir Rentan"; }
+    else if (totalSkor >= 8.26) { hasilDesil = "2"; hasilKat = "Rentan"; }
+    else { hasilDesil = "1"; hasilKat = "Sangat Rentan / Ekstrem"; }
+
+    setHasilKalkulasi({ skor: totalSkor.toFixed(2), desil: hasilDesil, kategori: hasilKat });
+    setIsCalculated(true);
+  };
+
+  const simpanHasilDesilKeluarga = () => {
+      const today = new Date();
+      const tglHitungStr = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
+
+      const updatedDtsenData = dtsenData.map(family => {
+        if (family.noKk === selectedKalkulasi.noKk) {
+          return { ...family, desil: hasilKalkulasi.desil, skorPMT: hasilKalkulasi.skor, kategoriDesil: hasilKalkulasi.kategori, tglHitung: tglHitungStr };
+        }
+        return family;
+      });
+      setDtsenData(updatedDtsenData);
+      setIsKalkulasiModalOpen(false);
+      showSuccess();
+      
+      // (Opsional) Langsung pindahkan tab ke riwayat agar staf melihat hasilnya
+      setActiveTab("riwayat_penentuan");
+    };
+
   const handleFilterPPKSChange = (e) => {
     setFilterTabelPPKS({ ...filterTabelPPKS, [e.target.name]: e.target.value });
   };
@@ -276,16 +375,18 @@ function StaffDashboard() {
     { noKk: "3971371863193703", nama: "Kaharuddin", kelurahan: "Tallo", tglHitung: "15 Mar 2026", skor: "45.2", desil: "3" }
   ];
 
-  // LOGIKA PENCARIAN (FILTER) DATA DESIL
-  const tabelMenungguFiltered = dummyMenungguDesil.filter((item) => {
-    // Mengecek apakah inputan cocok dengan data (Kecamatan dan No KK)
-    const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan);
+// LOGIKA PENCARIAN (FILTER) DATA DESIL (OTOMATIS DARI DTSEN)
+  const dataMenungguPenentuan = dtsenData.filter(item => item.asetLengkap === true && item.desil === 'Belum Dihitung');
+  const dataRiwayatDesil = dtsenData.filter(item => item.desil !== 'Belum Dihitung');
+
+  const tabelMenungguFiltered = dataMenungguPenentuan.filter((item) => {
+    const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan) || item.kecamatan.includes(filterDesil.kecamatan);
     const matchNoKk = filterDesil.noKk === "" || item.noKk.includes(filterDesil.noKk);
     return matchKecamatan && matchNoKk;
   });
 
-  const tabelRiwayatFiltered = dummyRiwayatDesil.filter((item) => {
-    const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan);
+  const tabelRiwayatFiltered = dataRiwayatDesil.filter((item) => {
+    const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan) || item.kecamatan.includes(filterDesil.kecamatan);
     const matchNoKk = filterDesil.noKk === "" || item.noKk.includes(filterDesil.noKk);
     return matchKecamatan && matchNoKk;
   });
@@ -547,12 +648,25 @@ function StaffDashboard() {
               <div className="table-wrapper">
                 <div className="table-responsive">
                   <table className="staff-table">
-                    <thead><tr><th>Nama Lengkap</th><th>Kecamatan</th><th>Kelurahan</th><th>Tanggal Pengusulan</th><th>Alamat</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Aksi</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Nama Lengkap</th>
+                        <th>Kecamatan</th>
+                        <th>Kelurahan</th>
+                        <th>Tanggal Pengusulan</th>
+                        <th>Alamat</th>
+                        <th style={{ textAlign: "center" }}>Status</th>
+                        <th style={{ textAlign: "center" }}>Aksi</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {tableDataFiltered.map((item) => (
                         <tr key={item.id}>
                           <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
-                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal)}</td><td>{item.alamat}</td>
+                          <td>{item.kecamatan}</td>
+                          <td>{item.kelurahan}</td>
+                          <td>{formatDateIndo(item.tanggal)}</td>
+                          <td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
                             {item.status === "Layak" && <span className="status-badge badge-active">Layak</span>}
                             {item.status === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
@@ -706,7 +820,7 @@ function StaffDashboard() {
                 <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', borderColor: '#fde047', color: '#b45309', marginBottom: '30px' }}>
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                   <span>Keluarga ini merupakan data baru. Anda harus melengkapi 39 Variabel Aset terlebih dahulu untuk menghitung Tingkat Desil.</span>
-                  <button onClick={handleArahkanKeDesil} style={{ marginLeft: 'auto', backgroundColor: '#b45309', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Lengkapi Aset & Hitung Desil &rarr;</button>
+                  <button onClick={handleOpenEditAset} style={{ marginLeft: 'auto', backgroundColor: '#b45309', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Lengkapi 39 Variabel Aset &rarr;</button>
                 </div>
               )}
 
@@ -1043,8 +1157,15 @@ function StaffDashboard() {
                       {/* 👇 PENTING: Gunakan tabelMenungguFiltered, bukan dummyMenungguDesil 👇 */}
                       {tabelMenungguFiltered.length > 0 ? tabelMenungguFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.noKk}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kelurahan}</td><td>{item.tglUpdate}</td>
-                          <td style={{ textAlign: "center" }}><button className="btn-hitung-desil" onClick={() => { setSelectedKalkulasi(item); setIsKalkulasiModalOpen(true); setIsCalculated(false); }}><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Hitung Desil</button></td>
+                          <td>{item.noKk}</td>
+                          <td style={{ fontWeight: '600' }}>{item.namaKepala}</td>
+                          <td>{item.kelurahan}</td>
+                          <td>{item.tglUpdate}</td>
+                          <td style={{ textAlign: "center" }}>
+                            <button className="btn-hitung-desil" onClick={() => { setSelectedKalkulasi(item); setIsKalkulasiModalOpen(true); setIsCalculated(false); }}>
+                              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Hitung Desil
+                            </button>
+                          </td>
                         </tr>
                       )) : (
                         <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada data yang cocok dengan pencarian.</td></tr>
@@ -1204,10 +1325,8 @@ function StaffDashboard() {
                         placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." 
                       />
                     </div>
-
                   </div>
                 </div>
-
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDetailAnggotaModalOpen(false)}>Tutup</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div>
               </form>
             </div>
@@ -1577,7 +1696,7 @@ function StaffDashboard() {
           </div>
         </div>
       )}
-      {/* ================= MODAL KALKULASI DESIL ================= */}
+      {/* ================= MODAL KALKULASI DESIL (DINAMIS & AKURAT) ================= */}
       {isKalkulasiModalOpen && selectedKalkulasi && (
         <div className="modal-overlay" onClick={() => setIsKalkulasiModalOpen(false)}>
           <div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}>
@@ -1587,24 +1706,41 @@ function StaffDashboard() {
                 <h3 style={{ margin: '0', color: '#234a66', fontSize: '18px' }}>{selectedKalkulasi.nama}</h3>
                 <p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.noKk}</p>
               </div>
+              
               {!isCalculated ? (
-                <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px' }} onClick={() => setIsCalculated(true)}>Jalankan Algoritma PMT</button>
+                <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px', backgroundColor: '#3b82f6' }} onClick={jalankanAlgoritmaPMT}>
+                  Jalankan Algoritma PMT
+                </button>
               ) : (
-                <div style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px'}}>
+                <div style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px', animation: 'fadeInModal 0.4s ease-out'}}>
                   <h4 style={{ color: '#10b981', margin: '0 0 15px 0' }}>✓ Kalkulasi Selesai</h4>
+                  
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '20px' }}>
-                    <div><span style={{ display: 'block', fontSize: '12px', color: '#64748b' }}>SKOR TOTAL PMT</span><span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>65.8</span></div>
-                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}><span style={{ display: 'block', fontSize: '12px', color: '#64748b' }}>MASUK KE DESIL</span><span style={{ backgroundColor: '#f97316', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>2</span></div>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SKOR TOTAL PMT</span>
+                      <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>{hasilKalkulasi.skor}</span>
+                    </div>
+                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>MASUK KE DESIL</span>
+                      <span style={{ backgroundColor: hasilKalkulasi.desil === "1" ? '#ef4444' : hasilKalkulasi.desil === "2" ? '#f97316' : '#f59e0b', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>
+                        {hasilKalkulasi.desil}
+                      </span>
+                    </div>
                   </div>
-                  <p style={{ fontSize: '13px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong>Keluarga Rentan</strong>.</p>
-                  <div className="modal-actions"><button type="button" className="btn-modal-submit" onClick={(e) => handleGenericSubmit(e, setIsKalkulasiModalOpen)}>Simpan Hasil ke Database</button></div>
+                  
+                  <p style={{ fontSize: '14px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong style={{ color: '#1e293b' }}>{hasilKalkulasi.kategori}</strong>.</p>
+                  
+                  <div className="modal-actions" style={{ marginTop: '20px' }}>
+                    <button type="button" className="btn-modal-submit" onClick={simpanHasilDesilKeluarga} style={{ width: '100%' }}>
+                      Simpan Hasil ke Database
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-
       {/* ================= MODAL SUKSES UMUM ================= */}
       {isSuccessModalOpen && (
         <div className="modal-overlay" onClick={() => setIsSuccessModalOpen(false)}>
