@@ -271,38 +271,27 @@ const handleSubmit = async () => {
   const [dtsenData, setDtsenData] = useState([
   ]);
 
-  const [formDtsen, setFormDtsen] = useState({ no_kk: "", nama_kepala_keluarga: "", kecamatan: "", kelurahan: "", alamat: "" });
+  const [formDtsen, setFormDtsen] = useState(
+    { no_kk: "", 
+      nama_kepala_keluarga: "", 
+      jenis_kelamin:"",
+      nik_kepala:"",
+      kecamatan: "", 
+      kelurahan: "", 
+      alamat: "" });
 
   const handleAddDtsen = async (e) => {
     e.preventDefault();
-    try {
-      const { data, error } = await supabase
-        .from('keluarga')
-        .insert([
-          {
-            no_kk: formDtsen.no_kk,
-            nama_kepala_keluarga: formDtsen.nama_kepala_keluarga,
-            kecamatan: formDtsen.kecamatan,
-            kelurahan: formDtsen.kelurahan,
-            alamat: formDtsen.alamat,
-            desil: "Belum Dihitung"
-          }
-        ]);
-      if (error) throw error;
-      const newDtsen = { 
-        ...formDtsen, 
-        id: data[0].id, 
-        desil: "Belum Dihitung", 
-        anggota: [{ nik: "Belum Diinput", nama: formDtsen.nama_kepala_keluarga, hub: "Kepala Keluarga", jk: "-", tglLahir: "-", status: "Hidup" }]
-      };
-      setDtsenData([newDtsen, ...dtsenData]);
-      setIsAddDtsenModalOpen(false);
-      setFormDtsen({ no_kk: "", nama_kepala_keluarga: "", kecamatan: "", kelurahan: "", alamat: "" });
-      showSuccess();
-    } catch (error) {
-      console.error('Error adding DTSEN:', error);
-      alert('Gagal menambah data DTSEN: ' + error.message);
-    }
+    const newDtsen = { 
+      ...formDtsen, 
+      id: Date.now(), 
+      desil: "Belum Dihitung", 
+      anggota: [{ nik: "Belum Diinput", nama: formDtsen.nama_kepala_keluarga, hub: "Kepala Keluarga", jk: "-", tglLahir: "-", status: "Hidup" }]
+    };
+    setDtsenData([newDtsen, ...dtsenData]);
+    setIsAddDtsenModalOpen(false);
+    setFormDtsen({ no_kk: "", nama_kepala_keluarga: "", jenis_kelamin:"", nik_kepala:"", kecamatan: "", kelurahan: "", alamat: "" });
+    showSuccess();
   };
 
   const handleOpenDetailDtsen = (data) => {
@@ -376,12 +365,14 @@ const handleSubmit = async () => {
   // 🌟 FUNGSI: SIMPAN 39 VARIABEL 🌟
   const handleEditAsetSubmit = (e) => {
     e.preventDefault();
+    const today = new Date();
+    const tglSekarang = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
 
     const updatedDtsenData = dtsenData.map(family => {
       if (family.id === selectedDtsenData.id) {
-        // Simpan data aset ke keluarga ini dan tandai aset sudah lengkap
-        const updatedFamily = { ...family, aset: formAset, asetLengkap: true };
-        setSelectedDtsenData(updatedFamily); // Update tampilan detail saat ini
+        // Tandai aset sudah lengkap dan catat tanggalnya
+        const updatedFamily = { ...family, aset: formAset, asetLengkap: true, tglUpdate: tglSekarang };
+        setSelectedDtsenData(updatedFamily);
         return updatedFamily;
       }
       return family;
@@ -419,6 +410,103 @@ const handleSubmit = async () => {
     setFilterDesil({ ...filterDesil, [name]: value });
   };
 
+  // =========================================================================
+  // === 🌟 ALGORITMA PMT & PENENTUAN DESIL 🌟 ===
+  // =========================================================================
+  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
+
+  const jalankanAlgoritmaPMT = () => {
+    // 1. Cari data keluarga asli di dtsenData berdasarkan No KK yang diklik
+    const keluargaAsli = dtsenData.find(item => item.no_kk === selectedKalkulasi.no_kk);
+    const aset = keluargaAsli?.aset || {}; 
+
+    let totalSkor = 0;
+
+    // 2. Kamus Bobot Nilai PMT berdasarkan parameter Dinsos
+    const bobot = {
+      v01: { "Laki-laki": 1.0, "Perempuan": 0.0 },
+      v02: { "< 25 tahun": 0.2, "25 - 40 tahun": 1.0, "41 - 55 tahun": 0.8, "56 - 65 tahun": 0.5, "> 65 tahun": 0.1 },
+      v03: { "Tidak pernah sekolah": 0.0, "Tidak tamat SD": 0.5, "Tamat SD/sederajat": 1.0, "Tamat SMP/sederajat": 1.8, "Tamat SMA/sederajat": 2.5, "Tamat D1/D2/D3": 3.2, "Tamat S1 ke atas": 4.0 },
+      v04: { "Tidak bekerja": 0.0, "Serabutan": 0.5, "Buruh": 1.0, "Usaha sendiri": 1.5, "Karyawan tetap": 2.5 },
+      v05: { "Cerai mati": 0.0, "Cerai hidup": 0.2, "Belum kawin": 0.5, "Kawin": 1.0 },
+      v06: { "≥ 8 jiwa": -2.0, "6 - 7 jiwa": -1.2, "4 - 5 jiwa": -0.5, "3 jiwa": 0.0, "1 - 2 jiwa": 0.5 },
+      v07: { "Menumpang": 0.0, "Sewa": 0.5, "Milik sendiri": 1.5 },
+      v08: { "< 4 m²": 0.0, "4 - 7 m²": 0.5, "8 - 15 m²": 1.5, "> 15 m²": 2.5 },
+      v09: { "Tanah": 0.0, "Bambu": 0.5, "Semen": 1.5, "Keramik": 3.0 },
+      v10: { "Bambu": 0.0, "Kayu": 0.5, "Tembok tidak diplester": 1.0, "Tembok diplester": 2.0 },
+      v11: { "Rumbia": 0.0, "Seng": 0.8, "Genteng tanah liat": 1.5, "Genteng beton": 2.0 },
+      v12: { "Sungai": 0.0, "Sumur tak terlindung": 0.3, "Sumur terlindung": 1.0, "Mata air": 1.2, "Air isi ulang": 1.5, "PDAM": 2.0, "kemasan": 2.5 },
+      v13: { "Tidak ada": 0.0, "Bersama": 0.5, "Milik sendiri": 1.5 },
+      v14: { "Tidak ada": 0.0, "Plengsengan": 0.5, "Leher angsa": 1.5 },
+      v15: { "Sungai": 0.0, "Tangki septik": 1.5, "IPAL komunal": 2.0 },
+      v16: { "Bukan listrik": 0.0, "Listrik Non-PLN": 0.8, "Listrik PLN": 1.5 },
+      v17: { "Tidak ada": 0.0, "450 Watt": 0.5, "900 Watt": 1.0, "1.300 Watt": 1.8, "2.200 Watt": 3.0 },
+      v18: { "Kayu bakar": 0.0, "Minyak tanah": 0.3, "3 Kg": 1.0, "5.5 Kg": 2.0, "Listrik": 2.5 },
+      v19: { "Tidak ada": 0.0, "1 tabung": 3.0 },
+      v20: { "Tidak ada": 0.0, "< 500 m²": 1.0, "≥ 500 m²": 2.5 },
+      v21: { "Tidak ada": 0.0, "Ada": 3.0 },
+      v22: { "Tidak ada": 0.0, "Ada": 2.0 },
+      v23: { "Tidak ada": 0.0, "Ada": 0.5 },
+      v24: { "Tidak ada": 0.0, "Ada": 3.0 },
+      v25: { "Tidak ada": 0.0, "Ada": 5.0 },
+      v26: { "Tidak ada": 0.0, "Ada": 3.0 },
+      v27: { "Tidak ada": 0.0, "Ada": 1.5 },
+      v28: { "Tidak ada": 0.0, "Ada": 2.0 },
+      v29: { "Tidak ada": 0.0, "Ada": 1.2 },
+      v30: { "Tidak ada": 0.0, "Ada": 2.5 },
+      v31: { "Tidak ada": 0.0, "Ada": 4.0 },
+      v32: { "Tidak ada": 0.0, "Ada": 1.5 },
+      v33: { "Tidak ada": 0.0, "Ada": 1.0 },
+      v34: { "Tidak ada": 0.0, "Ada": 0.5 },
+      v35: { "Tidak ada": 0.0, "1 - 2 ekor": 1.5, "≥ 3 ekor": 3.0 },
+      v36: { "Tidak ada": 0.0, "1 - 5 ekor": 0.8, "≥ 6 ekor": 1.5 },
+      v37: { "Tidak ada": 0.0, "1 - 10 ekor": 0.3, "≥ 11 ekor": 0.8 },
+      v38: { "Tidak ada": 0.0, "< 10 gram": 1.0, "≥ 10 gram": 2.5 },
+      v39: { "Tidak ada": 0.0, "< Rp 500.000": 0.5, "Rp 500rb - 5jt": 1.5, "> Rp 5 juta": 3.0 },
+    };
+
+    // 3. Proses Penjumlahan Aman (Menggunakan pencocokan teks pintar / substring)
+    Object.keys(bobot).forEach(kunci => {
+      const jawabanUser = aset[kunci] || "";
+      const opsiCocok = Object.keys(bobot[kunci]).find(opsi => jawabanUser.toLowerCase().includes(opsi.toLowerCase()));
+      if (opsiCocok) {
+        totalSkor += bobot[kunci][opsiCocok];
+      }
+    });
+
+    // 4. Penentuan Kategori Desil
+    let hasilDesil = "1";
+    let hasilKat = "Sangat Rentan / Ekstrem";
+
+    if (totalSkor >= 41.26) { hasilDesil = "6-10"; hasilKat = "Aman / Mampu"; }
+    else if (totalSkor >= 33.01) { hasilDesil = "5"; hasilKat = "Menuju Aman"; }
+    else if (totalSkor >= 24.76) { hasilDesil = "4"; hasilKat = "Rentan Sedang"; }
+    else if (totalSkor >= 16.51) { hasilDesil = "3"; hasilKat = "Hampir Rentan"; }
+    else if (totalSkor >= 8.26) { hasilDesil = "2"; hasilKat = "Rentan"; }
+    else { hasilDesil = "1"; hasilKat = "Sangat Rentan / Ekstrem"; }
+
+    setHasilKalkulasi({ skor: totalSkor.toFixed(2), desil: hasilDesil, kategori: hasilKat });
+    setIsCalculated(true);
+  };
+
+  const simpanHasilDesilKeluarga = () => {
+      const today = new Date();
+      const tglHitungStr = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
+
+      const updatedDtsenData = dtsenData.map(family => {
+        if (family.no_kk === selectedKalkulasi.no_kk) {
+          return { ...family, desil: hasilKalkulasi.desil, skorPMT: hasilKalkulasi.skor, kategoriDesil: hasilKalkulasi.kategori, tglHitung: tglHitungStr };
+        }
+        return family;
+      });
+      setDtsenData(updatedDtsenData);
+      setIsKalkulasiModalOpen(false);
+      showSuccess();
+      
+      // (Opsional) Langsung pindahkan tab ke riwayat agar staf melihat hasilnya
+      setActiveTab("riwayat_penentuan");
+    };
+
   const handleFilterPPKSChange = (e) => {
     setFilterTabelPPKS({ ...filterTabelPPKS, [e.target.name]: e.target.value });
   };
@@ -431,18 +519,20 @@ const handleSubmit = async () => {
     // { no_kk: "3971371863193703", nama: "Kaharuddin", kelurahan: "Tallo", tglHitung: "15 Mar 2026", skor: "45.2", desil: "3" }
   ];
 
-  // LOGIKA PENCARIAN (FILTER) DATA DESIL
-  const tabelMenungguFiltered = dummyMenungguDesil.filter((item) => {
-    // Mengecek apakah inputan cocok dengan data (Kecamatan dan No KK)
-    const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan);
-    const matchno_kk = filterDesil.no_kk === "" || item.no_kk.includes(filterDesil.no_kk);
-    return matchKecamatan && matchno_kk;
-  });
+// LOGIKA PENCARIAN (FILTER) DATA DESIL (OTOMATIS DARI DTSEN)
+  // const dataMenungguPenentuan = dtsenData.filter(item => item.asetLengkap === true && item.desil === 'Belum Dihitung');
+  // const dataRiwayatDesil = dtsenData.filter(item => item.desil !== 'Belum Dihitung');
+
+  // const tabelMenungguFiltered = dataMenungguPenentuan.filter((item) => {
+  //   const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan) || item.kecamatan.includes(filterDesil.kecamatan);
+  //   const matchNoKk = filterDesil.noKk === "" || item.noKk.includes(filterDesil.noKk);
+  //   return matchKecamatan && matchNoKk;
+  // });
 
   const tabelRiwayatFiltered = dummyRiwayatDesil.filter((item) => {
     const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan);
-    const matchno_kk = filterDesil.no_kk === "" || item.no_kk.includes(filterDesil.no_kk);
-    return matchKecamatan && matchno_kk;
+    const matchNoKk = filterDesil.no_kk === "" || item.no_kk.includes(filterDesil.no_kk);
+    return matchKecamatan && matchNoKk;
   });
 
   // LOGIKA KALKULASI DASHBOARD & TABEL PPKS
@@ -702,12 +792,22 @@ const handleSubmit = async () => {
               <div className="table-wrapper">
                 <div className="table-responsive">
                   <table className="staff-table">
-                    <thead><tr><th>Nama Lengkap</th><th>Kecamatan</th><th>Kelurahan</th><th>Tanggal Pengusulan</th><th>Alamat</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Aksi</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Nama Lengkap</th>
+                        <th>Kecamatan</th>
+                        <th>Kelurahan</th>
+                        <th>Tanggal Pengusulan</th>
+                        <th>Alamat</th>
+                        <th style={{ textAlign: "center" }}>Status</th>
+                        <th style={{ textAlign: "center" }}>Aksi</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {tableDataFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
-                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan)}</td><td>{item.alamat}</td>
+                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
+                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal)}</td><td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
                             {item.status === "Layak" && <span className="status-badge badge-active">Layak</span>}
                             {item.status === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
@@ -789,14 +889,29 @@ const handleSubmit = async () => {
 
               <div className="table-wrapper">
                 <div className="table-responsive">
-                  <table className="staff-table">
-                    <thead><tr><th>No. KK</th><th>Nama Kepala Keluarga</th><th>Kelurahan</th><th>Alamat Lengkap</th><th style={{ textAlign: "center" }}>Desil</th><th style={{ textAlign: "center" }}>Detail</th></tr></thead>
+<table className="staff-table">
+                    <thead>
+                      <tr>
+                        <th>No. KK</th>
+                        <th>Nama Kepala Keluarga</th>
+                        <th>Jenis Kelamin</th>
+                        <th>Kecamatan</th>
+                        <th>Kelurahan</th>
+                        <th>Alamat Lengkap</th>
+                        <th style={{ textAlign: "center" }}>Desil</th>
+                        <th style={{ textAlign: "center" }}>Detail</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {dtsenData.map((item) => (
                         <tr key={item.id}>
                           <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kelurahan}</td><td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
-                            {item.desil === 'Belum Dihitung' ? <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Dihitung</span> : <span className="desil-badge-table">{item.desil}</span>}
+                            {item.desil === 'Belum Dihitung' ? (
+                              <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Dihitung</span>
+                            ) : (
+                              <span className="desil-badge-table">{item.desil}</span>
+                            )}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <button className="btn-icon-keterangan" title="Lihat Detail Keluarga" onClick={() => handleOpenDetailDtsen(item)}>
@@ -841,7 +956,7 @@ const handleSubmit = async () => {
                 <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', borderColor: '#fde047', color: '#b45309', marginBottom: '30px' }}>
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                   <span>Keluarga ini merupakan data baru. Anda harus melengkapi 39 Variabel Aset terlebih dahulu untuk menghitung Tingkat Desil.</span>
-                  <button onClick={handleArahkanKeDesil} style={{ marginLeft: 'auto', backgroundColor: '#b45309', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Lengkapi Aset & Hitung Desil &rarr;</button>
+                  <button onClick={handleOpenEditAset} style={{ marginLeft: 'auto', backgroundColor: '#b45309', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Lengkapi 39 Variabel Aset &rarr;</button>
                 </div>
               )}
 
@@ -854,22 +969,81 @@ const handleSubmit = async () => {
               {detailDtsenInnerTab === "anggota" && (
                 <div className="table-wrapper">
                   <table className="staff-table">
-                    <thead><tr><th>NIK</th><th>Nama Anggota</th><th>Hub. Keluarga</th><th>Jenis Kelamin</th><th>Status Keadaan</th><th style={{ textAlign: "center" }}>Aksi Detail</th></tr></thead>
-                    <tbody>
-                      {selectedDtsenData.anggota.map((ang) => (
-                        <tr key={ang.id}>
-                          <td>{ang.nik}</td><td style={{ fontWeight: '600' }}>{ang.nama}</td><td>{ang.hub}</td><td>{ang.jk}</td>
-                          <td>
-                            {ang.status === "Meninggal" ? <span className="status-badge badge-inactive">Meninggal</span> : <span className="status-badge badge-active">{ang.status}</span>}
-                          </td>
-                          <td style={{ textAlign: "center" }}>
-                            {/* TOMBOL AKSI DETAIL ANGGOTA */}
-                            <button className="btn-icon-keterangan" title="Lihat/Edit Detail Anggota" onClick={() => handleOpenDetailAnggota(ang)}>
-                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                  <thead>
+                    <tr>
+                      <th>NIK</th>
+                      <th>Nama Anggota</th>
+                      <th>Hub. Keluarga</th>
+                      <th>Jenis Kelamin</th>
+                      <th>Kondisi Khusus</th>
+                      <th>Status Keadaan</th>
+                      <th style={{ textAlign: "center" }}>Aksi Detail</th>
+                    </tr>
+                  </thead>
+<tbody>
+                      {selectedDtsenData?.anggota?.map((ang, index) => {
+                        // Logika untuk menggabungkan kondisi khusus
+                        const kondisi = [];
+                        if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
+                        if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
+                        if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
+
+                        return (
+                          <tr key={ang.id || index}>
+                            {/* 1. Kolom NIK (Otomatis ambil nikKepala jika data anggota masih default) */}
+                            <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
+
+                            {/* 2. Kolom Nama */}
+                            <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama}</td>
+
+                            {/* 3. Kolom Hubungan */}
+                            <td>{ang.hub}</td>
+
+                            {/* 4. Kolom Jenis Kelamin (Otomatis ambil dari form sebelumnya jika masih default) */}
+                            <td>{ang.jk === "-" && index === 0 ? (selectedDtsenData?.jenisKelamin || "-") : ang.jk}</td>
+
+                            {/* 5. Kolom Kondisi Khusus Dinamis */}
+                            <td>
+                              {kondisi.length > 0 ? (
+                                <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                  {kondisi.join(", ")}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>-</span>
+                              )}
+                            </td>
+
+                            {/* 6. Status Keadaan */}
+                            <td>
+                              <span style={{ 
+                                backgroundColor: ang.status === 'Hidup' ? '#22c55e' : '#ef4444', 
+                                color: 'white', 
+                                padding: '4px 10px', 
+                                borderRadius: '4px', 
+                                fontSize: '12px' 
+                              }}>
+                                {ang.status}
+                              </span>
+                            </td>
+
+                            {/* 7. Tombol Aksi Detail dengan ONCLICK YANG DIKEMBALIKAN */}
+                            <td style={{ textAlign: 'center' }}>
+                              <button 
+                                type="button"
+                                className="btn-icon-keterangan" 
+                                title="Lihat Detail"
+                                onClick={() => handleOpenDetailAnggota(ang)} 
+                              >
+                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                   <div style={{ padding: '15px', textAlign: 'right' }}>
@@ -1119,7 +1293,7 @@ const handleSubmit = async () => {
                       {/* 👇 PENTING: Gunakan tabelMenungguFiltered, bukan dummyMenungguDesil 👇 */}
                       {tabelMenungguFiltered.length > 0 ? tabelMenungguFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_lengkap}</td><td>{item.kelurahan}</td><td>{item.tglUpdate}</td>
+                          <td>{item.noKk}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kelurahan}</td><td>{item.tglUpdate}</td>
                           <td style={{ textAlign: "center" }}><button className="btn-hitung-desil" onClick={() => { setSelectedKalkulasi(item); setIsKalkulasiModalOpen(true); setIsCalculated(false); }}><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Hitung Desil</button></td>
                         </tr>
                       )) : (
@@ -1232,21 +1406,56 @@ const handleSubmit = async () => {
                 <div className="modal-section" style={{ marginTop: '10px' }}>
                   <h3 className="section-subtitle" style={{ color: '#ef4444', borderColor: '#fca5a5' }}>Kondisi Khusus (Penting Untuk Bansos)</h3>
                   <div className="form-grid-2">
+                    
+                    {/* INPUT STATUS KEHAMILAN */}
                     <div className="form-group-modal">
                       <label>Status Kehamilan (Bagi Perempuan)</label>
-                      <div className="select-container-custom"><select defaultValue="Tidak"><option>Tidak Sedang Hamil</option><option>Sedang Hamil</option></select></div>
+                      <div className="select-container-custom">
+                        <select 
+                          name="hamil" 
+                          value={selectedAnggotaData.hamil || "Tidak Sedang Hamil"} 
+                          onChange={handleEditAnggotaChange}
+                        >
+                          <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
+                          <option value="Sedang Hamil">Sedang Hamil</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {/* INPUT KATEGORI DISABILITAS */}
                     <div className="form-group-modal">
                       <label>Kategori Disabilitas</label>
-                      <div className="select-container-custom"><select defaultValue="Tidak Ada"><option>Tidak Ada Disabilitas</option><option>Disabilitas Fisik</option><option>Disabilitas Sensorik (Netra/Rungu)</option><option>Disabilitas Mental (ODGJ)</option></select></div>
+                      <div className="select-container-custom">
+                        <select 
+                          name="disabilitas" 
+                          value={selectedAnggotaData.disabilitas || "Tidak Ada Disabilitas"} 
+                          onChange={handleEditAnggotaChange}
+                        >
+                          <option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option>
+                          <option value="Disabilitas Fisik">Disabilitas Fisik</option>
+                          <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
+                          <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
+                          <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
+                          <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
+                          <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
+                          <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {/* INPUT PENYAKIT KRONIS */}
                     <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
                       <label>Penyakit Kronis / Menahun</label>
-                      <input type="text" placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." />
+                      <input 
+                        type="text" 
+                        name="penyakit"
+                        value={selectedAnggotaData.penyakit || ""} 
+                        onChange={handleEditAnggotaChange}
+                        placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." 
+                      />
                     </div>
                   </div>
                 </div>
-
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDetailAnggotaModalOpen(false)}>Tutup</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div>
               </form>
             </div>
@@ -1302,6 +1511,10 @@ const handleSubmit = async () => {
                     <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option><option> 1 Unit</option></select></div></div>
                     <div className="form-group-modal"><label>23. Emas / Perhiasan ( 10 Gram)</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
                     <div className="form-group-modal"><label>24. Lahan Pertanian (Ha)</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>&lt; 0.5 Ha</option><option> 0.5 Ha</option></select></div></div> */}
+                    <div className="form-group-modal"><label>21. Tabung Gas 5.5kg / Kulkas</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
+                    <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option><option> 1 Unit</option></select></div></div>
+                    <div className="form-group-modal"><label>23. Emas / Perhiasan ( 10 Gram)</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
+                    <div className="form-group-modal"><label>24. Lahan Pertanian (Ha)</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>&lt; 0.5 Ha</option><option> 0.5 Ha</option></select></div></div>
                   </div>
                 </div>
 
@@ -1353,12 +1566,22 @@ const handleSubmit = async () => {
       {isAddDtsenModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddDtsenModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px', fontWeight: 'bold' }}>+</span><h2>Registrasi Keluarga Baru di DTSEN</h2></div></div>
+            
+            <div className="modal-header">
+              <div className="modal-header-title">
+                <span style={{ fontSize: '20px', fontWeight: 'bold', marginRight: '8px' }}>+</span>
+                <h2 style={{ margin: 0 }}>Registrasi Keluarga Baru di DTSEN</h2>
+              </div>
+            </div>
+            
             <div className="modal-body">
-              <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', borderColor: '#fde047', color: '#b45309', marginBottom: '20px', fontSize: '13px' }}>
+              <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', color: '#b45309', marginBottom: '20px', padding: '12px 15px', borderRadius: '8px', fontSize: '13px' }}>
                 Registrasi awal hanya memerlukan identitas dasar Kepala Keluarga. 39 Variabel Aset dapat dilengkapi setelah data ini tersimpan.
               </div>
+              
               <form onSubmit={handleAddDtsen}>
+                
+                {/* Baris 1: KK dan Nama */}
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>No. Kartu Keluarga (KK)*</label><input type="text" name="no_kk" value={formDtsen.no_kk} onChange={(e) => setFormDtsen({...formDtsen, no_kk: e.target.value})} required maxLength="16"/></div>
                   <div className="form-group-modal"><label>Nama Kepala Keluarga*</label><input type="text" name="nama_kepala_keluarga" value={formDtsen.nama_kepala_keluarga} onChange={(e) => setFormDtsen({...formDtsen, nama_kepala_keluarga: e.target.value})} required /></div>
@@ -1368,21 +1591,33 @@ const handleSubmit = async () => {
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddDtsenModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Registrasi Awal</button></div>
               </form>
+              
             </div>
           </div>
         </div>
       )}
 
-      {/* ================= MODAL TAMBAH USULAN BANSOS ================= */}
+{/* ================= MODAL TAMBAH USULAN BANSOS ================= */}
       {isAddModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><h2>Tambah Usulan Baru</h2></div></div>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#234a66', color: 'white', padding: '15px 25px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>Tambah Usulan Baru</h2>
+              <button 
+                type="button"
+                onClick={() => setIsAddModalOpen(false)} 
+                style={{ background: 'none', border: 'none', color: 'white', fontSize: '28px', cursor: 'pointer', padding: 0, lineHeight: 1 }}
+                title="Tutup"
+              >
+                &times;
+              </button>
+            </div>
             <div className="modal-body">
               <form onSubmit={handleAddSubmit}>
+                {/* Baris 1: NIK dan Nama */}
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16"/></div>
-                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama: e.target.value})} required /></div>
+                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} required /></div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div>
               </form>
@@ -1466,7 +1701,7 @@ const handleSubmit = async () => {
           </div>
         </div>
       )}
-      {/* ================= MODAL KALKULASI DESIL ================= */}
+      {/* ================= MODAL KALKULASI DESIL (DINAMIS & AKURAT) ================= */}
       {isKalkulasiModalOpen && selectedKalkulasi && (
         <div className="modal-overlay" onClick={() => setIsKalkulasiModalOpen(false)}>
           <div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}>
@@ -1476,24 +1711,41 @@ const handleSubmit = async () => {
                 <h3 style={{ margin: '0', color: '#234a66', fontSize: '18px' }}>{selectedKalkulasi.nama}</h3>
                 <p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.no_kk}</p>
               </div>
+              
               {!isCalculated ? (
-                <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px' }} onClick={() => setIsCalculated(true)}>Jalankan Algoritma PMT</button>
+                <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px', backgroundColor: '#3b82f6' }} onClick={jalankanAlgoritmaPMT}>
+                  Jalankan Algoritma PMT
+                </button>
               ) : (
-                <div style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px'}}>
+                <div style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px', animation: 'fadeInModal 0.4s ease-out'}}>
                   <h4 style={{ color: '#10b981', margin: '0 0 15px 0' }}>✓ Kalkulasi Selesai</h4>
+                  
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '20px' }}>
-                    <div><span style={{ display: 'block', fontSize: '12px', color: '#64748b' }}>SKOR TOTAL PMT</span><span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>65.8</span></div>
-                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}><span style={{ display: 'block', fontSize: '12px', color: '#64748b' }}>MASUK KE DESIL</span><span style={{ backgroundColor: '#f97316', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>2</span></div>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SKOR TOTAL PMT</span>
+                      <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>{hasilKalkulasi.skor}</span>
+                    </div>
+                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}>
+                      <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>MASUK KE DESIL</span>
+                      <span style={{ backgroundColor: hasilKalkulasi.desil === "1" ? '#ef4444' : hasilKalkulasi.desil === "2" ? '#f97316' : '#f59e0b', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>
+                        {hasilKalkulasi.desil}
+                      </span>
+                    </div>
                   </div>
-                  <p style={{ fontSize: '13px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong>Keluarga Rentan</strong>.</p>
-                  <div className="modal-actions"><button type="button" className="btn-modal-submit" onClick={(e) => handleGenericSubmit(e, setIsKalkulasiModalOpen)}>Simpan Hasil ke Database</button></div>
+                  
+                  <p style={{ fontSize: '14px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong style={{ color: '#1e293b' }}>{hasilKalkulasi.kategori}</strong>.</p>
+                  
+                  <div className="modal-actions" style={{ marginTop: '20px' }}>
+                    <button type="button" className="btn-modal-submit" onClick={simpanHasilDesilKeluarga} style={{ width: '100%' }}>
+                      Simpan Hasil ke Database
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-
       {/* ================= MODAL SUKSES UMUM ================= */}
       {isSuccessModalOpen && (
         <div className="modal-overlay" onClick={() => setIsSuccessModalOpen(false)}>
