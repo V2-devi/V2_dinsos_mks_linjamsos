@@ -15,11 +15,13 @@ const reject = async (id) => {
 
 const [form, setForm] = useState({
   nama_lengkap: "",
+  nama_pengusul: "",
   nik: "",
   no_kk: "",
   kecamatan: "",
   kelurahan: "",
-  alamat: ""
+  alamat: "",
+  penginput: ""
 });
 
 
@@ -72,7 +74,9 @@ const handleSubmit = async () => {
         setUsulanData(pengusulanData.map(item => ({
           id: item.id,
           nik: item.nik,
-          nama_lengkap: item.nama_pengusul,
+          nama_lengkap: item.nama_lengkap,
+          nama_pengusul: item.nama_pengusul,
+          penginput: item.penginput,
           kecamatan: item.kecamatan,
           kelurahan: item.kelurahan,
           tanggal_usulan: item.tanggal_usulan,
@@ -238,12 +242,14 @@ const handleSubmit = async () => {
         .from('pengusulan_bansos')
         .insert([
           {
-            nama_pengusul: formData.nama_lengkap,
-            nik: formData.nik,
-            no_kk: formData.no_kk,
+            nama_lengkap: formData.nama_lengkap,
+            nama_pengusul: formData.nama_pengusul || null,
+            nik: formData.nik || null,
+            no_kk: formData.no_kk || null,
             kecamatan: formData.kecamatan,
             kelurahan: formData.kelurahan,
             alamat: formData.alamat,
+            penginput: formData.penginput || null, 
             status_pengusulan: "Belum"
           }
         ]);
@@ -1618,6 +1624,16 @@ const handleSubmit = async () => {
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16"/></div>
                   <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} required /></div>
+
+
+                  <div className="form-group-modal"><label>Nama Pengusul</label><input type="text" name="nama_pengusul" value={formData.nama_pengusul} onChange={(e) => setFormData({...formData, nama_pengusul: e.target.value})}/></div>
+                  <div className="form-group-modal"><label>Alamat</label><input type="text" name="alamat" value={formData.alamat} onChange={(e) => setFormData({...formData, alamat: e.target.value})} required /></div>
+                  
+
+                  <div className="form-group-modal"><label>Penginput</label><input type="text" name="penginput" value={formData.penginput} onChange={(e) => setFormData({...formData, penginput: e.target.value})} required /></div>
+
+
+
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div>
               </form>

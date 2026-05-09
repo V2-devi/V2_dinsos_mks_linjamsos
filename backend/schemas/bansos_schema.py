@@ -3,12 +3,18 @@ from datetime import datetime
 from typing import Optional
 
 class PengusulanCreate(BaseModel):
-    nama_lengkap: str
-    nik: str
-    no_kk: str
+    id: int
+    no_kk: int 
+    nama_pengusul: str
+    tanggal_usulan: datetime
+    penginput: str
+    catatan_verifikator: str
+    alamat: str
     kecamatan: str
     kelurahan: str
-    alamat: str
+    nik:int
+    status_pengusulan: str
+    nama_lengkap: str   
 
     # nama_penerima_bantuan: str
     # jenis_bantuan_sosial: str

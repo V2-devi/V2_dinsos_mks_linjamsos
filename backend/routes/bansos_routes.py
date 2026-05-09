@@ -6,6 +6,7 @@ from services.bansos_service import (
     reject_pengusulan_service,
     create_pengusulan
 )
+from schemas.bansos_schema import PengusulanCreate
 
 # from services.bansos_service import (
 #     get_bantuan,
@@ -17,7 +18,7 @@ from services.bansos_service import (
 router = APIRouter(prefix="/bansos", tags=["Bansos"])
 
 @router.post("/pengusulan")
-def create(data: dict):
+def create(data: PengusulanCreate):
     return create_pengusulan(data)
 
 @router.get("/pengusulan")

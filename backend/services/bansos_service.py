@@ -8,30 +8,44 @@ from schemas.bansos_schema import PengusulanCreate
 
 def create_pengusulan (data: PengusulanCreate):
         supabase.table("pengusulan_bansos").insert({
-        "nama_lengkap": data.nama_lengkap,
-        "nik": data.nik,
+        "id": data.id,
         "no_kk": data.no_kk,
+        "nama_pengusul": data.nama_pengusul,
+        "tanggal_usulan": data.tanggal_usulan,
+        "penginput": data.penginput,
+        "catatan_verifikator": data.catatan_verifikator,
+        "alamat": data.alamat,
         "kecamatan": data.kecamatan,
         "kelurahan": data.kelurahan,
-        "alamat": data.alamat,
-        "status_pengusulan": "Belum"
+        "nik": data.nik,
+        "status_pengusulan": "Belum",
+        "nama_lengkap": data.nama_lengkap,
     }).execute()
 
 
 def get_pengusulan_service():
+
     res = supabase.table("pengusulan_bansos") \
         .select("""
             id,
+            no_kk,
             nama_pengusul,
             tanggal_usulan,
             status_pengusulan,
-            keluarga:no_kk (
-                alamat,
+            penginput,
+            catatan_verifikator,
+            alamat,
+            kecamatan,
+            kelurahan,
+            nik,
+            nama_lengkap,
+            keluarga (
                 kecamatan,
                 kelurahan
             )
         """) \
         .execute()
+    
 
     data = []
 
