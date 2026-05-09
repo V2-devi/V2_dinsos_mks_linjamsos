@@ -1,9 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./staffdashboard.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
+import { supabase } from "../../config/supabase";
 
 function StaffDashboard() {
+  const approve = async (id) => {
+  await fetch(`/pengusulan/${id}/approve`, { method: "PUT" });
+};
+
+const reject = async (id) => {
+  await fetch(`/pengusulan/${id}/reject`, { method: "PUT" });
+};
+
+const [form, setForm] = useState({
+  nama_lengkap: "",
+  nik: "",
+  no_kk: "",
+  kecamatan: "",
+  kelurahan: "",
+  alamat: ""
+});
+
+
+const handleSubmit = async () => {
+    await fetch("/pengusulan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(form),
+  });
+};
+
+
+
   const navigate = useNavigate();
   const location = useLocation(); // <--- Panggil fungsi location
 
@@ -29,6 +60,64 @@ function StaffDashboard() {
   const [selectedDtsenData, setSelectedDtsenData] = useState(null);
   const [detailDtsenInnerTab, setDetailDtsenInnerTab] = useState("anggota"); 
 
+  // Fetch data from Supabase on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch pengusulan
+        const { data: pengusulanData, error: pengusulanError } = await supabase
+          .from('pengusulan_bansos')
+          .select('*');
+        if (pengusulanError) throw pengusulanError;
+        setUsulanData(pengusulanData.map(item => ({
+          id: item.id,
+          nik: item.nik,
+          nama_lengkap: item.nama_pengusul,
+          kecamatan: item.kecamatan,
+          kelurahan: item.kelurahan,
+          tanggal_usulan: item.tanggal_usulan,
+          alamat: item.alamat,
+          status: item.status_pengusulan
+        })));
+
+        // Fetch DTSEN
+        const { data: dtsenDataFetched, error: dtsenError } = await supabase
+          .from('keluarga')
+          .select('*');
+        if (dtsenError) throw dtsenError;
+        setDtsenData(dtsenDataFetched.map(item => ({
+          id: item.id,
+          no_kk: item.no_kk,
+          nama_kepala_keluarga: item.nama_kepala_keluarga,
+          kecamatan: item.kecamatan,
+          kelurahan: item.kelurahan,
+          alamat: item.alamat,
+          desil: item.desil || "Belum Dihitung",
+          anggota: [] // Need to fetch separately if needed
+        })));
+
+        // Fetch PPKS
+        const { data: ppksData, error: ppksError } = await supabase
+          .from('ppks')
+          .select('*');
+        if (ppksError) throw ppksError;
+        setDummyPPKS(ppksData.map(item => ({
+          id: item.id,
+          nik: item.nik,
+          nama: item.nama,
+          kategori: item.kategori,
+          kecamatan: item.kecamatan,
+          lokasi: item.lokasi,
+          tanggal: item.tanggal_laporan,
+          status: item.status
+        })));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, []); 
+
   // === STATE MODAL ANGGOTA & 39 VARIABEL DTSEN ===
   const [isAddAnggotaModalOpen, setIsAddAnggotaModalOpen] = useState(false);
   const [isDetailAnggotaModalOpen, setIsDetailAnggotaModalOpen] = useState(false);
@@ -39,20 +128,38 @@ function StaffDashboard() {
   const initialFormPPKS = { nik: "", nama: "", kategori: "", kecamatan: "", lokasi: "", tanggal: "" };
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
   
-  const handleAddPPKSSubmit = (e) => {
+  const handleAddPPKSSubmit = async (e) => {
     e.preventDefault();
-    const newPPKS = {
-      ...formPPKS,
-      id: Date.now(),
-      status: "Menunggu Kelayakan",
-      // Jika NIK/Nama kosong, beri nilai default
-      nik: formPPKS.nik || "Belum Diketahui", 
-      nama: formPPKS.nama || "Tanpa Identitas"
-    };
-    setDummyPPKS([newPPKS, ...dummyPPKS]);
-    setIsAddPPKSModalOpen(false);
-    setFormPPKS(initialFormPPKS); // Reset form
-    showSuccess();
+    try {
+      const { data, error } = await supabase
+        .from('ppks')
+        .insert([
+          {
+            kategori: formPPKS.kategori,
+            tanggal_laporan: formPPKS.tanggal,
+            nik: formPPKS.nik || null,
+            nama: formPPKS.nama || null,
+            kecamatan: formPPKS.kecamatan,
+            lokasi: formPPKS.lokasi,
+            status: "Menunggu Kelayakan"
+          }
+        ]);
+      if (error) throw error;
+      const newPPKS = {
+        ...formPPKS,
+        id: data[0].id,
+        status: "Menunggu Kelayakan",
+        nik: formPPKS.nik || "Belum Diketahui", 
+        nama: formPPKS.nama || "Tanpa Identitas"
+      };
+      setDummyPPKS([newPPKS, ...dummyPPKS]);
+      setIsAddPPKSModalOpen(false);
+      setFormPPKS(initialFormPPKS);
+      showSuccess();
+    } catch (error) {
+      console.error('Error adding PPKS:', error);
+      alert('Gagal menambah laporan PPKS: ' + error.message);
+    }
   };
   // =========================================================================
   // === 🌟 STATE & FUNGSI UNTUK DETAIL PPKS 🌟 ===
@@ -66,16 +173,26 @@ function StaffDashboard() {
     setActiveTab("detail_ppks"); // Pindah ke halaman virtual detail
   };
 
-  const handleUpdateStatusPPKS = (e, statusBaru) => {
+  const handleUpdateStatusPPKS = async (e, statusBaru) => {
     e.preventDefault();
-    // Update data di tabel utama
-    const updatedPPKS = dummyPPKS.map(item =>
-      item.id === selectedPPKSData.id ? { ...item, status: statusBaru, deskripsiAwal: catatanAssessment } : item
-    );
-    setDummyPPKS(updatedPPKS);
-    // Update data yang sedang ditampilkan di detail
-    setSelectedPPKSData({ ...selectedPPKSData, status: statusBaru, deskripsiAwal: catatanAssessment });
-    showSuccess();
+    try {
+      const { error } = await supabase
+        .from('ppks')
+        .update({ status: statusBaru })
+        .eq('id', selectedPPKSData.id);
+      if (error) throw error;
+      // Update data di tabel utama
+      const updatedPPKS = dummyPPKS.map(item =>
+        item.id === selectedPPKSData.id ? { ...item, status: statusBaru, deskripsiAwal: catatanAssessment } : item
+      );
+      setDummyPPKS(updatedPPKS);
+      // Update data yang sedang ditampilkan di detail
+      setSelectedPPKSData({ ...selectedPPKSData, status: statusBaru, deskripsiAwal: catatanAssessment });
+      showSuccess();
+    } catch (error) {
+      console.error('Error updating PPKS status:', error);
+      alert('Gagal update status PPKS: ' + error.message);
+    }
   };
   
   const [formAset, setFormAset] = useState({});
@@ -84,11 +201,11 @@ function StaffDashboard() {
   // === DATA DUMMY: USULAN BANSOS ===
   // =========================================================================
   const [usulanData, setUsulanData] = useState([
-    { id: 1, nik: "3971371863193701", noKk: "000000000000", nama: "Cinta", kecamatan: "Tallo", kelurahan: "Wala-walaya", tanggal: "2026-02-14", alamat: "Jl. Kandea", status: "Layak" },
-    { id: 2, nik: "7270888888888888", noKk: "111111111111", nama: "Budi Santoso", kecamatan: "Bontoala", kelurahan: "Baraya", tanggal: "2026-03-15", alamat: "Jl. Veteran", status: "Tidak Layak" },
-    { id: 3, nik: "7470666666666666", noKk: "222222222222", nama: "Andi Pangeran", kecamatan: "Tallo", kelurahan: "Pannampu", tanggal: "2026-05-10", alamat: "Jl. Sunu", status: "Belum" }
+    // { id: 1, nik: "3971371863193701", no_kk: "000000000000", nama: "Cinta", kecamatan: "Tallo", kelurahan: "Wala-walaya", tanggal: "2026-02-14", alamat: "Jl. Kandea", status: "Layak" },
+    // { id: 2, nik: "7270888888888888", no_kk: "111111111111", nama: "Budi Santoso", kecamatan: "Bontoala", kelurahan: "Baraya", tanggal: "2026-03-15", alamat: "Jl. Veteran", status: "Tidak Layak" },
+    // { id: 3, nik: "7470666666666666", no_kk: "222222222222", nama: "Andi Pangeran", kecamatan: "Tallo", kelurahan: "Pannampu", tanggal: "2026-05-10", alamat: "Jl. Sunu", status: "Belum" }
   ]);
-  const initialFormState = { nik: "", noKk: "", nama: "", kecamatan: "", kelurahan: "", tanggal: "", alamat: "", desil: "", jenisBansos: "", status: "Belum" };
+  const initialFormState = { nik: "", no_kk: "", nama: "", kecamatan: "", kelurahan: "", tanggal: "", alamat: "", desil: "", jenisbansos: "", status: "Belum" };
   const [formData, setFormData] = useState(initialFormState);
   const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
   const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama: "" });
@@ -114,7 +231,34 @@ function StaffDashboard() {
     return (filterTable.kecamatan === "" || item.kecamatan === filterTable.kecamatan) && (filterTable.kelurahan === "" || item.kelurahan === filterTable.kelurahan) && (filterTable.nik === "" || item.nik.includes(filterTable.nik)) && (filterTable.nama === "" || item.nama.toLowerCase().includes(filterTable.nama.toLowerCase()));
   });
 
-  const handleAddSubmit = (e) => { e.preventDefault(); setUsulanData([{ ...formData, id: Date.now() }, ...usulanData]); setIsAddModalOpen(false); setFormData(initialFormState); showSuccess(); };
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase
+        .from('pengusulan_bansos')
+        .insert([
+          {
+            nama_pengusul: formData.nama_lengkap,
+            nik: formData.nik,
+            no_kk: formData.no_kk,
+            kecamatan: formData.kecamatan,
+            kelurahan: formData.kelurahan,
+            alamat: formData.alamat,
+            status_pengusulan: "Belum"
+          }
+        ]);
+      if (error) throw error;
+      // Update local state if needed, but since we're using Supabase, maybe fetch fresh data
+      // For now, add to local state for UI
+      setUsulanData([{ ...formData, id: data[0].id }, ...usulanData]);
+      setIsAddModalOpen(false);
+      setFormData(initialFormState);
+      showSuccess();
+    } catch (error) {
+      console.error('Error adding pengusulan:', error);
+      alert('Gagal menambah pengusulan: ' + error.message);
+    }
+  };
   
   const handleOpenDetailRiwayat = (data) => { 
     setSelectedDetailData(data); 
@@ -127,20 +271,38 @@ function StaffDashboard() {
   const [dtsenData, setDtsenData] = useState([
   ]);
 
-  const [formDtsen, setFormDtsen] = useState({ noKk: "", namaKepala: "", kecamatan: "", kelurahan: "", alamat: "" });
+  const [formDtsen, setFormDtsen] = useState({ no_kk: "", nama_kepala_keluarga: "", kecamatan: "", kelurahan: "", alamat: "" });
 
-  const handleAddDtsen = (e) => {
+  const handleAddDtsen = async (e) => {
     e.preventDefault();
-    const newDtsen = { 
-      ...formDtsen, 
-      id: Date.now(), 
-      desil: "Belum Dihitung", 
-      anggota: [{ nik: "Belum Diinput", nama: formDtsen.namaKepala, hub: "Kepala Keluarga", jk: "-", tglLahir: "-", status: "Hidup" }]
-    };
-    setDtsenData([newDtsen, ...dtsenData]);
-    setIsAddDtsenModalOpen(false);
-    setFormDtsen({ noKk: "", namaKepala: "", kecamatan: "", kelurahan: "", alamat: "" });
-    showSuccess();
+    try {
+      const { data, error } = await supabase
+        .from('keluarga')
+        .insert([
+          {
+            no_kk: formDtsen.no_kk,
+            nama_kepala_keluarga: formDtsen.nama_kepala_keluarga,
+            kecamatan: formDtsen.kecamatan,
+            kelurahan: formDtsen.kelurahan,
+            alamat: formDtsen.alamat,
+            desil: "Belum Dihitung"
+          }
+        ]);
+      if (error) throw error;
+      const newDtsen = { 
+        ...formDtsen, 
+        id: data[0].id, 
+        desil: "Belum Dihitung", 
+        anggota: [{ nik: "Belum Diinput", nama: formDtsen.nama_kepala_keluarga, hub: "Kepala Keluarga", jk: "-", tglLahir: "-", status: "Hidup" }]
+      };
+      setDtsenData([newDtsen, ...dtsenData]);
+      setIsAddDtsenModalOpen(false);
+      setFormDtsen({ no_kk: "", nama_kepala_keluarga: "", kecamatan: "", kelurahan: "", alamat: "" });
+      showSuccess();
+    } catch (error) {
+      console.error('Error adding DTSEN:', error);
+      alert('Gagal menambah data DTSEN: ' + error.message);
+    }
   };
 
   const handleOpenDetailDtsen = (data) => {
@@ -238,19 +400,19 @@ function StaffDashboard() {
   const notifData = [{ id: 1, title: "Sistem", date: "Hari ini", desc: "Data berhasil dimuat." }];
   // State dan dummy PPKS
   const [dummyPPKS, setDummyPPKS] = useState([
-    { id: 1, nik: "7371111111111111", nama: "Budi", kategori: "Anak Jalanan", lokasi: "Pasar MT Haryono", kecamatan: "Tallo", tanggal: "2026-02-12", status: "Menunggu Kelayakan" },
-    { id: 2, nik: "3971371863193701", nama: "Supardi", kategori: "Lanjut Usia Terlantar", lokasi: "Jl. Veteran Raya", kecamatan: "Bontoala", tanggal: "2026-03-10", status: "Kasus Aktif" },
-    { id: 3, nik: "7372222222222222", nama: "Siti", kategori: "Gelandangan & Pengemis", lokasi: "Lampu Merah Flyover", kecamatan: "Tallo", tanggal: "2026-01-15", status: "Kasus Aktif" },
-    { id: 4, nik: "7373333333333333", nama: "Agus", kategori: "Penyandang Disabilitas", lokasi: "Jl. Urip Sumoharjo", kecamatan: "Bontoala", tanggal: "2026-04-20", status: "Menunggu Kelayakan" }, // Ini masuk Kuartal 2
-    { id: 5, nik: "7374444444444444", nama: "Rina", kategori: "Lanjut Usia Terlantar", lokasi: "Jl. Perintis", kecamatan: "Tallo", tanggal: "2026-02-25", status: "Kasus Aktif" },
-    { id: 6, nik: "7375555555555555", nama: "Doni", kategori: "Anak Jalanan", lokasi: "Karebosi", kecamatan: "Bontoala", tanggal: "2026-03-05", status: "Kasus Aktif" },
-    { id: 7, nik: "7376666666666666", nama: "Hasan", kategori: "Anak Jalanan", lokasi: "Pelabuhan", kecamatan: "Tallo", tanggal: "2026-03-18", status: "Kasus Aktif" }
+    // { id: 1, nik: "7371111111111111", nama: "Budi", kategori: "Anak Jalanan", lokasi: "Pasar MT Haryono", kecamatan: "Tallo", tanggal: "2026-02-12", status: "Menunggu Kelayakan" },
+    // { id: 2, nik: "3971371863193701", nama: "Supardi", kategori: "Lanjut Usia Terlantar", lokasi: "Jl. Veteran Raya", kecamatan: "Bontoala", tanggal: "2026-03-10", status: "Kasus Aktif" },
+    // { id: 3, nik: "7372222222222222", nama: "Siti", kategori: "Gelandangan & Pengemis", lokasi: "Lampu Merah Flyover", kecamatan: "Tallo", tanggal: "2026-01-15", status: "Kasus Aktif" },
+    // { id: 4, nik: "7373333333333333", nama: "Agus", kategori: "Penyandang Disabilitas", lokasi: "Jl. Urip Sumoharjo", kecamatan: "Bontoala", tanggal: "2026-04-20", status: "Menunggu Kelayakan" }, // Ini masuk Kuartal 2
+    // { id: 5, nik: "7374444444444444", nama: "Rina", kategori: "Lanjut Usia Terlantar", lokasi: "Jl. Perintis", kecamatan: "Tallo", tanggal: "2026-02-25", status: "Kasus Aktif" },
+    // { id: 6, nik: "7375555555555555", nama: "Doni", kategori: "Anak Jalanan", lokasi: "Karebosi", kecamatan: "Bontoala", tanggal: "2026-03-05", status: "Kasus Aktif" },
+    // { id: 7, nik: "7376666666666666", nama: "Hasan", kategori: "Anak Jalanan", lokasi: "Pelabuhan", kecamatan: "Tallo", tanggal: "2026-03-18", status: "Kasus Aktif" }
   ]);
 
   const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
   const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", nama: "" });
   // STATE & FUNGSI UNTUK FILTER PENENTUAN DESIL
-  const [filterDesil, setFilterDesil] = useState({ kecamatan: "", noKk: "" });
+  const [filterDesil, setFilterDesil] = useState({ kecamatan: "", no_kk: "" });
 
   const handleFilterDesilChange = (e) => {
     const { name, value } = e.target;
@@ -261,26 +423,26 @@ function StaffDashboard() {
     setFilterTabelPPKS({ ...filterTabelPPKS, [e.target.name]: e.target.value });
   };
   const dummyMenungguDesil = [
-    { id: 1, noKk: "1234567890123456", nama: "Keluarga Baru", kelurahan: "Tallo", tglUpdate: "Hari Ini", kelengkapan: "Lengkap (39/39 Vrb)" },
-    { id: 2, noKk: "3971371863193701", nama: "Ahmad Sudirman", kelurahan: "Tallo", tglUpdate: "16 Mar 2026", kelengkapan: "Lengkap (39/39 Vrb)" },
-    { id: 3, noKk: "3971371863193702", nama: "Siti Aminah", kelurahan: "Wala-walaya", tglUpdate: "17 Mar 2026", kelengkapan: "Lengkap (39/39 Vrb)" }
+    // { id: 1, no_kk: "1234567890123456", nama: "Keluarga Baru", kelurahan: "Tallo", tglUpdate: "Hari Ini", kelengkapan: "Lengkap (39/39 Vrb)" },
+    // { id: 2, no_kk: "3971371863193701", nama: "Ahmad Sudirman", kelurahan: "Tallo", tglUpdate: "16 Mar 2026", kelengkapan: "Lengkap (39/39 Vrb)" },
+    // { id: 3, no_kk: "3971371863193702", nama: "Siti Aminah", kelurahan: "Wala-walaya", tglUpdate: "17 Mar 2026", kelengkapan: "Lengkap (39/39 Vrb)" }
   ];
   const dummyRiwayatDesil = [
-    { noKk: "3971371863193703", nama: "Kaharuddin", kelurahan: "Tallo", tglHitung: "15 Mar 2026", skor: "45.2", desil: "3" }
+    // { no_kk: "3971371863193703", nama: "Kaharuddin", kelurahan: "Tallo", tglHitung: "15 Mar 2026", skor: "45.2", desil: "3" }
   ];
 
   // LOGIKA PENCARIAN (FILTER) DATA DESIL
   const tabelMenungguFiltered = dummyMenungguDesil.filter((item) => {
     // Mengecek apakah inputan cocok dengan data (Kecamatan dan No KK)
     const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan);
-    const matchNoKk = filterDesil.noKk === "" || item.noKk.includes(filterDesil.noKk);
-    return matchKecamatan && matchNoKk;
+    const matchno_kk = filterDesil.no_kk === "" || item.no_kk.includes(filterDesil.no_kk);
+    return matchKecamatan && matchno_kk;
   });
 
   const tabelRiwayatFiltered = dummyRiwayatDesil.filter((item) => {
     const matchKecamatan = filterDesil.kecamatan === "" || item.kelurahan.includes(filterDesil.kecamatan);
-    const matchNoKk = filterDesil.noKk === "" || item.noKk.includes(filterDesil.noKk);
-    return matchKecamatan && matchNoKk;
+    const matchno_kk = filterDesil.no_kk === "" || item.no_kk.includes(filterDesil.no_kk);
+    return matchKecamatan && matchno_kk;
   });
 
   // LOGIKA KALKULASI DASHBOARD & TABEL PPKS
@@ -534,7 +696,7 @@ function StaffDashboard() {
                 <div className="filter-group-top"><label>Kecamatan</label><div className="select-container-custom"><select name="kecamatan" value={filterTable.kecamatan} onChange={handleFilterChange}><option value="">Semua Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option></select></div></div>
                 <div className="filter-group-top"><label>Kelurahan/Desa</label><div className="select-container-custom"><select name="kelurahan" value={filterTable.kelurahan} onChange={handleFilterChange}><option value="">Semua Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option></select></div></div>
                 <div className="filter-group-top"><label>NIK (0-16)</label><input type="text" name="nik" className="input-custom" placeholder="Cari NIK..." value={filterTable.nik} onChange={handleFilterChange} /></div>
-                <div className="filter-group-top"><label>Nama</label><input type="text" name="nama" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama} onChange={handleFilterChange} /></div>
+                <div className="filter-group-top"><label>Nama</label><input type="text" name="nama_lengkap" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama_lengkap} onChange={handleFilterChange} /></div>
               </div>
               <div className="action-row-right"><button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}><span className="plus-icon">+</span> Tambah Usulan</button></div>
               <div className="table-wrapper">
@@ -544,8 +706,8 @@ function StaffDashboard() {
                     <tbody>
                       {tableDataFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
-                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal)}</td><td>{item.alamat}</td>
+                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
+                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan)}</td><td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
                             {item.status === "Layak" && <span className="status-badge badge-active">Layak</span>}
                             {item.status === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
@@ -632,7 +794,7 @@ function StaffDashboard() {
                     <tbody>
                       {dtsenData.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.noKk}</td><td style={{ fontWeight: '600' }}>{item.namaKepala}</td><td>{item.kelurahan}</td><td>{item.alamat}</td>
+                          <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kelurahan}</td><td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
                             {item.desil === 'Belum Dihitung' ? <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Dihitung</span> : <span className="desil-badge-table">{item.desil}</span>}
                           </td>
@@ -660,8 +822,8 @@ function StaffDashboard() {
 
               <div className="detail-summary-grid">
                 <div className="summary-col">
-                  <div className="summary-item"><span className="sum-label">Nama Kepala Keluarga</span><span className="sum-val">{selectedDtsenData.namaKepala}</span></div>
-                  <div className="summary-item"><span className="sum-label">Nomor Kartu Keluarga (KK)</span><span className="sum-val">{selectedDtsenData.noKk}</span></div>
+                  <div className="summary-item"><span className="sum-label">Nama Kepala Keluarga</span><span className="sum-val">{selectedDtsenData.nama_kepala_keluarga}</span></div>
+                  <div className="summary-item"><span className="sum-label">Nomor Kartu Keluarga (KK)</span><span className="sum-val">{selectedDtsenData.no_kk}</span></div>
                 </div>
                 <div className="summary-col">
                   <div className="summary-item"><span className="sum-label">Alamat Domisili</span><span className="sum-val">{selectedDtsenData.alamat}</span></div>
@@ -814,7 +976,7 @@ function StaffDashboard() {
                 <div className="ppks-horizontal-chart">
                   {top5PPKS.length > 0 ? top5PPKS.map((item, idx) => (
                     <div className="ppks-bar-row" key={idx}>
-                      <span className="ppks-label">{item.nama}</span>
+                      <span className="ppks-label">{item.nama_lengkap}</span>
                       <div className="ppks-bar-track">
                         {/* Panjang Bar dihitung dinamis berdasarkan persentase */}
                         <div className="ppks-bar-fill" style={{ width: `${(item.jumlah / maxPPKS) * 100}%` }}></div>
@@ -943,7 +1105,7 @@ function StaffDashboard() {
                 </div>
                 <div className="filter-group-top">
                   <label>No. KK</label>
-                  <input type="text" name="noKk" value={filterDesil.noKk} onChange={handleFilterDesilChange} className="input-custom" placeholder="Ketik No. KK..." />
+                  <input type="text" name="no_kk" value={filterDesil.no_kk} onChange={handleFilterDesilChange} className="input-custom" placeholder="Ketik No. KK..." />
                 </div>
                 <div className="filter-group-top align-bottom">
                   <button className="btn-search-outline">Cari Data</button>
@@ -957,7 +1119,7 @@ function StaffDashboard() {
                       {/* 👇 PENTING: Gunakan tabelMenungguFiltered, bukan dummyMenungguDesil 👇 */}
                       {tabelMenungguFiltered.length > 0 ? tabelMenungguFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.noKk}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kelurahan}</td><td>{item.tglUpdate}</td>
+                          <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_lengkap}</td><td>{item.kelurahan}</td><td>{item.tglUpdate}</td>
                           <td style={{ textAlign: "center" }}><button className="btn-hitung-desil" onClick={() => { setSelectedKalkulasi(item); setIsKalkulasiModalOpen(true); setIsCalculated(false); }}><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Hitung Desil</button></td>
                         </tr>
                       )) : (
@@ -985,7 +1147,7 @@ function StaffDashboard() {
                   </div>
                   <div className="filter-group-top">
                     <label>No. KK</label>
-                    <input type="text" name="noKk" value={filterDesil.noKk} onChange={handleFilterDesilChange} className="input-custom" placeholder="Ketik No. KK..." />
+                    <input type="text" name="no_kk" value={filterDesil.no_kk} onChange={handleFilterDesilChange} className="input-custom" placeholder="Ketik No. KK..." />
                   </div>
                   <div className="filter-group-top align-bottom">
                     <button className="btn-search-outline">Cari Data</button>
@@ -998,7 +1160,7 @@ function StaffDashboard() {
                      <tbody>
                        {/* 👇 PENTING: Gunakan tabelRiwayatFiltered 👇 */}
                        {tabelRiwayatFiltered.length > 0 ? tabelRiwayatFiltered.map((item, idx) => (
-                         <tr key={idx}><td>{item.noKk}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kelurahan}</td><td>{item.tglHitung}</td><td>{item.skor}</td><td style={{ textAlign: "center" }}><span className="desil-badge-table">{item.desil}</span></td></tr>
+                         <tr key={idx}><td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kelurahan}</td><td>{item.tglHitung}</td><td>{item.skor}</td><td style={{ textAlign: "center" }}><span className="desil-badge-table">{item.desil}</span></td></tr>
                        )) : (
                          <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada riwayat yang cocok.</td></tr>
                        )}
@@ -1198,8 +1360,8 @@ function StaffDashboard() {
               </div>
               <form onSubmit={handleAddDtsen}>
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>No. Kartu Keluarga (KK)*</label><input type="text" name="noKk" value={formDtsen.noKk} onChange={(e) => setFormDtsen({...formDtsen, noKk: e.target.value})} required maxLength="16"/></div>
-                  <div className="form-group-modal"><label>Nama Kepala Keluarga*</label><input type="text" name="namaKepala" value={formDtsen.namaKepala} onChange={(e) => setFormDtsen({...formDtsen, namaKepala: e.target.value})} required /></div>
+                  <div className="form-group-modal"><label>No. Kartu Keluarga (KK)*</label><input type="text" name="no_kk" value={formDtsen.no_kk} onChange={(e) => setFormDtsen({...formDtsen, no_kk: e.target.value})} required maxLength="16"/></div>
+                  <div className="form-group-modal"><label>Nama Kepala Keluarga*</label><input type="text" name="nama_kepala_keluarga" value={formDtsen.nama_kepala_keluarga} onChange={(e) => setFormDtsen({...formDtsen, nama_kepala_keluarga: e.target.value})} required /></div>
                   <div className="form-group-modal"><label>Kecamatan*</label><div className="select-container-custom"><select required value={formDtsen.kecamatan} onChange={(e) => setFormDtsen({...formDtsen, kecamatan: e.target.value})}><option value="" disabled hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option></select></div></div>
                   <div className="form-group-modal"><label>Kelurahan*</label><div className="select-container-custom"><select required value={formDtsen.kelurahan} onChange={(e) => setFormDtsen({...formDtsen, kelurahan: e.target.value})}><option value="" disabled hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option></select></div></div>
                   <div className="form-group-modal" style={{ gridColumn: "1 / -1" }}><label>Alamat Lengkap / RT RW*</label><input type="text" value={formDtsen.alamat} onChange={(e) => setFormDtsen({...formDtsen, alamat: e.target.value})} required /></div>
@@ -1220,7 +1382,7 @@ function StaffDashboard() {
               <form onSubmit={handleAddSubmit}>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16"/></div>
-                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} required /></div>
+                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama: e.target.value})} required /></div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Data</button></div>
               </form>
@@ -1312,7 +1474,7 @@ function StaffDashboard() {
             <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
               <div style={{ marginBottom: '20px' }}>
                 <h3 style={{ margin: '0', color: '#234a66', fontSize: '18px' }}>{selectedKalkulasi.nama}</h3>
-                <p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.noKk}</p>
+                <p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.no_kk}</p>
               </div>
               {!isCalculated ? (
                 <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px' }} onClick={() => setIsCalculated(true)}>Jalankan Algoritma PMT</button>

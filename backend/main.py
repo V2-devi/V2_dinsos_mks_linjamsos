@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.auth_routes import router as auth_router
 from routes.profile_routes import router as profile_router
 from routes.admin_routes import router as admin_router
+from routes.bansos_routes import router as bansos_router
+
 app = FastAPI()
 
 app.add_middleware(
@@ -20,3 +22,4 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(admin_router)
+app.include_router(bansos_router)
