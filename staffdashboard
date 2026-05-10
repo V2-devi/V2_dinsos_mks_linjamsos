@@ -1,0 +1,145 @@
+[1mdiff --cc src/pages/staff/staffdashboard.jsx[m
+[1mindex 3fc07c5,bc00687..0000000[m
+[1m--- a/src/pages/staff/staffdashboard.jsx[m
+[1m+++ b/src/pages/staff/staffdashboard.jsx[m
+[36m@@@ -6,42 -6,36 +6,38 @@@[m [mimport { supabase } from "../../config/[m
+  [m
+  function StaffDashboard() {[m
+    const approve = async (id) => {[m
+[31m-   await fetch(`/pengusulan/${id}/approve`, { method: "PUT" });[m
+[31m- };[m
+[31m- [m
+[31m- const reject = async (id) => {[m
+[31m-   await fetch(`/pengusulan/${id}/reject`, { method: "PUT" });[m
+[31m- };[m
+[31m- [m
+[31m- const [form, setForm] = useState({[m
+[31m-   nama_lengkap: "",[m
+[31m-   nama_pengusul: "",[m
+[31m-   nik: "",[m
+[31m-   no_kk: "",[m
+[31m-   kecamatan: "",[m
+[31m-   kelurahan: "",[m
+[31m-   alamat: "",[m
+[31m-   penginput: ""[m
+[31m- });[m
+[31m- [m
+[31m- [m
+[31m- const handleSubmit = async () => {[m
+[31m-     await fetch("/pengusulan", {[m
+[31m-     method: "POST",[m
+[31m-     headers: {[m
+[31m-       "Content-Type": "application/json",[m
+[31m-     },[m
+[31m-     body: JSON.stringify(form),[m
+[31m-   });[m
+[31m- };[m
+[32m+     await fetch(`/pengusulan/${id}/approve`, { method: "PUT" });[m
+[32m+   };[m
+  [m
+[32m+   const reject = async (id) => {[m
+[32m+     await fetch(`/pengusulan/${id}/reject`, { method: "PUT" });[m
+[32m+   };[m
+  [m
+[32m+   const [form, setForm] = useState({[m
+[32m+     nama_lengkap: "",[m
+[32m++    nama_pengusul: "",[m
+[32m+     nik: "",[m
+[32m+     no_kk: "",[m
+[32m+     kecamatan: "",[m
+[32m+     kelurahan: "",[m
+[31m -    alamat: ""[m
+[32m++    alamat: "",[m
+[32m++    penginput: ""[m
+[32m+   });[m
+  [m
+[32m+   const handleSubmit = async () => {[m
+[32m+     await fetch("/pengusulan", {[m
+[32m+       method: "POST",[m
+[32m+       headers: {[m
+[32m+         "Content-Type": "application/json",[m
+[32m+       },[m
+[32m+       body: JSON.stringify(form),[m
+[32m+     });[m
+[32m+   };[m
+[31m -[m
+[32m++  [m
+    const navigate = useNavigate();[m
+[31m-   const location = useLocation(); // <--- Panggil fungsi location[m
+[32m+   const location = useLocation();[m
+  [m
+    // === STATE NAVIGASI & TAB DINAMIS ===[m
+[31m-   // Ia akan membaca 'state' dari halaman sebelumnya. Jika tidak ada, default ke 'usulan_baru'[m
+    const [activeMenu, setActiveMenu] = useState(location.state?.activeMenu || "usulan_baru"); [m
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || "dashboard"); [m
+    const [isNotifOpen, setIsNotifOpen] = useState(false);[m
+[36m@@@ -74,14 -70,14 +72,17 @@@[m
+          setUsulanData(pengusulanData.map(item => ({[m
+            id: item.id,[m
+            nik: item.nik,[m
+[31m -          no_kk: item.no_kk, // Tambahan[m
+[31m -          nama: item.nama_pengusul, // Disamakan dengan struktur state lokal agar tidak 'undefined'[m
+[32m++          no_kk: item.no_kk,[m
+[32m +          nama_lengkap: item.nama_lengkap,[m
+[32m +          nama_pengusul: item.nama_pengusul,[m
+[32m++          nama: item.nama_pengusul,[m
+[32m +          penginput: item.penginput,[m
+            kecamatan: item.kecamatan,[m
+            kelurahan: item.kelurahan,[m
+[31m-           tanggal_usulan: item.tanggal_usulan,[m
+[32m+           tanggal: item.tanggal_usulan, // Disamakan dengan state lokal[m
+            alamat: item.alamat,[m
+[31m-           status: item.status_pengusulan[m
+[32m+           jenisbansos: item.jenis_bansos, // Field baru[m
+[32m+           status: item.status_pengusulan // Disamakan dengan state lokal[m
+          })));[m
+  [m
+          // Fetch DTSEN[m
+[36m@@@ -249,16 -257,33 +263,40 @@@[m
+              kecamatan: formData.kecamatan,[m
+              kelurahan: formData.kelurahan,[m
+              alamat: formData.alamat,[m
+[31m -            tanggal_usulan: formData.tanggal,[m
+[31m -            jenis_bansos: formData.jenisbansos, // Menyimpan jenis bansos ke DB[m
+[32m +            penginput: formData.penginput || null, [m
+[32m++            // nama_pengusul: formData.nama, // Sesuai state lokal[m
+[32m++            // nik: formData.nik,[m
+[32m++            // no_kk: formData.no_kk,[m
+[32m++            // kecamatan: formData.kecamatan,[m
+[32m++            // kelurahan: formData.kelurahan,[m
+[32m++            // alamat: formData.alamat,[m
+[32m++            // tanggal_usulan: formData.tanggal,[m
+[32m++            // jenis_bansos: formData.jenisbansos, // Menyimpan jenis bansos ke DB[m
+              status_pengusulan: "Belum"[m
+            }[m
+[31m-         ]);[m
+[32m+         ])[m
+[32m+         .select(); // Minta kembalikan data yang baru di-insert[m
+[32m+ [m
+        if (error) throw error;[m
+[31m-       // Update local state if needed, but since we're using Supabase, maybe fetch fresh data[m
+[31m-       // For now, add to local state for UI[m
+[31m-       setUsulanData([{ ...formData, id: data[0].id }, ...usulanData]);[m
+[32m+ [m
+[32m+       // 2. Format objek baru untuk state lokal[m
+[32m+       const newUsulan = {[m
+[32m+         id: data[0].id,[m
+[32m+         nik: formData.nik,[m
+[32m+         no_kk: formData.no_kk,[m
+[32m+         nama: formData.nama,[m
+[32m+         kecamatan: formData.kecamatan,[m
+[32m+         kelurahan: formData.kelurahan,[m
+[32m+         tanggal: formData.tanggal,[m
+[32m+         alamat: formData.alamat,[m
+[32m+         jenisbansos: formData.jenisbansos, // Field jenis bansos[m
+[32m+         status: "Belum"[m
+[32m+       };[m
+[32m+       [m
+[32m+       // 3. Masukkan ke tabel UI[m
+[32m+       setUsulanData([newUsulan, ...usulanData]);[m
+        setIsAddModalOpen(false);[m
+[31m-       setFormData(initialFormState);[m
+[32m+       setFormData(initialFormState); // Reset form[m
+        showSuccess();[m
+      } catch (error) {[m
+        console.error('Error adding pengusulan:', error);[m
