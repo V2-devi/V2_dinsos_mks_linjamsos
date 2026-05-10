@@ -173,25 +173,50 @@ const fetchUsers = async () => {
         <div className="table-responsive">
           <table className="admin-table">
             <thead>
-              <tr><th>NIK</th><th>Kata Sandi</th><th>No.HP</th><th>Nama Lengkap</th><th>Email</th><th>Alamat</th><th style={{ textAlign: 'center' }}>Status Pegawai</th><th style={{ textAlign: "center" }}>Aksi</th></tr>
+              <tr>
+                <th>NIP</th>
+                <th>Role</th>
+                <th>Kata Sandi</th>
+                <th>No.HP</th>
+                <th>Nama Lengkap</th>
+                <th>Email</th>
+                <th>Alamat</th>
+                <th style={{ textAlign: 'center' }}>Status Pegawai</th>
+                <th style={{ textAlign: "center" }}>Aksi</th>
+              </tr>
             </thead>
             <tbody>
-              {/* ✅ PERBAIKAN: Menambahkan .slice(0, 5) agar yang tampil hanya 5 di dashboard */}
+              {/* Tampilkan maksimal 5 pengguna di Dashboard */}
               {users.slice(0, 5).map((user) => (
-                <tr key={user.id}>
-                  <td>{user.nik}</td><td>{user.password || "-"}</td><td>{user.no_hp}</td><td style={{ fontWeight: '600' }}>{user.nama_lengkap}</td><td>{user.email}</td><td>{user.alamat}</td>
-                  <td style={{ textAlign: 'center' }}><span className={`status-badge ${user.status === "approved" || user.status === "Approved" ? "badge-active" : "badge-inactive"}`}>{user.status}</span></td>
+                <tr key={user.id || Math.random()}>
+                  <td>{user.nip || "-"}</td>
+                  <td>
+                    <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', backgroundColor: user.role === 'verifikator' ? '#fef08a' : user.role === 'admin' ? '#fecaca' : '#e0e7ff', color: user.role === 'verifikator' ? '#a16207' : user.role === 'admin' ? '#b91c1c' : '#1d4ed8' }}>
+                      {user.role || "staff"}
+                    </span>
+                  </td>
+                  <td>{user.password || "-"}</td>
+                  <td>{user.no_hp || "-"}</td>
+                  <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
+                  <td>{user.email || "-"}</td>
+                  <td>{user.alamat || "-"}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className={`status-badge ${user.status === "approved" || user.status === "Approved" ? "badge-active" : "badge-inactive"}`}>
+                      {user.status || "pending"}
+                    </span>
+                  </td>
                   <td style={{ textAlign: "center" }}>
                     <div className="action-buttons" style={{ justifyContent: 'center' }}>
-                      <button className="action-btn text-yellow" title="Ganti Password">🔑</button>
-                      <button className="action-btn text-blue" title="Edit Profil">📝</button>
-                      <button className="action-btn text-red" title="Hapus Akun">🗑️</button>
+                      {/* Aksi di dashboard diarahkan ke halaman Data User agar pengelolaannya terpusat */}
+                      <button className="action-btn text-yellow" title="Kelola di Data User" onClick={() => navigate("/datauser")}>🔑</button>
+                      <button className="action-btn text-blue" title="Kelola di Data User" onClick={() => navigate("/datauser")}>📝</button>
+                      <button className="action-btn text-red" title="Kelola di Data User" onClick={() => navigate("/datauser")}>🗑️</button>
                     </div>
                   </td>
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
               )}
             </tbody>
           </table>

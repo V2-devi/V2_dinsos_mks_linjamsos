@@ -337,7 +337,7 @@ function DataUser() {
                     <tr key={user.id || Math.random()}>
                       <td>{user.nik || "-"}</td>
                       <td>
-                        <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', backgroundColor: user.role === 'verifikator' ? '#fef08a' : '#e0e7ff', color: user.role === 'verifikator' ? '#a16207' : '#1d4ed8' }}>
+                        <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', backgroundColor: user.role === 'verifikator' ? '#fef08a' : user.role === 'admin' ? '#fecaca' : '#e0e7ff', color: user.role === 'verifikator' ? '#a16207' : user.role === 'admin' ? '#b91c1c' : '#1d4ed8' }}>
                           {user.role || "staff"}
                         </span>
                       </td>
@@ -391,8 +391,11 @@ function DataUser() {
                 <div className="modal-section">
                   <h3 className="section-subtitle">Informasi Login & Role</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>NIP Pegawai</label><input type="text" name="nip" value={formData.nip || ""} onChange={handleInputChange} /></div>
-                    <div className="form-group-modal"><label>NIK KTP*</label><input type="text" name="nik" value={formData.nik || ""} onChange={handleInputChange} maxLength="16" required /></div>
+                    <div className="form-group-modal">
+                      <label>NIP Pegawai*</label>
+                      <input type="text" name="nip" value={formData.nip || ""} onChange={handleInputChange} required placeholder="Masukkan NIP" />
+                    </div>
+                    
                     <div className="form-group-modal">
                       <label>Role / Posisi*</label>
                       <select name="role" value={formData.role || ""} onChange={handleInputChange} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
@@ -402,7 +405,11 @@ function DataUser() {
                         <option value="admin">admin</option>
                       </select>
                     </div>
-                    <div className="form-group-modal"><label>Kata Sandi Sementara*</label><input type="text" name="password" value={formData.password || ""} onChange={handleInputChange} required /></div>
+                    
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
+                      <label>Kata Sandi Sementara*</label>
+                      <input type="text" name="password" value={formData.password || ""} onChange={handleInputChange} required placeholder="Ketik kata sandi..." />
+                    </div>
                   </div>
                 </div>
 

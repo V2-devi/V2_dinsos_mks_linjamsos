@@ -6,15 +6,14 @@ import logoLinjamsos from "../../assets/logo_linjamsos.png";
 function AdminProfile() {
   const navigate = useNavigate();
 
-  // === STATE DATA PROFIL ===
+// === STATE DATA PROFIL ===
   const [profileData, setProfileData] = useState({
     namaLengkap: "Firliany Firdaus",
-    nik: "0000000000000000",
     nip: "0000000000000000",
     email: "snhsxiqb@gmail.com",
     noHp: "+6280000000000",
     alamat: "Jl.mana saja",
-    role: "Staff / Pengisi Data",
+    role: "admin",
     namaInstansi: "Dinas Sosial Kota Makassar",
     alamatInstansi: "Jln.",
     kepalaDinas: "Xxxxxxxxxxxxx",
@@ -85,7 +84,6 @@ function AdminProfile() {
             <h2 className="profile-section-title">Data Staff</h2>
             <div className="profile-info-grid">
               <span className="grid-label">Nama Lengkap</span><span className="grid-colon">:</span><span className="grid-value">{profileData.namaLengkap}</span>
-              <span className="grid-label">NIK</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nik}</span>
               <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nip}</span>
               <span className="grid-label">Email Aktif</span><span className="grid-colon">:</span><span className="grid-value">{profileData.email}</span>
               <span className="grid-label">No.HP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.noHp}</span>
@@ -133,7 +131,17 @@ function AdminProfile() {
                   <h3 className="section-subtitle">Data Pribadi Staff</h3>
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="namaLengkap" value={formData.namaLengkap} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>NIK</label><input type="text" name="nik" value={formData.nik} onChange={handleInputChange} required /></div>
+                    
+                    {/* INPUT NIK DIUBAH MENJADI DROPDOWN ROLE */}
+                    <div className="form-group-modal">
+                      <label>Role</label>
+                      <select name="role" value={formData.role} onChange={handleInputChange} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+                        <option value="staff">staff</option>
+                        <option value="verifikator">verifikator</option>
+                        <option value="admin">admin</option>
+                      </select>
+                    </div>
+
                     <div className="form-group-modal"><label>NIP</label><input type="text" name="nip" value={formData.nip} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Email Aktif</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>No. HP</label><input type="text" name="noHp" value={formData.noHp} onChange={handleInputChange} required /></div>
