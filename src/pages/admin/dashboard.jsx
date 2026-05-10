@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // ✅ TAMBAHAN: Agar fetchUsers tidak error
 import "./dashboard.css"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
@@ -24,16 +25,38 @@ function AdminDashboard() {
       email: "tallo@gmail.com", 
       address: "Kantor Kecamatan Tallo, Jl. AR Hakim", 
       role: "Verifikator", 
-      status: "Tidak Aktif",
+      status: "Pending",
       tanggal: "15/09"
     }
   ]);
+  
+  // === STATE DATA PENGGUNA (DARI DATABASE) ===
+  const [users, setUsers] = useState([]);
 
-  // === STATE DATA PENGGUNA (TABEL DASHBOARD) ===
-  const [users, setUsers] = useState([
-    // { id: 1, nik: "7370999999999999", role: "Pengisi Data", pass: "firli12", phone: "089999999999", name: "Devi Permata", email: "deviper@gmail.com", address: "Gowa", status: "Aktif" },
-    // { id: 2, nik: "7270888888888888", role: "Verifikator", pass: "dev12", phone: "088888888888", name: "Firliany Firdaus", email: "firli@gmail.com", address: "Gowa", status: "Aktif" }
-  ]);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+const fetchUsers = async () => {
+    try {
+      // Coba fetch dari API dulu
+      const res = await axios.get("http://localhost:8000/admin/users");
+      const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : null;
+      if (data) {
+        setUsers(data);
+        localStorage.setItem("localUsers", JSON.stringify(data));
+      }
+    } catch (err) {
+      console.warn("Backend mati. Memuat data Dashboard dari memori lokal...");
+      // ✅ PERBAIKAN: Jika API mati, tarik data dari form DataUser tadi
+      const savedUsers = JSON.parse(localStorage.getItem("localUsers")) || [];
+      setUsers(savedUsers);
+    }
+  };
+
+  // ✅ PERBAIKAN: Menyesuaikan nama variabel agar cocok dengan yang dipanggil di JSX bawah
+  const totalApproved = users.filter(u => u.status === "approved" || u.status === "Approved").length;
+  const totalPending = users.filter(u => u.status === "pending" || u.status === "Pending" || u.status === "Tidak Aktif").length;
 
   // === HANDLER FUNGSI ===
   const handleOpenApproval = (account) => {
@@ -43,7 +66,7 @@ function AdminDashboard() {
   };
 
   const handleApproveAccount = () => {
-    const newActiveUser = { ...selectedApproval, status: "Aktif", id: Date.now() };
+    const newActiveUser = { ...selectedApproval, status: "approved", id: Date.now() };
     setUsers([newActiveUser, ...users]); 
     setPendingAccounts(pendingAccounts.filter(acc => acc.id !== selectedApproval.id)); 
     setIsApprovalModalOpen(false);
@@ -60,10 +83,6 @@ function AdminDashboard() {
     setIsSuccessModalOpen(true);
     setTimeout(() => setIsSuccessModalOpen(false), 2500);
   };
-
-  // Hitung jumlah untuk Kartu Statistik
-  const totalAktif = users.filter(u => u.status === "Aktif").length;
-  const totalTidakAktif = users.filter(u => u.status === "Tidak Aktif").length;
 
   return (
     <div className="admin-container relative">
@@ -140,12 +159,12 @@ function AdminDashboard() {
         {/* STATS CARDS */}
         <div className="stats-container">
           <div className="stat-card">
-            <h3>Pengguna Aktif</h3>
-            <div className="stat-value text-green">{totalAktif}</div>
+            <h3>Pengguna Approved</h3>
+            <div className="stat-value text-green">{totalApproved}</div>
           </div>
           <div className="stat-card">
-            <h3>Pengguna Tidak Aktif</h3>
-            <div className="stat-value text-red">{totalTidakAktif}</div>
+            <h3>Pengguna Terpending</h3>
+            <div className="stat-value text-red">{totalPending}</div>
           </div>
         </div>
 
@@ -157,10 +176,11 @@ function AdminDashboard() {
               <tr><th>NIK</th><th>Kata Sandi</th><th>No.HP</th><th>Nama Lengkap</th><th>Email</th><th>Alamat</th><th style={{ textAlign: 'center' }}>Status Pegawai</th><th style={{ textAlign: "center" }}>Aksi</th></tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {/* ✅ PERBAIKAN: Menambahkan .slice(0, 5) agar yang tampil hanya 5 di dashboard */}
+              {users.slice(0, 5).map((user) => (
                 <tr key={user.id}>
-                  <td>{user.nik}</td><td>{user.pass}</td><td>{user.phone}</td><td style={{ fontWeight: '600' }}>{user.name}</td><td>{user.email}</td><td>{user.address}</td>
-                  <td style={{ textAlign: 'center' }}><span className={`status-badge ${user.status === "Aktif" ? "badge-active" : "badge-inactive"}`}>{user.status}</span></td>
+                  <td>{user.nik}</td><td>{user.password || "-"}</td><td>{user.no_hp}</td><td style={{ fontWeight: '600' }}>{user.nama_lengkap}</td><td>{user.email}</td><td>{user.alamat}</td>
+                  <td style={{ textAlign: 'center' }}><span className={`status-badge ${user.status === "approved" || user.status === "Approved" ? "badge-active" : "badge-inactive"}`}>{user.status}</span></td>
                   <td style={{ textAlign: "center" }}>
                     <div className="action-buttons" style={{ justifyContent: 'center' }}>
                       <button className="action-btn text-yellow" title="Ganti Password">🔑</button>
@@ -170,6 +190,9 @@ function AdminDashboard() {
                   </td>
                 </tr>
               ))}
+              {users.length === 0 && (
+                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
+              )}
             </tbody>
           </table>
         </div>

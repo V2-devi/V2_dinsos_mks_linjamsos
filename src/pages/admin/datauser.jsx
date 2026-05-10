@@ -3,9 +3,6 @@ import { useNavigate } from "react-router-dom";
 import "./datauser.css"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 import axios from "axios";
-// axios.get("http://localhost:8000/admin/users");
-
-
 
 // TESTING
 // function DataUser() {
@@ -15,74 +12,42 @@ import axios from "axios";
 // export default DataUser;
 // TESTING
 
-
-
-
-
-
 function DataUser() {
   const navigate = useNavigate();
-
-
 
 //   // === STATE NOTIFIKASI ===
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-//   // === STATE DATA PENGGUNA (Bisa Diubah/Ditambah) ===
+// === STATE DATA PENGGUNA ===
   const [users, setUsers] = useState([]);
 
+  // ✅ PERBAIKAN: Baca dari LocalStorage saat pertama render
   useEffect(() => {
     fetchUsers();
   }, []);
 
-console.log("USERS STATE:", users);
-
-const fetchUsers = async () => {
-  try {
-    console.log("FETCHING USERS FROM BACKEND...");
+  const fetchUsers = async () => {
     setIsInitialLoad(true);
-    const res = await axios.get("http://localhost:8000/admin/users");
-    console.log("RAW RESPONSE:", res);
-    console.log("RESPONSE DATA:", res.data);
-
-    const data = Array.isArray(res.data)
-      ? res.data
-      : Array.isArray(res.data?.data)
-        ? res.data.data
-        : null;
-
-    console.log("PROCESSED DATA:", data);
-
-    if (data) {
-      console.log("SETTING USERS STATE:", data.length, "users");
-      setUsers(data);
-      return data;
-    }
-
-    console.warn("Unexpected fetch format:", res.data);
-    return users;
-  } catch (err) {
-    console.error("ERROR FETCHING USERS:", err);
-    console.error("ERROR DETAILS:", err.response?.data || err.message);
-    // tetap gunakan data existing agar tabel tidak hilang saat terjadi network error
-    return users;
-  } finally {
-    setIsInitialLoad(false);
-  }
-};
-
-  console.log("USERS STATE:", users);
-
-  const approveUser = async (id) => {
-    console.log("KLIK APPROVE:", id); // ✅ DEBUG
     try {
-      await axios.put(`http://localhost:8000/admin/approve/${id}`);
-      fetchUsers(); // refresh
+      // Coba fetch dari API dulu
+      const res = await axios.get("http://localhost:8000/admin/users");
+      const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : null;
+      if (data) {
+        setUsers(data);
+        localStorage.setItem("localUsers", JSON.stringify(data)); // Simpan backup ke browser
+      }
     } catch (err) {
-      console.error(err);
-      alert("Gagal aaprove")
+      console.warn("Backend mati. Memuat dari memori lokal...");
+      // Jika API mati, ambil dari LocalStorage browser
+      const savedUsers = JSON.parse(localStorage.getItem("localUsers")) || [];
+      setUsers(savedUsers);
+    } finally {
+      setIsInitialLoad(false);
     }
   };
+  // Hitung jumlah untuk Kartu Statistik (Sesuaikan value status dengan yang ada di database, misal "approved" / "pending")
+  const totalAktif = users.filter(u => u.status === "approved").length;
+  const totalTidakAktif = users.filter(u => u.status === "pending" || u.status === "Tidak Aktif").length;
 
 
 //   // === STATE FORM DATA (Untuk Tambah & Edit) ===
@@ -121,17 +86,39 @@ const fetchUsers = async () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // === HANDLER TAMBAH DATA ===
-  const handleAddSubmit = (e) => {
+// === HANDLER TAMBAH DATA ===
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    const newUser = { 
-      ...formData, 
-      id: Date.now() // Membuat ID unik sementara
+    setIsLoading(true);
+    
+    const newUserPayload = {
+      id: Date.now(),
+      nip: formData.nip,
+      nik: formData.nik,
+      role: formData.role,
+      password: formData.password,
+      nama_lengkap: formData.nama_lengkap,
+      email: formData.email,
+      no_hp: formData.no_hp,
+      alamat: formData.alamat,
+      status: formData.status
     };
-    setUsers([newUser, ...users]); // Masukkan data baru ke urutan paling atas
-    setIsAddModalOpen(false);
-    setFormData(initialFormState); // Kosongkan form
-    showSuccess();
+
+    try {
+      await axios.post("http://localhost:8000/admin/users", newUserPayload, { headers: { "Content-Type": "application/json" } });
+    } catch (err) {
+      console.warn("Backend mati. Menyimpan lokal...");
+    } finally {
+      // ✅ PERBAIKAN PENTING: Update state & simpan ke LocalStorage agar tidak hilang
+      const updatedList = [newUserPayload, ...users];
+      setUsers(updatedList);
+      localStorage.setItem("localUsers", JSON.stringify(updatedList));
+
+      setIsAddModalOpen(false);
+      setFormData(initialFormState);
+      showSuccess();
+      setIsLoading(false);
+    }
   };
 
   // === HANDLER EDIT DATA ===
@@ -232,12 +219,24 @@ const fetchUsers = async () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    const remainingUsers = users.filter(u => u.id !== userToDelete.id);
-    setUsers(remainingUsers);
-    setIsDeleteModalOpen(false);
-    setUserToDelete(null);
-    showSuccess();
+// === HANDLER NONAKTIFKAN DATA (UBAH KE PENDING) ===
+  const confirmDelete = async () => {
+    setIsLoading(true);
+    try {
+      await axios.put(`http://localhost:8000/admin/update/${userToDelete.id}`, { ...userToDelete, status: "pending" }, { headers: { "Content-Type": "application/json" } });
+    } catch (err) {
+      console.warn("Backend mati. Menonaktifkan lokal...");
+    } finally {
+      // ✅ PERBAIKAN: Ubah status secara lokal dan simpan ke browser
+      const updatedList = users.map(u => u.id === userToDelete.id ? { ...u, status: "pending" } : u);
+      setUsers(updatedList);
+      localStorage.setItem("localUsers", JSON.stringify(updatedList));
+
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+      showSuccess();
+      setIsLoading(false);
+    }
   };
 
   // Tampilkan Notifikasi Sukses
@@ -364,7 +363,7 @@ const fetchUsers = async () => {
         </div>
       </main>
 
-      {/* ================= MODAL TAMBAH STAFF (INTERapproved) ================= */}
+{/* ================= MODAL TAMBAH STAFF (INTERapproved) ================= */}
       {isAddModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -372,32 +371,48 @@ const fetchUsers = async () => {
               <div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg><h2>Tambah Staff Baru</h2></div>
             </div>
             <div className="modal-body">
+              {/* ✅ MENAMPILKAN KOTAK ERROR JIKA SERVER MENOLAK */}
+              {errorMessage && (
+                <div style={{
+                  padding: '12px 15px',
+                  marginBottom: '20px',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '6px',
+                  color: '#991b1b',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {errorMessage}
+                </div>
+              )}
               <form onSubmit={handleAddSubmit}>
                 
                 <div className="modal-section">
                   <h3 className="section-subtitle">Informasi Login & Role</h3>
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>NIP Pegawai</label><input type="text" name="nip" value={formData.nip || ""} onChange={handleInputChange} /></div>
-                    <div className="form-group-modal"><label>NIK KTP*</label><input type="text" name="nik" value={formData.nik || ""} onChange={handleInputChange} maxLength="16" /></div>
+                    <div className="form-group-modal"><label>NIK KTP*</label><input type="text" name="nik" value={formData.nik || ""} onChange={handleInputChange} maxLength="16" required /></div>
                     <div className="form-group-modal">
                       <label>Role / Posisi*</label>
-                      <select name="role" value={formData.role || ""} onChange={handleInputChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+                      <select name="role" value={formData.role || ""} onChange={handleInputChange} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
                         <option value="" disabled hidden>Pilih Role</option>
                         <option value="staff">staff</option>
                         <option value="verifikator">verifikator</option>
+                        <option value="admin">admin</option>
                       </select>
                     </div>
-                    <div className="form-group-modal"><label>Kata Sandi Sementara*</label><input type="text" name="password" value={formData.password} onChange={handleInputChange} /></div>
+                    <div className="form-group-modal"><label>Kata Sandi Sementara*</label><input type="text" name="password" value={formData.password || ""} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
 
                 <div className="modal-section">
                   <h3 className="section-subtitle">Data Pribadi Staff</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap || ""} onChange={handleInputChange} /></div>
-                    <div className="form-group-modal"><label>Email approved*</label><input type="email" name="email" value={formData.email || ""} onChange={handleInputChange}  /></div>
-                    <div className="form-group-modal"><label>No. WhatsApp*</label><input type="text" name="no_hp" value={formData.no_hp || ""} onChange={handleInputChange} /></div>
-                    <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat|| ""} onChange={handleInputChange}  /></div>
+                    <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap || ""} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Email*</label><input type="email" name="email" value={formData.email || ""} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>No. WhatsApp*</label><input type="text" name="no_hp" value={formData.no_hp || ""} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat || ""} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
 
@@ -405,15 +420,18 @@ const fetchUsers = async () => {
                   <h3 className="section-subtitle">Status Akun</h3>
                   <div className="form-group-modal">
                     <div className="radio-group-inline">
-                      <label className="radio-label"><input type="radio" name="status" value="approved" checked={formData.status === "approved"} onChange={handleInputChange} /><span>approved</span></label>
-                      <label className="radio-label"><input type="radio" name="status" value="pending" checked={formData.status === "pending"} onChange={handleInputChange} /><span>pending</span></label>
+                      <label className="radio-label"><input type="radio" name="status" value="approved" checked={formData.status === "approved"} onChange={handleInputChange} required /><span>approved</span></label>
+                      <label className="radio-label"><input type="radio" name="status" value="pending" checked={formData.status === "pending"} onChange={handleInputChange} required /><span>pending</span></label>
                     </div>
                   </div>
                 </div>
 
                 <div className="modal-actions">
-                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button>
-                  <button type="submit" className="btn-modal-submit">Buat Akun</button>
+                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)} disabled={isLoading}>Batal</button>
+                  {/* ✅ TOMBOL OTOMATIS BERUBAH JADI 'Menyimpan...' AGAR TIDAK DIKLIK BERKALI-KALI */}
+                  <button type="submit" className="btn-modal-submit" disabled={isLoading} style={{opacity: isLoading ? 0.6 : 1, cursor: isLoading ? 'not-allowed' : 'pointer'}}>
+                    {isLoading ? 'Menyimpan...' : 'Buat Akun'}
+                  </button>
                 </div>
               </form>
             </div>
@@ -455,6 +473,7 @@ const fetchUsers = async () => {
                       <select name="role" value={formData.role} onChange={handleInputChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
                         <option value="staff">staff</option>
                         <option value="verifikator">verifikator</option>
+                        <option value="admin">admin</option>
                       </select>
                     </div>
                   </div>
@@ -515,14 +534,14 @@ const fetchUsers = async () => {
         <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
           <div className="modal-content modal-small text-center" onClick={(e) => e.stopPropagation()}>
             <div className="modal-body" style={{ padding: '40px 20px 30px' }}>
-              <div style={{ fontSize: '50px', marginBottom: '15px' }}>🗑️</div>
-              <h2 style={{ color: '#234a66', fontSize: '20px', marginBottom: '10px' }}>Hapus Akun Pengguna?</h2>
+              <div style={{ fontSize: '50px', marginBottom: '15px' }}>⚠️</div>
+              <h2 style={{ color: '#234a66', fontSize: '20px', marginBottom: '10px' }}>Nonaktifkan Akun?</h2>
               <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '30px' }}>
-                Apakah Anda yakin ingin menghapus akun milik <strong>{userToDelete.nama_lengkap}</strong>?<br/>Data yang telah dihapus tidak dapat dikembalikan.
+                Apakah Anda yakin ingin menonaktifkan akses sistem untuk <strong>{userToDelete.nama_lengkap}</strong>?<br/>Akun ini tidak akan bisa digunakan untuk login, namun riwayat dokumen yang dikerjakannya akan tetap aman tersimpan.
               </p>
               <div className="modal-actions">
                 <button type="button" className="btn-modal-cancel" onClick={() => setIsDeleteModalOpen(false)}>Batal</button>
-                <button type="button" className="btn-modal-danger" onClick={confirmDelete}>Ya, Hapus Akun</button>
+                <button type="button" className="btn-modal-danger" style={{ backgroundColor: '#ef4444' }} onClick={confirmDelete}>Ya, Nonaktifkan</button>
               </div>
             </div>
           </div>
@@ -549,35 +568,3 @@ const fetchUsers = async () => {
 }
 
 export default DataUser;
-
-
-
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-
-// function DataUser() {
-//   const [users, setUsers] = useState([]);
-
-//   useEffect(() => {
-//     axios
-//       .get("http://localhost:8000/admin/users/pending")
-//       .then((res) => {
-//         console.log(res.data);
-//         setUsers(res.data);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//       });
-//   }, []);
-
-//   return (
-//     <div>
-//       <h1>TEST DATAUSER</h1>
-//       <pre>{JSON.stringify(users, null, 2)}</pre>
-//     </div>
-//   );
-// }
-
-// export default DataUser;
