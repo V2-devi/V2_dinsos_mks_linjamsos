@@ -36,6 +36,8 @@ function StaffDashboard() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(form),
+        nama_pengusul: form.nama_pengusul,
+        penginput: form.penginput,
     });
   };
 
@@ -80,14 +82,13 @@ function StaffDashboard() {
           no_kk: item.no_kk,
           nama_lengkap: item.nama_lengkap,
           nama_pengusul: item.nama_pengusul,
-          nama: item.nama_pengusul,
           penginput: item.penginput,
           kecamatan: item.kecamatan,
           kelurahan: item.kelurahan,
           tanggal: item.tanggal_usulan, // Disamakan dengan state lokal
           alamat: item.alamat,
           jenisbansos: item.jenis_bansos, // Field baru
-          status: item.status_pengusulan // Disamakan dengan state lokal
+          status_pengusulan: item.status_pengusulan // Disamakan dengan state lokal
         })));
 
         // Fetch DTSEN
@@ -114,12 +115,12 @@ function StaffDashboard() {
         setDummyPPKS(ppksData.map(item => ({
           id: item.id,
           nik: item.nik,
-          nama: item.nama,
+          nama_lengkap: item.nama_lengkap,
           kategori: item.kategori,
           kecamatan: item.kecamatan,
           lokasi: item.lokasi,
           tanggal: item.tanggal_laporan,
-          status: item.status
+          status_penanganan: item.status_penanganan
         })));
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -133,9 +134,9 @@ function StaffDashboard() {
   const [isDetailAnggotaModalOpen, setIsDetailAnggotaModalOpen] = useState(false);
   const [selectedAnggotaData, setSelectedAnggotaData] = useState(null);
   const [isEditAsetModalOpen, setIsEditAsetModalOpen] = useState(false);
-  const initialFormAnggota = { nik: "", nama: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
+  const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
   const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
-  const initialFormPPKS = { nik: "", nama: "", kategori: "", kecamatan: "", lokasi: "", tanggal: "" };
+  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", lokasi: "", tanggal: "" };
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
   
   const handleAddPPKSSubmit = async (e) => {
@@ -148,7 +149,7 @@ function StaffDashboard() {
             kategori: formPPKS.kategori,
             tanggal_laporan: formPPKS.tanggal,
             nik: formPPKS.nik || null,
-            nama: formPPKS.nama || null,
+            nama_lengkap: formPPKS.nama_lengkap || null,
             kecamatan: formPPKS.kecamatan,
             lokasi: formPPKS.lokasi,
             status: "Menunggu Kelayakan"
@@ -158,9 +159,9 @@ function StaffDashboard() {
       const newPPKS = {
         ...formPPKS,
         id: data[0].id,
-        status: "Menunggu Kelayakan",
+        status_penanganan: "Menunggu Kelayakan",
         nik: formPPKS.nik || "Belum Diketahui", 
-        nama: formPPKS.nama || "Tanpa Identitas"
+        nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas"
       };
       setDummyPPKS([newPPKS, ...dummyPPKS]);
       setIsAddPPKSModalOpen(false);
@@ -186,7 +187,7 @@ function StaffDashboard() {
     try {
       const { error } = await supabase
         .from('ppks')
-        .update({ status: statusBaru })
+        .update({ status_penanganan: statusBaru })
         .eq('id', selectedPPKSData.id);
       if (error) throw error;
       
@@ -194,7 +195,7 @@ function StaffDashboard() {
         item.id === selectedPPKSData.id ? { ...item, status: statusBaru, deskripsiAwal: catatanAssessment } : item
       );
       setDummyPPKS(updatedPPKS);
-      setSelectedPPKSData({ ...selectedPPKSData, status: statusBaru, deskripsiAwal: catatanAssessment });
+      setSelectedPPKSData({ ...selectedPPKSData, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment });
       showSuccess();
     } catch (error) {
       console.error('Error updating PPKS status:', error);
@@ -209,19 +210,21 @@ function StaffDashboard() {
   const initialFormState = { 
     nik: "", 
     no_kk: "", 
-    nama: "", 
+    nama_lengkap: "", 
+    penginput: "",
+    nama_pengusul: "",
     kecamatan: "", 
     kelurahan: "", 
     tanggal: "", 
     alamat: "", 
     desil: "", 
     jenisbansos: "", // Field Jenis Bansos dipastikan ada
-    status: "Belum" 
+    status_pengusulan: "Belum" 
   };
   const [formData, setFormData] = useState(initialFormState);
   
   const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
-  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama: "" });
+  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
 
   const getQuarter = (dateString) => {
     if (!dateString) return "q1";
@@ -229,12 +232,12 @@ function StaffDashboard() {
     return month <= 3 ? "q1" : month <= 6 ? "q2" : month <= 9 ? "q3" : "q4";
   };
 
-  const dashboardDataFiltered = usulanData.filter(item => getQuarter(item.tanggal) === filterPeriodeDashboard);
+  const dashboardDataFiltered = usulanData.filter(item => getQuarter(item.tanggal_usulan) === filterPeriodeDashboard);
   const statTotal = dashboardDataFiltered.length;
-  const statSelesai = dashboardDataFiltered.filter(i => i.status === "Layak" || i.status === "Tidak Layak").length;
-  const statBelum = dashboardDataFiltered.filter(i => i.status === "Belum").length;
-  const statLayak = dashboardDataFiltered.filter(i => i.status === "Layak").length;
-  const statTidakLayak = dashboardDataFiltered.filter(i => i.status === "Tidak Layak").length;
+  const statSelesai = dashboardDataFiltered.filter(i => i.status_pengusulan === "Layak" || i.status_pengusulan === "Tidak Layak").length;
+  const statBelum = dashboardDataFiltered.filter(i => i.status_pengusulan === "Belum").length;
+  const statLayak = dashboardDataFiltered.filter(i => i.status_pengusulan === "Layak").length;
+  const statTidakLayak = dashboardDataFiltered.filter(i => i.status_pengusulan === "Tidak Layak").length;
   const totalVerified = statLayak + statTidakLayak;
   const pctLayak = totalVerified === 0 ? 0 : Math.round((statLayak / totalVerified) * 100);
   const pctTidakLayak = totalVerified === 0 ? 0 : 100 - pctLayak;
@@ -244,12 +247,12 @@ function StaffDashboard() {
   const tableDataFiltered = usulanData.filter(item => {
     // Penambahan pengaman agar tidak error jika nik/nama undefined
     const itemNik = item.nik || "";
-    const itemNama = item.nama || "";
+    const itemNama = item.nama_lengkap || "";
     
     return (filterTable.kecamatan === "" || item.kecamatan === filterTable.kecamatan) && 
            (filterTable.kelurahan === "" || item.kelurahan === filterTable.kelurahan) && 
            (filterTable.nik === "" || itemNik.includes(filterTable.nik)) && 
-           (filterTable.nama === "" || itemNama.toLowerCase().includes(filterTable.nama.toLowerCase()));
+           (filterTable.nama_lengkap === "" || itemNama.toLowerCase().includes(filterTable.nama_lengkap.toLowerCase()));
   });
 
   // 🌟 PERBAIKAN FUNGSI SUBMIT USULAN BARU 🌟
@@ -281,13 +284,14 @@ function StaffDashboard() {
         id: data[0].id,
         nik: formData.nik,
         no_kk: formData.no_kk,
-        nama: formData.nama,
+        nama_lengkap: formData.nama_lengkap,
+        nama_pengusul: formData.nama_pengusul,
         kecamatan: formData.kecamatan,
         kelurahan: formData.kelurahan,
         tanggal: formData.tanggal,
         alamat: formData.alamat,
         jenisbansos: formData.jenisbansos, // Field jenis bansos
-        status: "Belum"
+        status_pengusulan: "Belum"
       };
       
       // 3. Masukkan ke tabel UI
@@ -325,7 +329,7 @@ function StaffDashboard() {
       desil: "Belum Dihitung", 
       anggota: [{ 
         nik: "Belum Diinput", 
-        nama: formDtsen.nama_kepala_keluarga, 
+        nama_kepala_keluarga: formDtsen.nama_kepala_keluarga, 
         hub: "Kepala Keluarga", 
         jk: formDtsen.jenis_kelamin || "-", 
         tglLahir: "-", 
@@ -544,7 +548,7 @@ function StaffDashboard() {
   });
 
   const top5PPKS = Object.entries(kategoriCount)
-    .map(([nama, jumlah]) => ({ nama, jumlah }))
+    .map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah }))
     .sort((a, b) => b.jumlah - a.jumlah)
     .slice(0, 5); 
 
@@ -553,7 +557,7 @@ function StaffDashboard() {
   const tabelPPKSFiltered = dummyPPKS.filter(item => {
     const matchKategori = filterTabelPPKS.kategori === "" || item.kategori === filterTabelPPKS.kategori;
     const matchKecamatan = filterTabelPPKS.kecamatan === "" || item.kecamatan === filterTabelPPKS.kecamatan;
-    const matchNama = filterTabelPPKS.nama === "" || item.nama.toLowerCase().includes(filterTabelPPKS.nama.toLowerCase()) || item.nik.includes(filterTabelPPKS.nama);
+    const matchNama = filterTabelPPKS.nama_lengkap === "" || item.nama_lengkap.toLowerCase().includes(filterTabelPPKS.nama_lengkap.toLowerCase()) || item.nik.includes(filterTabelPPKS.nama_lengkap);
     return matchKategori && matchKecamatan && matchNama;
   });
 
@@ -683,7 +687,7 @@ function StaffDashboard() {
 
               <div className="detail-summary-grid">
                 <div className="summary-col">
-                  <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama}</span></div>
+                  <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap}</span></div>
                   <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik}</span></div>
                 </div>
                 <div className="summary-col">
@@ -776,7 +780,7 @@ function StaffDashboard() {
                 <div className="filter-group-top"><label>Kecamatan</label><div className="select-container-custom"><select name="kecamatan" value={filterTable.kecamatan} onChange={handleFilterChange}><option value="">Semua Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option></select></div></div>
                 <div className="filter-group-top"><label>Kelurahan/Desa</label><div className="select-container-custom"><select name="kelurahan" value={filterTable.kelurahan} onChange={handleFilterChange}><option value="">Semua Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option></select></div></div>
                 <div className="filter-group-top"><label>NIK (0-16)</label><input type="text" name="nik" className="input-custom" placeholder="Cari NIK..." value={filterTable.nik} onChange={handleFilterChange} /></div>
-                <div className="filter-group-top"><label>Nama</label><input type="text" name="nama" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama} onChange={handleFilterChange} /></div>
+                <div className="filter-group-top"><label>Nama</label><input type="text" name="nama_lengkap" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama_lengkap} onChange={handleFilterChange} /></div>
               </div>
               <div className="action-row-right"><button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}><span className="plus-icon">+</span> Tambah Usulan</button></div>
               <div className="table-wrapper">
@@ -796,12 +800,12 @@ function StaffDashboard() {
                     <tbody>
                       {tableDataFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
-                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal)}</td><td>{item.alamat}</td>
+                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
+                          <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan)}</td><td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
-                            {item.status === "Layak" && <span className="status-badge badge-active">Layak</span>}
-                            {item.status === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
-                            {item.status === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Menunggu</span>}
+                            {item.status_pengusulan === "Layak" && <span className="status-badge badge-active">Layak</span>}
+                            {item.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
+                            {item.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum</span>}
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <button className="btn-icon-keterangan" title="Lihat Riwayat" onClick={() => handleOpenDetailRiwayat(item)}>
@@ -826,7 +830,7 @@ function StaffDashboard() {
               </div>
               <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '30px', display: 'flex', gap: '40px' }}>
                 {/* 🌟 PERBAIKAN: Menampilkan data sesuai state item yang dipilih 🌟 */}
-                <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Nama Pengusul</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>{selectedDetailData.nama}</strong></div>
+                <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Nama Pengusul</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>{selectedDetailData.nama_pengusul}</strong></div>
                 <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>NIK</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>{selectedDetailData.nik}</strong></div>
                 <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Domisili</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>Kec. {selectedDetailData.kecamatan}, Kel. {selectedDetailData.kelurahan}</strong></div>
               </div>
@@ -834,14 +838,14 @@ function StaffDashboard() {
               <div className="table-wrapper"><div className="table-responsive"><table className="staff-table">
                 <thead><tr><th>Nama Penerima Bantuan</th><th>Jenis Bantuan Sosial</th><th>Tanggal Penerimaan</th><th style={{ textAlign: "center" }}>Status Penyaluran</th></tr></thead>
                 <tbody>
-                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama}</td><td>Bantuan Pangan Non Tunai (BPNT)</td><td>12 Januari 2026</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
-                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama}</td><td>Program Keluarga Harapan (PKH)</td><td>25 Agustus 2025</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
+                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama_lengkap}</td><td>Bantuan Pangan Non Tunai (BPNT)</td><td>12 Januari 2026</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
+                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama_lengkap}</td><td>Program Keluarga Harapan (PKH)</td><td>25 Agustus 2025</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
                   {/* 🌟 PERBAIKAN: Menampilkan Jenis Bansos sesuai input form 🌟 */}
                   <tr style={{ backgroundColor: '#fffbeb' }}>
-                    <td style={{ fontWeight: '600', color: '#b45309' }}>{selectedDetailData.nama} <span style={{fontSize:'10px', color:'#ef4444'}}>(Usulan Baru)</span></td>
+                    <td style={{ fontWeight: '600', color: '#b45309' }}>{selectedDetailData.nama_lengkap} <span style={{fontSize:'10px', color:'#ef4444'}}>(Usulan Baru)</span></td>
                     <td style={{ color: '#b45309', fontWeight: 'bold' }}>{selectedDetailData.jenisbansos || "Belum Ditentukan"}</td>
                     <td style={{ color: '#b45309' }}>{formatDateIndo(selectedDetailData.tanggal)}</td>
-                    <td style={{ textAlign: "center" }}>{selectedDetailData.status === "Layak" && <span className="status-badge badge-active">Selesai</span>}{selectedDetailData.status === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak Menerima</span>}{selectedDetailData.status === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Selesai</span>}</td>
+                    <td style={{ textAlign: "center" }}>{selectedDetailData.status_pengusulan === "Layak" && <span className="status-badge badge-active">Selesai</span>}{selectedDetailData.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak Menerima</span>}{selectedDetailData.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Selesai</span>}</td>
                   </tr>
                 </tbody>
               </table></div></div>
@@ -1129,7 +1133,7 @@ function StaffDashboard() {
                 <div className="ppks-horizontal-chart">
                   {top5PPKS.length > 0 ? top5PPKS.map((item, idx) => (
                     <div className="ppks-bar-row" key={idx}>
-                      <span className="ppks-label">{item.nama}</span>
+                      <span className="ppks-label">{item.nama_lengkap}</span>
                       <div className="ppks-bar-track">
                         <div className="ppks-bar-fill" style={{ width: `${(item.jumlah / maxPPKS) * 100}%` }}></div>
                       </div>
@@ -1192,7 +1196,7 @@ function StaffDashboard() {
                 </div>
                 <div className="filter-group-top">
                   <label>Nama/Identitas</label>
-                  <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
+                  <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
                 </div>
                 <div className="filter-group-top align-bottom">
                   <button className="btn-search-outline">Cari Data</button>
@@ -1214,7 +1218,7 @@ function StaffDashboard() {
                     <tbody>
                       {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
+                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
                           <td>{item.kategori}</td>
                           <td>{item.lokasi}</td>
                           <td>{formatDateIndo(item.tanggal)}</td>
@@ -1337,7 +1341,7 @@ function StaffDashboard() {
               <form onSubmit={handleAddAnggotaSubmit}>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formAnggota.nik} onChange={(e) => setFormAnggota({...formAnggota, nik: e.target.value})} required maxLength="16" placeholder="Ketik NIK..." /></div>
-                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama" value={formAnggota.nama} onChange={(e) => setFormAnggota({...formAnggota, nama: e.target.value})} required placeholder="Ketik Nama..." /></div>
+                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formAnggota.nama_lengkap} onChange={(e) => setFormAnggota({...formAnggota, nama_lengkap: e.target.value})} required placeholder="Ketik Nama..." /></div>
                   <div className="form-group-modal">
                     <label>Hubungan Keluarga*</label>
                     <div className="select-container-custom"><select name="hub" value={formAnggota.hub} onChange={(e) => setFormAnggota({...formAnggota, hub: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div>
@@ -1371,7 +1375,7 @@ function StaffDashboard() {
                   <h3 className="section-subtitle">Data Pribadi</h3>
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>NIK</label><input type="text" name="nik" value={selectedAnggotaData.nik} onChange={handleEditAnggotaChange} /></div>
-                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama" value={selectedAnggotaData.nama} onChange={handleEditAnggotaChange} /></div>
+                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={selectedAnggotaData.nama_lengkap} onChange={handleEditAnggotaChange} /></div>
                     <div className="form-group-modal">
                       <label>Hubungan Keluarga</label>
                       <div className="select-container-custom"><select name="hub" value={selectedAnggotaData.hub} onChange={handleEditAnggotaChange}><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div>
@@ -1665,14 +1669,28 @@ function StaffDashboard() {
 
                 {/* Baris 2: Nama dan Tanggal Pengusulan */}
                 <div className="form-grid-2">
+
                   <div className="form-group-modal">
                     <label>Nama Lengkap (Sesuai KTP)*</label>
-                    <input type="text" name="nama" value={formData.nama} onChange={(e) => setFormData({...formData, nama: e.target.value})} required placeholder="Masukkan Nama Lengkap" />
+                    <input type="text" name="nama" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama_lengkap: e.target.value})} required placeholder="Masukkan Nama Lengkap" />
                   </div>
+
                   <div className="form-group-modal">
                     <label>Tanggal Pengusulan*</label>
-                    <input type="date" name="tanggal" value={formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value})} required />
+                    <input type="date" name="tanggal" value={formData.tanggal_usulan} onChange={(e) => setFormData({...formData, tanggal_usulan: e.target.value})} required />
                   </div>
+
+                  <div className="form-group-modal">
+                    <label>Nama Pengusul</label>
+                    <input type="text" name="nama_pengusul" value={formData.nama_pengusul} onChange={(e) => setFormData({...formData, nama_pengusul: e.target.value})} required placeholder="Masukkan Nama Pengusul" />
+                  </div>
+
+
+                   <div className="form-group-modal">
+                    <label>Penginput</label>
+                    <input type="text" name="penginput" value={formData.penginput} onChange={(e) => setFormData({...formData, penginput: e.target.value})} required placeholder="Masukkan Nama Pengusul" />
+                  </div>
+                    
                 </div>
 
                 {/* Baris 3: Kecamatan dan Kelurahan */}
@@ -1726,6 +1744,7 @@ function StaffDashboard() {
                       style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #94a3b8', resize: 'vertical', minHeight: '60px'}}
                     ></textarea>
                   </div>
+                  
                 </div>
 
                 <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
@@ -1781,7 +1800,7 @@ function StaffDashboard() {
 
                   <div className="form-group-modal">
                     <label>Nama/Alias (Bila Diketahui)</label>
-                    <input type="text" name="nama" value={formPPKS.nama} onChange={(e) => setFormPPKS({...formPPKS, nama: e.target.value})} placeholder="Contoh: Bapak Fulan" />
+                    <input type="text" name="nama" value={formPPKS.nama_lengkap} onChange={(e) => setFormPPKS({...formPPKS, nama_lengkap: e.target.value})} placeholder="Contoh: Bapak Fulan" />
                   </div>
 
                   <div className="form-group-modal">
@@ -1820,7 +1839,7 @@ function StaffDashboard() {
             <div className="modal-header"><div className="modal-header-title"><h2>Kalkulasi PMT & Desil</h2></div></div>
             <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
               <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ margin: '0', color: '#234a66', fontSize: '18px' }}>{selectedKalkulasi.nama}</h3>
+                <h3 style={{ margin: '0', color: '#234a66', fontSize: '18px' }}>{selectedKalkulasi.nama_lengkap}</h3>
                 <p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.no_kk}</p>
               </div>
               

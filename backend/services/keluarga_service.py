@@ -35,7 +35,9 @@ def create_anggota_keluarga(id: str, data: dict):
         "lokasi_penemuan": data.get("lokasi_penemuan"),
         "tanggal_laporan": data.get("tanggal_laporan"),
         "kategori_ppks": data.get("kategori_ppks"),
-        "status_penangangan": data.get("status_penanganan")
+        "status_penangangan": data.get("status_penanganan"),
+
+        "alamat":data.get("alamat")
 
     }
 

@@ -41,7 +41,8 @@ def get_pengusulan_service():
             nama_lengkap,
             keluarga (
                 kecamatan,
-                kelurahan
+                kelurahan,
+                alamat
             )
         """) \
         .execute()
@@ -54,7 +55,7 @@ def get_pengusulan_service():
             "id": item["id"],
             "nama_lengkap": item["nama_pengusul"],  # mapping di sini
             "tanggal_usulan": item["tanggal_usulan"],
-            "status": item["status_pengusulan"],
+            "status_pengusulan": item["status_pengusulan"],
             "alamat": item["keluarga"]["alamat"] if item.get("keluarga") else None,
             "kecamatan": item["keluarga"]["kecamatan"] if item.get("keluarga") else None,
             "kelurahan": item["keluarga"]["kelurahan"] if item.get("keluarga") else None,
@@ -79,7 +80,7 @@ def approve_pengusulan_service(id: str):
 
     # update status
     supabase.table("pengusulan_bansos") \
-        .update({"status_pengusulan": "approved"}) \
+        .update({"status_pengusulan": "Layak"}) \
         .eq("id", id) \
         .execute()
 
@@ -89,16 +90,16 @@ def approve_pengusulan_service(id: str):
         "jenis_bantuan_sosial": item.get("jenis_bantuan_sosial", "default")
     }).execute()
 
-    return {"message": "Approved"}
+    return {"message": "Layak"}
 
 
 def reject_pengusulan_service(id: str):
     supabase.table("pengusulan_bansos") \
-        .update({"status_pengusulan": "rejected"}) \
+        .update({"status_pengusulan": "Tidak Layak"}) \
         .eq("id", id) \
         .execute()
 
-    return {"message": "Rejected"}
+    return {"message": "Tidak Layak"}
 
 
 
