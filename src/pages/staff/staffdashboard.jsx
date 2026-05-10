@@ -269,14 +269,6 @@ function StaffDashboard() {
             kelurahan: formData.kelurahan,
             alamat: formData.alamat,
             penginput: formData.penginput || null, 
-            // nama_pengusul: formData.nama, // Sesuai state lokal
-            // nik: formData.nik,
-            // no_kk: formData.no_kk,
-            // kecamatan: formData.kecamatan,
-            // kelurahan: formData.kelurahan,
-            // alamat: formData.alamat,
-            // tanggal_usulan: formData.tanggal,
-            // jenis_bansos: formData.jenisbansos, // Menyimpan jenis bansos ke DB
             status_pengusulan: "Belum"
           }
         ])
