@@ -20,6 +20,7 @@ def create_pengusulan (data: PengusulanCreate):
         "nik": data.nik,
         "status_pengusulan": "Belum",
         "nama_lengkap": data.nama_lengkap,
+        "jenis_bansos": data.jenis_bansos,
     }).execute()
 
 
@@ -39,6 +40,7 @@ def get_pengusulan_service():
             kelurahan,
             nik,
             nama_lengkap,
+            jenis_bansos
             keluarga (
                 kecamatan,
                 kelurahan,
@@ -59,6 +61,7 @@ def get_pengusulan_service():
             "alamat": item["keluarga"]["alamat"] if item.get("keluarga") else None,
             "kecamatan": item["keluarga"]["kecamatan"] if item.get("keluarga") else None,
             "kelurahan": item["keluarga"]["kelurahan"] if item.get("keluarga") else None,
+            "jenis_bansos": item["jenis_bansos"],
         })
 
     return data

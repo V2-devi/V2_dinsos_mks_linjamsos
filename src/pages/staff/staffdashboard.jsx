@@ -26,7 +26,8 @@ function StaffDashboard() {
     kecamatan: "",
     kelurahan: "",
     alamat: "",
-    penginput: ""
+    penginput: "",
+    jenis_bansos: ""
   });
 
   const handleSubmit = async () => {
@@ -87,8 +88,9 @@ function StaffDashboard() {
           kelurahan: item.kelurahan,
           tanggal: item.tanggal_usulan, // Disamakan dengan state lokal
           alamat: item.alamat,
-          jenisbansos: item.jenis_bansos, // Field baru
-          status_pengusulan: item.status_pengusulan // Disamakan dengan state lokal
+          jenis_bansos: item.jenis_bansos, // Field baru
+          status_pengusulan: item.status_pengusulan, // Disamakan dengan state lokal
+          jenis_bansos: item.jenis_bansos
         })));
 
         // Fetch DTSEN
@@ -218,7 +220,7 @@ function StaffDashboard() {
     tanggal: "", 
     alamat: "", 
     desil: "", 
-    jenisbansos: "", // Field Jenis Bansos dipastikan ada
+    jenis_bansos: "", // Field Jenis Bansos dipastikan ada
     status_pengusulan: "Belum" 
   };
   const [formData, setFormData] = useState(initialFormState);
@@ -272,7 +274,8 @@ function StaffDashboard() {
             kelurahan: formData.kelurahan,
             alamat: formData.alamat,
             penginput: formData.penginput || null, 
-            status_pengusulan: "Belum"
+            status_pengusulan: "Belum",
+            jenis_bansos: formData.jenis_bansos
           }
         ])
         .select(); // Minta kembalikan data yang baru di-insert
@@ -290,7 +293,7 @@ function StaffDashboard() {
         kelurahan: formData.kelurahan,
         tanggal: formData.tanggal,
         alamat: formData.alamat,
-        jenisbansos: formData.jenisbansos, // Field jenis bansos
+        jenis_bansos: formData.jenis_bansos, // Field jenis bansos
         status_pengusulan: "Belum"
       };
       
@@ -834,17 +837,19 @@ function StaffDashboard() {
                 <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>NIK</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>{selectedDetailData.nik}</strong></div>
                 <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Domisili</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>Kec. {selectedDetailData.kecamatan}, Kel. {selectedDetailData.kelurahan}</strong></div>
               </div>
+
+
               <h3 style={{ fontSize: '16px', color: '#234a66', marginBottom: '15px', marginTop: '0' }}>Daftar Bantuan Sosial Diterima</h3>
               <div className="table-wrapper"><div className="table-responsive"><table className="staff-table">
                 <thead><tr><th>Nama Penerima Bantuan</th><th>Jenis Bantuan Sosial</th><th>Tanggal Penerimaan</th><th style={{ textAlign: "center" }}>Status Penyaluran</th></tr></thead>
                 <tbody>
-                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama_lengkap}</td><td>Bantuan Pangan Non Tunai (BPNT)</td><td>12 Januari 2026</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
-                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama_lengkap}</td><td>Program Keluarga Harapan (PKH)</td><td>25 Agustus 2025</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
+                  {/* <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama_lengkap}</td><td>Bantuan Pangan Non Tunai (BPNT)</td><td>12 Januari 2026</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr>
+                  <tr><td style={{ fontWeight: '600' }}>{selectedDetailData.nama_lengkap}</td><td>Program Keluarga Harapan (PKH)</td><td>25 Agustus 2025</td><td style={{ textAlign: "center" }}><span className="status-badge badge-active">Selesai</span></td></tr> */}
                   {/* 🌟 PERBAIKAN: Menampilkan Jenis Bansos sesuai input form 🌟 */}
                   <tr style={{ backgroundColor: '#fffbeb' }}>
                     <td style={{ fontWeight: '600', color: '#b45309' }}>{selectedDetailData.nama_lengkap} <span style={{fontSize:'10px', color:'#ef4444'}}>(Usulan Baru)</span></td>
-                    <td style={{ color: '#b45309', fontWeight: 'bold' }}>{selectedDetailData.jenisbansos || "Belum Ditentukan"}</td>
-                    <td style={{ color: '#b45309' }}>{formatDateIndo(selectedDetailData.tanggal)}</td>
+                    <td style={{ color: '#b45309', fontWeight: 'bold' }}>{selectedDetailData.jenis_bansos || "Belum Ditentukan"}</td>
+                    <td style={{ color: '#b45309' }}>{formatDateIndo(selectedDetailData.tanggal_penerimaan)}</td>
                     <td style={{ textAlign: "center" }}>{selectedDetailData.status_pengusulan === "Layak" && <span className="status-badge badge-active">Selesai</span>}{selectedDetailData.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak Menerima</span>}{selectedDetailData.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Selesai</span>}</td>
                   </tr>
                 </tbody>
@@ -1724,7 +1729,7 @@ function StaffDashboard() {
                   <div className="form-group-modal">
                     <label>Jenis Bantuan Sosial yang Diusulkan*</label>
                     <div className="select-container-custom">
-                      <select name="jenisbansos" value={formData.jenisbansos} onChange={(e) => setFormData({...formData, jenisbansos: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+                      <select name="jenis_bansos" value={formData.jenis_bansos} onChange={(e) => setFormData({...formData, jenis_bansos: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
                         <option value="" disabled hidden>Pilih Jenis Bantuan</option>
                         <option value="Bantuan Langsung Tunai (BLT)">Bantuan Langsung Tunai (BLT)</option>
                         <option value="Program Keluarga Harapan (PKH)">Program Keluarga Harapan (PKH)</option>

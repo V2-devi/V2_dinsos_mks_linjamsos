@@ -15,7 +15,7 @@ class PengusulanCreate(BaseModel):
     nik:int
     status_pengusulan: str
     nama_lengkap: str   
-
+    jenis_bansos: str
     # nama_penerima_bantuan: str
     # jenis_bantuan_sosial: str
     # tanggal_penerimaan: datetime
