@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./verifikatordashboard.css"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
+// PENTING: Pastikan Anda sudah mengimpor supabase di atas file ini
+import { supabase } from "../../config/supabase";
 
 function VerifikatorDashboard() {
   const navigate = useNavigate();
@@ -21,53 +23,210 @@ function VerifikatorDashboard() {
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
+  // === STATE DATA DINAMIS DARI SUPABASE ===
+  const [usulanList, setUsulanList] = useState([]);
+  const [riwayatList, setRiwayatList] = useState([]);
+  
+  const [ppksList, setPpksList] = useState([]);
+  const [riwayatPpksList, setRiwayatPpksList] = useState([]);
+  
+  const [catatanValidasi, setCatatanValidasi] = useState("");
+  // Tambahan state untuk 39 variabel
+  const [asetKeluarga, setAsetKeluarga] = useState(null); 
+
+  // === STATE & LOGIKA FILTER PENCARIAN BANSOS ===
+  const [filterBansos, setFilterBansos] = useState({ kecamatan: "", kelurahan: "", keyword: "" });
+
+  const handleFilterBansosChange = (e) => {
+    const { name, value } = e.target;
+    setFilterBansos({ ...filterBansos, [name]: value });
+  };
+
+const filteredUsulanList = usulanList.filter(item => {
+    const matchKecamatan = filterBansos.kecamatan === "" || item.kecamatan === filterBansos.kecamatan;
+    const matchKelurahan = filterBansos.kelurahan === "" || item.kelurahan === filterBansos.kelurahan;
+    
+    const keyword = filterBansos.keyword.toLowerCase();
+    
+    const matchKeyword = keyword === "" || 
+                         (item.nik && String(item.nik).toLowerCase().includes(keyword)) || 
+                         (item.nama_pengusul && String(item.nama_pengusul).toLowerCase().includes(keyword));
+    
+    return matchKecamatan && matchKelurahan && matchKeyword;
+  });
+
+  // === STATE & LOGIKA FILTER PENCARIAN PPKS ===
+  const [filterPPKS, setFilterPPKS] = useState({ kategori: "", kecamatan: "", keyword: "" });
+
+  const handleFilterPPKSChange = (e) => {
+    const { name, value } = e.target;
+    setFilterPPKS({ ...filterPPKS, [name]: value });
+  };
+
+  const filteredPpksList = ppksList.filter(item => {
+    const matchKategori = filterPPKS.kategori === "" || item.kategori === filterPPKS.kategori;
+    const matchKecamatan = filterPPKS.kecamatan === "" || item.kecamatan === filterPPKS.kecamatan;
+    
+    const keyword = filterPPKS.keyword.toLowerCase();
+    // Menggunakan String() untuk mencegah white-screen jika data berupa angka
+    const matchKeyword = keyword === "" || 
+                         (item.nik && String(item.nik).toLowerCase().includes(keyword)) || 
+                         (item.nama && String(item.nama).toLowerCase().includes(keyword));
+    
+    return matchKategori && matchKecamatan && matchKeyword;
+  });
+
+  // --- FETCH DATA DARI SUPABASE ---
+  useEffect(() => {
+    fetchDataVerifikator();
+  }, []);
+
+  const fetchDataVerifikator = async () => {
+    try {
+      // 1. Ambil Usulan Bansos (Menunggu)
+      const { data: dataBansos, error: errBansos } = await supabase
+        .from('pengusulan_bansos')
+        .select('*')
+        .eq('status_pengusulan', 'Belum');
+      if (errBansos) throw errBansos;
+      setUsulanList(dataBansos);
+
+      // 2. Ambil Riwayat Bansos (Layak / Tidak Layak)
+      const { data: dataRiwayat, error: errRiwayat } = await supabase
+        .from('pengusulan_bansos')
+        .select('*')
+        .neq('status_pengusulan', 'Belum');
+      if (errRiwayat) throw errRiwayat;
+      setRiwayatList(dataRiwayat);
+
+      // 3. Ambil PPKS (Menunggu)
+      const { data: dataPPKS, error: errPPKS } = await supabase
+        .from('ppks')
+        .select('*')
+        .eq('status', 'Menunggu Kelayakan');
+      if (errPPKS) throw errPPKS;
+      setPpksList(dataPPKS);
+
+      // 4. Ambil Riwayat PPKS (Kasus Aktif / Ditolak) 
+      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase
+        .from('ppks')
+        .select('*')
+        .neq('status', 'Menunggu Kelayakan');
+      if (errRiwayatPPKS) throw errRiwayatPPKS;
+      setRiwayatPpksList(dataRiwayatPPKS);
+
+    } catch (error) {
+      console.error("Gagal mengambil data:", error);
+    }
+  };
+
   // --- DATA DUMMY NOTIFIKASI ---
   const notifData = [
-    { id: 1, title: "Usulan Menunggu Validasi", date: "Hari ini", desc: "Terdapat 12 usulan Bansos baru dari Staf Pengisi Data yang menunggu persetujuan Anda." }
+    { id: 1, title: "Sistem Terhubung", date: "Hari ini", desc: "Data berhasil disinkronkan dengan Staf Lapangan." }
   ];
 
-  // --- DATA DUMMY VALIDASI BANSOS ---
-  const dummyUsulan = [
-    { id: 1, nik: "3971371863193701", noKk: "0000000000000000", nama: "Cinta", kecamatan: "Tallo", kelurahan: "Wala-walaya", penginput: "Firliany (Staf)", tanggal: "16 Mar 2026", status: "Menunggu" },
-    { id: 2, nik: "7270888888888888", noKk: "1111111111111111", nama: "Budi Santoso", kecamatan: "Bontoala", kelurahan: "Baraya", penginput: "Devi (Staf)", tanggal: "15 Mar 2026", status: "Menunggu" },
-  ];
-
-  const dummyRiwayat = [
-    { id: 3, nik: "7470666666666666", nama: "Siti Aminah", kecamatan: "Tallo", penginput: "Firliany", tanggal: "14 Mar 2026", statusValidasi: "Disetujui", catatan: "-" },
-    { id: 4, nik: "7570555555555555", nama: "Andi Pangeran", kecamatan: "Bontoala", penginput: "Devi", tanggal: "13 Mar 2026", statusValidasi: "Ditolak", catatan: "Foto rumah kurang jelas dan NIK tidak sesuai KTP." },
-  ];
-
-  // --- DATA DUMMY VALIDASI PPKS (BARU) ---
-  const dummyUsulanPPKS = [
-    { id: 1, nik: "Belum Diketahui", nama: "Mr. X (Budi Kecil)", kategori: "Anak Jalanan", lokasi: "Lampu Merah Pasar MT Haryono", penginput: "Devi (Staf)", tanggal: "17 Mar 2026", status: "Menunggu", deskripsi: "Ditemukan anak laki-laki usia perkiraan 8 tahun sedang mengamen. Kondisi pakaian lusuh dan tidak mengenakan alas kaki." },
-    { id: 2, nik: "3971371863193701", nama: "Supardi", kategori: "Lanjut Usia Terlantar", lokasi: "Jl. Veteran Raya", penginput: "Firliany (Staf)", tanggal: "16 Mar 2026", status: "Menunggu", deskripsi: "Kakek kebingungan dan terlihat sakit di depan ruko yang tutup." },
-  ];
-
-  const dummyRiwayatPPKS = [
-    { id: 3, nama: "Siti", kategori: "Penyandang Disabilitas", lokasi: "Kecamatan Tallo", penginput: "Firliany", tanggal: "14 Mar 2026", statusValidasi: "Kasus Aktif", catatan: "Valid PPKS. Segera lakukan asesmen lanjutan ke rumahnya dan usulkan bantuan kursi roda." },
-  ];
-
-  // Handler Buka Modal Bansos
-  const openValidationModal = (data) => {
+  // ================= HANDLERS =================
+  
+  // Membuka Modal Validasi Bansos & Mencari Data 39 Variabel
+  const openValidationModal = async (data) => {
     setSelectedData(data);
+    setCatatanValidasi("");
+    setAsetKeluarga(null); // Reset dulu
+
+    try {
+      // Cari data aset di tabel keluarga berdasarkan NO KK atau NIK pengusul
+      const { data: dataKeluarga, error } = await supabase
+        .from('keluarga')
+        .select('aset, desil')
+        .or(`no_kk.eq.${data.no_kk},nik_kepala.eq.${data.nik}`)
+        .single();
+      
+      if (!error && dataKeluarga) {
+        setAsetKeluarga({
+          desil: dataKeluarga.desil,
+          detail: dataKeluarga.aset
+        });
+      }
+    } catch (error) {
+      console.log("Keluarga belum memiliki data aset 39 Variabel di DTSEN.");
+    }
+
     setIsValidateModalOpen(true);
   };
 
-  // Handler Buka Modal PPKS
   const openValidationPPKSModal = (data) => {
     setSelectedPPKSReview(data);
     setIsReviewPPKSModalOpen(true);
   };
 
-  // Handler Submit Umum (Setuju / Tolak)
-  const handleValidationAction = (e) => {
+// Handler Submit BANSOS (Terima / Tolak)
+  const handleValidasiBansos = async (e, statusKeputusan) => {
     e.preventDefault();
-    setIsValidateModalOpen(false);
-    setIsReviewPPKSModalOpen(false);
-    setSelectedData(null);
-    setSelectedPPKSReview(null);
-    setIsSuccessModalOpen(true);
-    setTimeout(() => setIsSuccessModalOpen(false), 3000);
+    if (!selectedData) return;
+
+    try {
+      // 1. Update ke Supabase
+      const { error } = await supabase
+        .from('pengusulan_bansos')
+        .update({ 
+          status_pengusulan: statusKeputusan, 
+          catatan_verifikator: catatanValidasi // <--- AKTIFKAN BARIS INI
+        })
+        .eq('id', selectedData.id);
+      
+      if (error) throw error;
+
+      // 2. Tarik ulang data agar UI update secara real-time
+      await fetchDataVerifikator();
+
+      // 3. Tutup Modal & Tampilkan Sukses
+      setIsValidateModalOpen(false);
+      setSelectedData(null);
+      setCatatanValidasi("");
+      setIsSuccessModalOpen(true);
+      setTimeout(() => setIsSuccessModalOpen(false), 3000);
+      setActiveTab("riwayat"); // Otomatis pindah ke tab riwayat
+    } catch (error) {
+      console.error("Gagal update status:", error);
+      alert("Gagal melakukan validasi.");
+    }
+  };
+
+// Handler Submit PPKS (Terima / Tolak)
+  const handleValidationPPKSAction = async (e, statusKeputusan) => {
+    e.preventDefault();
+    if (!selectedPPKSReview) return;
+
+    try {
+      const { error } = await supabase
+        .from('ppks')
+        .update({ 
+          status: statusKeputusan, 
+          catatan_verifikator: catatanValidasi // Menyimpan catatan ke database
+        })
+        .eq('id', selectedPPKSReview.id);
+
+      if (error) throw error;
+
+      await fetchDataVerifikator(); // Refresh data
+      setIsReviewPPKSModalOpen(false);
+      setSelectedPPKSReview(null);
+      setCatatanValidasi(""); // Kosongkan catatan
+      setIsSuccessModalOpen(true);
+      setTimeout(() => setIsSuccessModalOpen(false), 3000);
+      setActiveTab("riwayat"); // Pindah ke tab riwayat
+    } catch (error) {
+      console.error("Gagal update status PPKS:", error);
+      alert("Gagal melakukan validasi PPKS.");
+    }
+  };
+
+  // Fungsi helper format tanggal
+  const formatDateIndo = (dateStr) => { 
+    if(!dateStr || dateStr === "-") return "-"; 
+    const date = new Date(dateStr); 
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; 
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; 
   };
 
   return (
@@ -164,7 +323,8 @@ function VerifikatorDashboard() {
                     <h4>Usulan Bansos Baru</h4>
                     <p>Membutuhkan persetujuan Anda</p>
                   </div>
-                  <div className="task-card-count"><span>12</span></div>
+                  {/* UPDATE DINAMIS: Menampilkan panjang array usulanList */}
+                  <div className="task-card-count"><span>{usulanList.length}</span></div>
                   <button className="task-card-btn" onClick={() => { setActiveMenu("validasi_bansos"); setActiveTab("menunggu"); }}>
                     Validasi Sekarang &rarr;
                   </button>
@@ -178,7 +338,8 @@ function VerifikatorDashboard() {
                     <h4>Laporan PPKS</h4>
                     <p>Membutuhkan review kelayakan</p>
                   </div>
-                  <div className="task-card-count"><span>5</span></div>
+                  {/* UPDATE DINAMIS: Menampilkan panjang array ppksList */}
+                  <div className="task-card-count"><span>{ppksList.length}</span></div>
                   <button className="task-card-btn" onClick={() => { setActiveMenu("validasi_ppks"); setActiveTab("menunggu"); }}>
                     Validasi Sekarang &rarr;
                   </button>
@@ -228,23 +389,65 @@ function VerifikatorDashboard() {
                   </div>
 
                   <div className="verifikator-filter-grid">
-                    <div className="filter-group-top"><label>Kecamatan</label><select defaultValue=""><option value="" disabled hidden>Semua Kecamatan</option></select></div>
-                    <div className="filter-group-top"><label>Kelurahan/Desa</label><select defaultValue=""><option value="" disabled hidden>Semua Kelurahan</option></select></div>
-                    <div className="filter-group-top"><label>NIK / No. KK</label><input type="text" placeholder="" /></div>
-                    <div className="filter-group-top align-bottom"><button className="btn-search-outline"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Cari Data</button></div>
+                    <div className="filter-group-top">
+                      <label>Kecamatan</label>
+                      <div className="select-container-custom">
+                        <select name="kecamatan" value={filterBansos.kecamatan} onChange={handleFilterBansosChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
+                          <option value="">Semua Kecamatan</option>
+                          <option value="Tallo">Tallo</option>
+                          <option value="Bontoala">Bontoala</option>
+                          <option value="Panakkukang">Panakkukang</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="filter-group-top">
+                      <label>Kelurahan/Desa</label>
+                      <div className="select-container-custom">
+                        <select name="kelurahan" value={filterBansos.kelurahan} onChange={handleFilterBansosChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
+                          <option value="">Semua Kelurahan</option>
+                          <option value="Wala-walaya">Wala-walaya</option>
+                          <option value="Baraya">Baraya</option>
+                          <option value="Pannampu">Pannampu</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="filter-group-top">
+                      <label>NIK / Nama Lengkap</label>
+                      <input 
+                        type="text" 
+                        name="keyword" 
+                        value={filterBansos.keyword} 
+                        onChange={handleFilterBansosChange} 
+                        placeholder="Ketik NIK atau Nama..." 
+                        style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}} 
+                      />
+                    </div>
+                    
+                    <div className="filter-group-top align-bottom">
+                      <button className="btn-search-outline" style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> 
+                        Cari Data
+                      </button>
+                    </div>
                   </div>
 
                   <div className="table-wrapper">
                     <div className="table-responsive">
                       <table className="verifikator-table">
                         <thead>
-                          <tr><th>NIK</th><th>Nama Lengkap</th><th>Kecamatan</th><th>Tgl Usulan</th><th>Petugas Penginput</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Tindakan</th></tr>
+                          {/* PERBAIKAN: Hapus Kolom Petugas Penginput */}
+                          <tr><th>NIK</th><th>Nama Lengkap</th><th>Kecamatan</th><th>Kelurahan</th><th>Tgl Usulan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Tindakan</th></tr>
                         </thead>
                         <tbody>
-                          {dummyUsulan.map((item) => (
+                          {filteredUsulanList.length > 0 ? filteredUsulanList.map((item) => (
                             <tr key={item.id}>
-                              <td>{item.nik}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kecamatan}</td><td>{item.tanggal}</td>
-                              <td style={{ color: '#3b82f6', fontWeight: '600' }}>{item.penginput}</td>
+                              <td>{item.nik}</td>
+                              <td style={{ fontWeight: '600' }}>{item.nama_pengusul}</td>
+                              <td>{item.kecamatan}</td>
+                              <td>{item.kelurahan}</td>
+                              <td>{formatDateIndo(item.tanggal_usulan)}</td>
                               <td style={{ textAlign: "center" }}><span className="badge-status-v waiting">Menunggu Review</span></td>
                               <td style={{ textAlign: "center" }}>
                                 <button className="btn-review-action" onClick={() => openValidationModal(item)}>
@@ -252,7 +455,9 @@ function VerifikatorDashboard() {
                                 </button>
                               </td>
                             </tr>
-                          ))}
+                          )) : (
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada usulan baru yang sesuai pencarian.</td></tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -266,16 +471,39 @@ function VerifikatorDashboard() {
                     <div className="table-responsive">
                       <table className="verifikator-table">
                         <thead>
-                          <tr><th>NIK</th><th>Nama Lengkap</th><th>Tgl Usulan</th><th>Penginput</th><th style={{ textAlign: "center" }}>Status Validasi</th><th>Catatan Verifikator</th></tr>
+                          <tr>
+                            <th>Nama / Identitas</th>
+                            <th>Kategori PPKS</th>
+                            <th>Kecamatan</th>
+                            <th>Lokasi Penemuan</th>
+                            <th>Tgl Laporan</th>
+                            <th style={{ textAlign: "center" }}>Status Keputusan</th>
+                            <th>Keterangan</th>
+                          </tr>
                         </thead>
                         <tbody>
-                          {dummyRiwayat.map((item) => (
+                          {riwayatPpksList.length > 0 ? riwayatPpksList.map((item) => (
                             <tr key={item.id}>
-                              <td>{item.nik}</td><td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.tanggal}</td><td>{item.penginput}</td>
-                              <td style={{ textAlign: "center" }}><span className={`badge-status-v ${item.statusValidasi === "Disetujui" ? "approved" : "rejected"}`}>{item.statusValidasi}</span></td>
-                              <td style={{ color: '#64748b', fontSize: '12px' }}>{item.catatan}</td>
+                              <td style={{ fontWeight: '600' }}>
+                                {item.nama || "Tanpa Identitas"}<br/>
+                                <span style={{fontSize:'11px', color:'#64748b', fontWeight:'normal'}}>NIK: {item.nik || "-"}</span>
+                              </td>
+                              <td>{item.kategori}</td>
+                              <td>{item.kecamatan}</td>
+                              <td>{item.lokasi}</td>
+                              <td>{formatDateIndo(item.tanggal_laporan)}</td>
+                              <td style={{ textAlign: "center" }}>
+                                <span className={`badge-status-v ${item.status === 'Kasus Aktif' ? 'approved' : 'rejected'}`}>
+                                  {item.status}
+                                </span>
+                              </td>
+                              <td style={{ color: '#64748b', fontSize: '12px', maxWidth: '200px' }}>
+                                {item.catatan_verifikator || "-"}
+                              </td>
                             </tr>
-                          ))}
+                          )) : (
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Belum ada riwayat validasi PPKS.</td></tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -285,7 +513,7 @@ function VerifikatorDashboard() {
             </>
           )}
 
-          {/* ================= HALAMAN VALIDASI PPKS (DIUPDATE) ================= */}
+          {/* ================= HALAMAN VALIDASI PPKS ================= */}
           {activeMenu === "validasi_ppks" && (
             <>
               <div className="tabs-container">
@@ -304,34 +532,109 @@ function VerifikatorDashboard() {
                   </div>
 
                   <div className="verifikator-filter-grid">
-                    <div className="filter-group-top"><label>Kategori PPKS</label><select defaultValue=""><option value="" disabled hidden>Semua Kategori</option></select></div>
-                    <div className="filter-group-top"><label>Kecamatan/Lokasi</label><input type="text" placeholder="Cari lokasi..." /></div>
-                    <div className="filter-group-top"><label>Nama/Identitas</label><input type="text" placeholder="" /></div>
-                    <div className="filter-group-top align-bottom"><button className="btn-search-outline"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Cari Data</button></div>
+                    <div className="filter-group-top">
+                      <label>Kategori PPKS</label>
+                      <div className="select-container-custom">
+                        <select name="kategori" value={filterPPKS.kategori} onChange={handleFilterPPKSChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
+                          <option value="">Semua Kategori</option>
+                          <option value="Anak Balita Terlantar">Anak Balita Terlantar</option>
+                          <option value="Anak Terlantar">Anak Terlantar</option>
+                          <option value="Anak yang Berhadapan dengan Hukum">Anak yang Berhadapan dengan Hukum</option>
+                          <option value="Anak Jalanan">Anak Jalanan</option>
+                          <option value="Anak dengan Disabilitas">Anak dengan Disabilitas</option>
+                          <option value="Anak yang Menjadi Korban Tindak Kekerasan">Anak yang Menjadi Korban Tindak Kekerasan</option>
+                          <option value="Anak yang Memerlukan Perlindungan Khusus">Anak yang Memerlukan Perlindungan Khusus</option>
+                          <option value="Lanjut Usia Terlantar">Lanjut Usia Terlantar</option>
+                          <option value="Penyandang Disabilitas">Penyandang Disabilitas</option>
+                          <option value="Tunasusila">Tunasusila</option>
+                          <option value="Gelandangan">Gelandangan</option>
+                          <option value="Pengemis">Pengemis</option>
+                          <option value="Pemulung">Pemulung</option>
+                          <option value="Kelompok Minoritas">Kelompok Minoritas</option>
+                          <option value="Bekas Warga Binaan Lembaga Permasyarakatan">Bekas Warga Binaan Lembaga Permasyarakatan</option>
+                          <option value="Orang dengan HIV/AIDS">Orang dengan HIV/AIDS</option>
+                          <option value="Korban Penyalahgunaan NAPZA">Korban Penyalahgunaan NAPZA</option>
+                          <option value="Korban Trafficking">Korban Trafficking</option>
+                          <option value="Korban Tindak Kekerasan">Korban Tindak Kekerasan</option>
+                          <option value="Pekerja Migran Bermasalah Sosial">Pekerja Migran Bermasalah Sosial</option>
+                          <option value="Korban Bencana Alam">Korban Bencana Alam</option>
+                          <option value="Korban Bencana Sosial">Korban Bencana Sosial</option>
+                          <option value="Perempuan Rawan Sosial Ekonomi">Perempuan Rawan Sosial Ekonomi</option>
+                          <option value="Fakir Miskin">Fakir Miskin</option>
+                          <option value="Keluarga Bermasalah Sosial Psikologi">Keluarga Bermasalah Sosial Psikologi</option>
+                          <option value="Komunitas Adat Terpencil">Komunitas Adat Terpencil</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="filter-group-top">
+                      <label>Kecamatan</label>
+                      <div className="select-container-custom">
+                        <select name="kecamatan" value={filterPPKS.kecamatan} onChange={handleFilterPPKSChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
+                          <option value="">Semua Kecamatan</option>
+                          <option value="Tallo">Tallo</option>
+                          <option value="Bontoala">Bontoala</option>
+                          <option value="Panakkukang">Panakkukang</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="filter-group-top">
+                      <label>Nama / Identitas (NIK)</label>
+                      <input 
+                        type="text" 
+                        name="keyword" 
+                        value={filterPPKS.keyword} 
+                        onChange={handleFilterPPKSChange} 
+                        placeholder="Cari NIK atau Nama..." 
+                        style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}} 
+                      />
+                    </div>
+                    
+                    <div className="filter-group-top align-bottom">
+                      <button className="btn-search-outline" style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> 
+                        Cari Data
+                      </button>
+                    </div>
                   </div>
 
                   <div className="table-wrapper">
                     <div className="table-responsive">
                       <table className="verifikator-table">
                         <thead>
-                          <tr><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th>Petugas Penginput</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Tindakan</th></tr>
+                          <tr>
+                            <th>Nama / Identitas</th>
+                            <th>Kategori PPKS</th>
+                            <th>Kecamatan</th>
+                            <th>Lokasi Penemuan</th>
+                            <th>Tgl Laporan</th>
+                            <th style={{ textAlign: "center" }}>Status</th>
+                            <th style={{ textAlign: "center" }}>Tindakan</th>
+                          </tr>
                         </thead>
                         <tbody>
-                          {dummyUsulanPPKS.map((item) => (
+                          {/* MENGGUNAKAN DATA HASIL FILTER */}
+                          {filteredPpksList.length > 0 ? filteredPpksList.map((item) => (
                             <tr key={item.id}>
-                              <td style={{ fontWeight: '600' }}>{item.nama}<br/><span style={{fontSize:'11px', color:'#64748b', fontWeight:'normal'}}>NIK: {item.nik}</span></td>
+                              <td style={{ fontWeight: '600' }}>
+                                {item.nama || "Tanpa Identitas"}<br/>
+                                <span style={{fontSize:'11px', color:'#64748b', fontWeight:'normal'}}>NIK: {item.nik || "-"}</span>
+                              </td>
                               <td>{item.kategori}</td>
+                              <td>{item.kecamatan}</td>
                               <td>{item.lokasi}</td>
-                              <td>{item.tanggal}</td>
-                              <td style={{ color: '#3b82f6', fontWeight: '600' }}>{item.penginput}</td>
+                              <td>{formatDateIndo(item.tanggal_laporan)}</td>
                               <td style={{ textAlign: "center" }}><span className="badge-status-v waiting">Menunggu Review</span></td>
                               <td style={{ textAlign: "center" }}>
                                 <button className="btn-review-action" onClick={() => openValidationPPKSModal(item)}>
-                                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Review Kasus
+                                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Review
                                 </button>
                               </td>
                             </tr>
-                          ))}
+                          )) : (
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada laporan PPKS yang sesuai pencarian.</td></tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -345,16 +648,17 @@ function VerifikatorDashboard() {
                     <div className="table-responsive">
                       <table className="verifikator-table">
                         <thead>
-                          <tr><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Tgl Laporan</th><th>Penginput</th><th style={{ textAlign: "center" }}>Status Keputusan</th><th>Hasil Asesmen (Instruksi)</th></tr>
+                          <tr><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status Keputusan</th></tr>
                         </thead>
                         <tbody>
-                          {dummyRiwayatPPKS.map((item) => (
+                          {riwayatPpksList.length > 0 ? riwayatPpksList.map((item) => (
                             <tr key={item.id}>
-                              <td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kategori}</td><td>{item.tanggal}</td><td>{item.penginput}</td>
-                              <td style={{ textAlign: "center" }}><span className="badge-status-v approved">{item.statusValidasi}</span></td>
-                              <td style={{ color: '#64748b', fontSize: '12px' }}>{item.catatan}</td>
+                              <td style={{ fontWeight: '600' }}>{item.nama}</td><td>{item.kategori}</td><td>{formatDateIndo(item.tanggal_laporan)}</td>
+                              <td style={{ textAlign: "center" }}><span className="badge-status-v approved">{item.status}</span></td>
                             </tr>
-                          ))}
+                          )) : (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Belum ada riwayat validasi.</td></tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -367,7 +671,7 @@ function VerifikatorDashboard() {
         </div>
       </main>
 
-      {/* ================= MODAL VALIDASI BANSOS ================= */}
+      {/* ================= 🌟 MODAL VALIDASI BANSOS (DIUBAH KE 39 VARIABEL) 🌟 ================= */}
       {isValidateModalOpen && selectedData && (
         <div className="modal-overlay" onClick={() => setIsValidateModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -377,37 +681,65 @@ function VerifikatorDashboard() {
                 <h2>Review Data Usulan Bansos</h2>
               </div>
             </div>
-            <div className="modal-body">
+            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+              
               <div className="alert-info-box" style={{ backgroundColor: '#f1f5f9', border: '1px dashed #94a3b8', padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
-                <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>DIINPUT OLEH:</span><strong style={{ color: '#234a66' }}>{selectedData.penginput}</strong></div>
-                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>TANGGAL USULAN:</span><strong style={{ color: '#234a66' }}>{selectedData.tanggal}</strong></div>
+                <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>JENIS BANSOS:</span><strong style={{ color: '#234a66' }}>{selectedData.jenis_bansos || "Belum Ditentukan"}</strong></div>
+                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>TANGGAL USULAN:</span><strong style={{ color: '#234a66' }}>{formatDateIndo(selectedData.tanggal_usulan)}</strong></div>
               </div>
+              
               <div className="modal-section">
                 <h3 className="section-subtitle">Data Pribadi Keluarga (Read-Only)</h3>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK</label><input type="text" value={selectedData.nik} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>No. KK</label><input type="text" value={selectedData.noKk} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" value={selectedData.nama} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Alamat & Kecamatan</label><input type="text" value={`${selectedData.kelurahan}, Kec. ${selectedData.kecamatan}`} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>No. KK</label><input type="text" value={selectedData.no_kk || "-"} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" value={selectedData.nama_pengusul} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Kecamatan</label><input type="text" value={selectedData.kecamatan} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Kelurahan</label><input type="text" value={selectedData.kelurahan} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Tingkat Desil Saat Ini</label><input type="text" value={asetKeluarga ? asetKeluarga.desil : "Belum Dihitung"} readOnly className="input-readonly" style={{ fontWeight: 'bold', color: '#b45309', backgroundColor: '#fffbeb' }} /></div>
+                  <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Alamat Lengkap</label><input type="text" value={selectedData.alamat} readOnly className="input-readonly" /></div>
                 </div>
               </div>
-              <div className="modal-section">
-                <h3 className="section-subtitle">Dokumentasi Aset (Bukti Foto)</h3>
-                <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-                  <div style={{ width: '150px', height: '120px', backgroundColor: '#e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px solid #cbd5e1' }}>[Foto Tampak Depan]</div>
-                  <div style={{ width: '150px', height: '120px', backgroundColor: '#e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px solid #cbd5e1' }}>[Foto Ruang Tamu]</div>
-                </div>
+
+              <div className="modal-section" style={{ marginTop: '20px' }}>
+                <h3 className="section-subtitle">Kondisi Aset & Perumahan (39 Variabel DTSEN)</h3>
+                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '15px' }}>Data di bawah ditarik langsung dari survei lapangan DTSEN.</p>
+                
+                {asetKeluarga && asetKeluarga.detail ? (
+                  <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', fontSize: '13px' }}>
+                     {/* Menampilkan objek aset (key-value) */}
+                     {Object.entries(asetKeluarga.detail).map(([key, value]) => (
+                        <div key={key} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px dashed #cbd5e1', paddingBottom: '5px' }}>
+                          <span style={{ color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11px' }}>Var: {key.toUpperCase()}</span>
+                          <span style={{ color: '#1e293b' }}>{value}</span>
+                        </div>
+                     ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px', textAlign: 'center', fontSize: '13px' }}>
+                    Keluarga ini belum melengkapi data 39 Variabel Aset di DTSEN. Disarankan untuk menolak usulan sampai staf melengkapi data tersebut.
+                  </div>
+                )}
               </div>
-              <form onSubmit={(e) => handleValidationAction(e)} style={{ marginTop: '30px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
+
+              {/* ACTION BUTTONS (Meneruskan Status 'Layak' atau 'Tidak Layak') */}
+              <div style={{ marginTop: '30px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
                 <div className="form-group-modal" style={{ marginBottom: '20px' }}>
-                  <label style={{ color: '#ef4444' }}>Catatan Revisi / Alasan Penolakan (Opsional)</label>
-                  <textarea rows="3" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', width: '100%', outline: 'none', resize: 'vertical' }} placeholder="Isi catatan jika data dikembalikan ke Staf untuk diperbaiki..."></textarea>
+                  <label style={{ color: '#234a66' }}>Catatan Verifikator (Opsional)</label>
+                  <textarea 
+                    rows="3" 
+                    value={catatanValidasi}
+                    onChange={(e) => setCatatanValidasi(e.target.value)}
+                    style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', width: '100%', outline: 'none', resize: 'vertical' }} 
+                    placeholder="Isi catatan jika data dikembalikan ke Staf untuk diperbaiki atau alasan kelayakan..."
+                  ></textarea>
                 </div>
-                <div className="modal-actions" style={{ gap: '20px' }}>
-                  <button type="button" className="btn-modal-danger" style={{ width: '100%', padding: '15px' }} onClick={(e) => handleValidationAction(e)}>Tolak & Kembalikan ke Staf</button>
-                  <button type="submit" className="btn-modal-submit" style={{ width: '100%', padding: '15px' }}>Validasi & Setujui Data</button>
+                <div className="modal-actions" style={{ gap: '20px', display: 'flex' }}>
+                  <button type="button" className="btn-modal-danger" style={{ flex: 1, padding: '15px' }} onClick={(e) => handleValidasiBansos(e, "Tidak Layak")}>Tolak (Tidak Layak)</button>
+                  <button type="button" className="btn-modal-submit" style={{ flex: 1, padding: '15px' }} onClick={(e) => handleValidasiBansos(e, "Layak")}>Validasi & Setujui (Layak)</button>
                 </div>
-              </form>
+              </div>
+
             </div>
           </div>
         </div>
@@ -426,40 +758,39 @@ function VerifikatorDashboard() {
             
             <div className="modal-body">
               <div className="alert-info-box" style={{ backgroundColor: '#f1f5f9', border: '1px dashed #94a3b8', padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
-                <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>DILAPORKAN OLEH:</span><strong style={{ color: '#234a66' }}>{selectedPPKSReview.penginput}</strong></div>
-                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>TANGGAL LAPORAN:</span><strong style={{ color: '#234a66' }}>{selectedPPKSReview.tanggal}</strong></div>
+                <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>KATEGORI:</span><strong style={{ color: '#234a66' }}>{selectedPPKSReview.kategori}</strong></div>
+                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>TANGGAL LAPORAN:</span><strong style={{ color: '#234a66' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
               </div>
 
               <div className="modal-section">
                 <h3 className="section-subtitle">Data Temuan Lapangan (Read-Only)</h3>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>Nama / Alias</label><input type="text" value={selectedPPKSReview.nama} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Kategori PPKS</label><input type="text" value={selectedPPKSReview.kategori} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Kecamatan</label><input type="text" value={selectedPPKSReview.kecamatan} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Lokasi Presisi Penemuan</label><input type="text" value={selectedPPKSReview.lokasi} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Deskripsi Kondisi / Kasus</label><textarea rows="3" value={selectedPPKSReview.deskripsi} readOnly className="input-readonly" style={{ resize: 'none' }}></textarea></div>
-                </div>
-              </div>
-
-              <div className="modal-section">
-                <h3 className="section-subtitle">Dokumentasi (Foto Kondisi TKP)</h3>
-                <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-                  <div style={{ width: '200px', height: '140px', backgroundColor: '#e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px solid #cbd5e1' }}>[Preview Foto TKP]</div>
                 </div>
               </div>
 
               {/* FORM ASESMEN & PERSETUJUAN */}
-              <form onSubmit={(e) => handleValidationAction(e)} style={{ marginTop: '30px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
+              <form style={{ marginTop: '30px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
                 <div className="form-group-modal" style={{ marginBottom: '20px' }}>
                   <label style={{ color: '#15803d' }}>Hasil Asesmen / Instruksi Penanganan Lanjutan*</label>
                   <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 8px 0' }}>Berikan instruksi kepada staf lapangan apa yang harus dilakukan selanjutnya (misal: Rujuk ke RS, Masukkan Panti, dll) jika kasus ini disetujui. Atau berikan alasan jika ditolak.</p>
-                  <textarea rows="4" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', width: '100%', outline: 'none', resize: 'vertical' }} placeholder="Ketik hasil asesmen atau instruksi di sini..." required></textarea>
+                  <textarea 
+                    rows="4" 
+                    value={catatanValidasi}
+                    onChange={(e) => setCatatanValidasi(e.target.value)}
+                    style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', width: '100%', outline: 'none', resize: 'vertical' }} 
+                    placeholder="Ketik hasil asesmen atau instruksi di sini..." 
+                    required
+                  ></textarea>
                 </div>
-                
-                <div className="modal-actions" style={{ gap: '20px' }}>
-                  <button type="button" className="btn-modal-danger" style={{ width: '100%', padding: '15px' }} onClick={(e) => handleValidationAction(e)}>
+
+                <div className="modal-actions" style={{ gap: '20px', display: 'flex' }}>
+                  <button type="button" className="btn-modal-danger" style={{ flex: 1, padding: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Ditolak")}>
                     Tolak Laporan (Bukan Kasus)
                   </button>
-                  <button type="submit" className="btn-modal-submit" style={{ width: '100%', padding: '15px', backgroundColor: '#1d4ed8' }}>
+                  <button type="button" className="btn-modal-submit" style={{ flex: 1, padding: '15px', backgroundColor: '#1d4ed8' }} onClick={(e) => handleValidationPPKSAction(e, "Kasus Aktif")}>
                     Validasi & Jadikan "Kasus Aktif"
                   </button>
                 </div>
