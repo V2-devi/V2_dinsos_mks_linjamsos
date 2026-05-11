@@ -1,4 +1,9 @@
 from config.database import supabase
+# from supabase import create_client
+# from dotenv import load_dotenv
+# import os
+
+# load_dotenv()
 
 # REGISTER
 def sign_up(email: str, password: str):
@@ -21,3 +26,5 @@ def get_user(token: str):
 # LOGOUT
 def sign_out():
     return supabase.auth.sign_out()
+
+

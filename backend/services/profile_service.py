@@ -123,3 +123,38 @@ def update_user_profile(user_id: UUID, data: dict):
         .execute()
 
     return result.data
+
+
+
+def create_staff(data):
+
+    try:
+        # =========================
+        # BUAT USER AUTH
+        # =========================
+        auth_user = supabase.auth.admin.create_user({
+            "email": data.email,
+            "password": data.password,
+            "email_confirm": True
+        })
+        user = auth_user.user
+        # =========================
+        # INSERT KE TABEL PENGGUNA
+        # =========================
+        result = supabase.table("pengguna").insert({
+            "id": str(user.id),
+            "email": data.email,
+            "nama_lengkap": data.nama_lengkap,
+            "nik": data.nik,
+            "nip": data.nip,
+            "role": data.role,
+            "alamat": data.alamat,
+            "no_hp": data.no_hp,
+            "status": "disetujui",
+            "is_active": True
+        }).execute()
+        return result.data
+    except Exception as e:
+        return {
+            "error": str(e)
+        }

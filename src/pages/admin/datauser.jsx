@@ -29,6 +29,44 @@ function DataUser() {
 };
 
 
+// Data tambah staff otomatis dari admin
+const [formStaff, setFormStaff] = useState({
+  nama_lengkap: "",
+  email: "",
+  password: "",
+  role: "",
+  nik: "",
+  nip: "",
+  no_hp: "",
+  alamat: ""
+});
+
+
+const handleAddStaff = async () => {
+  try {
+    const res = await fetch(
+      "http://127.0.0.1:8000/datauser",
+
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formStaff)
+      }
+    );
+    const data = await res.json();
+    console.log(data);
+    alert("Staff berhasil ditambahkan");
+  } catch (error) {
+    console.error(error);
+    alert("Gagal tambah staff");
+  }
+
+};
+
+
+
   // ✅ PERBAIKAN: Baca dari LocalStorage saat pertama render
   useEffect(() => {
     fetchUsers();
