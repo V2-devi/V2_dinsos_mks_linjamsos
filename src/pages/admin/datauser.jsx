@@ -30,40 +30,42 @@ function DataUser() {
 
 
 // Data tambah staff otomatis dari admin
-const [formStaff, setFormStaff] = useState({
-  nama_lengkap: "",
-  email: "",
-  password: "",
-  role: "",
-  nik: "",
-  nip: "",
-  no_hp: "",
-  alamat: ""
-});
+// const initialStaffForm = {
+//   nama_lengkap: "",
+//   email: "",
+//   password: "",
+//   role: "",
+//   nik: "",
+//   nip: "",
+//   no_hp: "",
+//   alamat: ""
+// };
+
+// const [formStaff, setFormStaff] = useState(initialStaffForm);
 
 
-const handleAddStaff = async () => {
-  try {
-    const res = await fetch(
-      "http://127.0.0.1:8000/datauser",
+// const handleAddStaff = async () => {
+//   try {
+//     const res = await fetch(
+//       "http://127.0.0.1:8000/staff",
 
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formStaff)
-      }
-    );
-    const data = await res.json();
-    console.log(data);
-    alert("Staff berhasil ditambahkan");
-  } catch (error) {
-    console.error(error);
-    alert("Gagal tambah staff");
-  }
+//       {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json"
+//         },
+//         body: JSON.stringify(formStaff)
+//       }
+//     );
+//     const data = await res.json();
+//     console.log(data);
+//     alert("Staff berhasil ditambahkan");
+//   } catch (error) {
+//     console.error(error);
+//     alert("Gagal tambah staff");
+//   }
 
-};
+// };
 
 
 
@@ -108,6 +110,7 @@ const handleAddStaff = async () => {
 
 //   // === STATE MODAL POP-UP ===
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -381,6 +384,16 @@ const handleAddStaff = async () => {
         </div>
 
         {/* TOMBOL TAMBAH STAFF */}
+
+        {/* <div className="action-row-right">
+          <button
+            className="btn-add-staff"
+            onClick={() => setIsAddStaffModalOpen(true)}>
+            <span className="plus-icon">+</span>
+            Tambah Staff
+          </button>
+        </div> */}
+
         <div className="action-row-right">
           <button className="btn-add-staff" onClick={() => { setFormData(initialFormState); setIsAddModalOpen(true); }}>
             <span className="plus-icon">+</span> Tambah Staff

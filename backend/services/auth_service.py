@@ -9,7 +9,6 @@ def register_user(data):
 
     try:
 
-        # cek email sudah ada atau belum
         existing = get_user_by_email(data.email)
 
         if existing and existing.data:
@@ -17,38 +16,70 @@ def register_user(data):
                 "error": "Email sudah terdaftar"
             }
 
-        # register ke auth.users
+        # ====================================
+        # REGISTER KE AUTH
+        # ====================================
         auth = supabase.auth.sign_up({
 
             "email": data.email,
+
             "password": data.password,
+
             "options": {
 
-                # metadata user
                 "data": {
-                    "nama_lengkap": data.nama_lengkap,
-                    "nik": data.nik,
-                    "nip": data.nip,
                     "role": data.role,
-                    "alamat": data.alamat,
-                    "no_hp": data.no_hp
                 },
-                # redirect verifikasi email
-                "email_redirect_to": "http://localhost:5173/verify"
+
+                "email_redirect_to":
+                "http://localhost:5173/verify"
+
             }
         })
-        if not auth.user:
+
+        print(auth)
+        print(auth.user)
+
+        user = auth.user
+
+        if not user:
             return {
                 "error": "Gagal register"
             }
+
+        # ====================================
+        # INSERT PROFILE KE TABEL PENGGUNA
+        # ====================================
+        insert_user_profile({
+
+            "id": str(user.id),
+
+            "email": data.email,
+
+            "nama_lengkap": data.nama_lengkap,
+
+            "nik": data.nik,
+
+            "nip": data.nip,
+
+            "role": data.role,
+
+            "no_hp": data.no_hp,
+
+            "alamat": data.alamat
+
+        })
+
         return {
-            "message": "Register berhasil, silakan cek email verifikasi"
+            "message":
+            "Register berhasil, cek email verifikasi"
         }
+
     except Exception as e:
+
         return {
             "error": str(e)
         }
-
 
 # =========================================================
 # LOGIN

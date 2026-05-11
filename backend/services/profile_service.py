@@ -53,32 +53,33 @@ def get_profile_service(user_id: UUID):
 # =========================================================
 # INSERT USER PROFILE
 # =========================================================
-def insert_user_profile(data: dict):
+def insert_user_profile(data):
 
-    result = supabase.table("pengguna") \
-        .insert({
+    result = supabase.table("pengguna").insert({
 
-            "id": data["id"],
+        "id": str(data["id"]),
 
-            "email": data["email"],
+        "email": data["email"],
 
-            "nama_lengkap": data.get("nama_lengkap"),
+        "nama_lengkap": data["nama_lengkap"],
 
-            "nik": data.get("nik"),
+        "nik": data["nik"],
 
-            "nip": data.get("nip"),
+        "nip": data["nip"],
 
-            "role": data.get("role"),
+        "role": data["role"],
 
-            "status": data.get("status", "menunggu"),
+        "no_hp": data["no_hp"],
 
-            "is_active": data.get("is_active", False),
+        "alamat": data["alamat"],
 
-            "alamat": data.get("alamat"),
+        "status": "menunggu",
 
-            "no_hp": data.get("no_hp")
-        }) \
-        .execute()
+        "is_active": False
+
+    }).execute()
+
+    print(result)
 
     return result.data
 
