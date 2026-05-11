@@ -2,7 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from dependencies.auth_dependency import get_current_user
 from config.database import supabase
-from services.profile_service import get_all_users
+# from services.profile_service import get_all_users
+from services.auth_service import approve_user
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -27,36 +28,32 @@ def get_all_users():
 #     return result.data
 
 
-@router.put("/approve/{id}")
-def approve_user(id: str):
-    result = supabase.table("pengguna") \
-        .update({"status": "approved"}) \
-        .eq("id", id) \
-        .execute()
+@router.put("/approve/{user_id}")
+def approve(user_id: str):
+    return approve_user(user_id)
 
-    print("UPDATE RESULT:", result)
 
-    return result.data
 
-@router.put("/update/{id}")
-def update_user(id: str, payload: dict = Body(...)):
-    print("UPDATE REQUEST ID:", id)
-    print("UPDATE REQUEST PAYLOAD:", payload)
 
-    result = supabase.table("pengguna") \
-        .update(payload) \
-        .eq("id", id) \
-        .execute()
+# @router.put("/update/{id}")
+# def update_user(id: str, payload: dict = Body(...)):
+#     print("UPDATE REQUEST ID:", id)
+#     print("UPDATE REQUEST PAYLOAD:", payload)
 
-    print("UPDATE RESULT:", result.data)
+#     result = supabase.table("pengguna") \
+#         .update(payload) \
+#         .eq("id", id) \
+#         .execute()
 
-    if not result.data:
-        raise HTTPException(
-            status_code=404,
-            detail="User tidak ditemukan atau gagal update"
-        )
+#     print("UPDATE RESULT:", result.data)
 
-    return result.data
+#     if not result.data:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="User tidak ditemukan atau gagal update"
+#         )
+
+#     return result.data
 
 # @router.post("/users/{user_id}/approve")
 # def approve_user(user_id: str, user=Depends(get_current_user)):

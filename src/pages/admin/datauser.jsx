@@ -21,6 +21,14 @@ function DataUser() {
 // === STATE DATA PENGGUNA ===
   const [users, setUsers] = useState([]);
 
+// Update status akun
+  const approve = async (id) => {
+  await fetch(`http://127.0.0.1:8000/approve/${id}`, {
+    method: "PUT"
+  });
+};
+
+
   // ✅ PERBAIKAN: Baca dari LocalStorage saat pertama render
   useEffect(() => {
     fetchUsers();
