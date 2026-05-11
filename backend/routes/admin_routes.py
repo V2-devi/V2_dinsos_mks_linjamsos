@@ -4,6 +4,8 @@ from dependencies.auth_dependency import get_current_user
 from config.database import supabase
 # from services.profile_service import get_all_users
 from services.auth_service import approve_user
+from services.admin_service import create_staff
+from schemas.staff_schema import StaffSchema
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -33,7 +35,9 @@ def approve(user_id: str):
     return approve_user(user_id)
 
 
-
+@router.post("/admin")
+def create_staff_route(data: StaffSchema):
+    return create_staff(data)
 
 # @router.put("/update/{id}")
 # def update_user(id: str, payload: dict = Body(...)):

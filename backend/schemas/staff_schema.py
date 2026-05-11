@@ -1,0 +1,17 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+
+class StaffSchema(BaseModel):
+    nama_lengkap: str
+    email: EmailStr
+    password: str
+    role: str
+    nik: Optional[str] = None
+    nip: Optional[str] = None
+    no_hp: Optional[str] = None
+    alamat: Optional[str] = None
+    instansi: Optional[str] = None
+    alamat_instansi: Optional[str] = None
+    nama_kepala_dinas: Optional[str] = None
+    nip_kepala_dinas: Optional[str] = None
