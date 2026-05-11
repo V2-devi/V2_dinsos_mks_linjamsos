@@ -182,7 +182,6 @@ const fetchUsers = async () => {
               <tr>
                 <th>NIP</th>
                 <th>Role</th>
-                <th>Kata Sandi</th>
                 <th>Nama Lengkap</th>
                 <th>Email</th>
                 <th>Alamat</th>
@@ -200,7 +199,6 @@ const fetchUsers = async () => {
                       {user.role || "staff"}
                     </span>
                   </td>
-                  <td>{user.password || "-"}</td>
                   <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
                   <td>{user.email || "-"}</td>
                   <td>{user.alamat || "-"}</td>
@@ -225,7 +223,7 @@ const fetchUsers = async () => {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
               )}
             </tbody>
           </table>
