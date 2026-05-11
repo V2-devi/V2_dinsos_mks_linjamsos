@@ -354,7 +354,15 @@ function DataUser() {
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
-                <tr><th>NIP</th><th>Role</th><th>Kata Sandi</th><th>Nama Lengkap</th><th>Email</th><th>Alamat</th><th style={{ textAlign: 'center' }}>Status Pegawai</th><th style={{ textAlign: "center" }}>Aksi</th></tr>
+                <tr>
+                  <th>NIP</th>
+                  <th>Role</th>
+                  <th>Nama Lengkap</th>
+                  <th>Email</th>
+                  <th>Alamat</th>
+                  <th style={{ textAlign: 'center' }}>Status Pegawai</th>
+                  <th style={{ textAlign: "center" }}>Aksi</th>
+                </tr>
               </thead>
               <tbody>
                 {filteredUsers && filteredUsers.length > 0 ? (
@@ -366,7 +374,9 @@ function DataUser() {
                           {user.role || "staff"}
                         </span>
                       </td>
-                      <td>{user.password || "-"}</td><td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td><td>{user.email || "-"}</td><td>{user.alamat || "-"}</td>
+                      <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
+                      <td>{user.email || "-"}</td>
+                      <td>{user.alamat || "-"}</td>
                       <td style={{ textAlign: 'center' }}>
                         <span className={`status-badge ${
                           String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
@@ -387,7 +397,7 @@ function DataUser() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                  <tr><td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
                     {isInitialLoad ? "Memuat data dari Supabase..." : "Tidak ada data pengguna yang ditemukan."}
                   </td></tr>
                 )}
