@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // ✅ TAMBAHAN: Agar fetchUsers tidak error
+import axios from "axios"; //
 import "./dashboard.css"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
@@ -25,7 +25,7 @@ function AdminDashboard() {
       email: "tallo@gmail.com", 
       address: "Kantor Kecamatan Tallo, Jl. AR Hakim", 
       role: "Verifikator", 
-      status: "Pending",
+      status_akun: "Menunggu",
       tanggal: "15/09"
     }
   ]);
@@ -54,10 +54,16 @@ const fetchUsers = async () => {
     }
   };
 
-  // ✅ PERBAIKAN: Menyesuaikan nama variabel agar cocok dengan yang dipanggil di JSX bawah
-  const totalApproved = users.filter(u => u.status === "approved" || u.status === "Approved").length;
-  const totalPending = users.filter(u => u.status === "pending" || u.status === "Pending" || u.status === "Tidak Aktif").length;
+  // ✅ PERBAIKAN: Kalkulasi aman untuk membaca data lama (pending/approved) maupun baru (menunggu/disetujui)
+  const totaldisetujui = users.filter(u => {
+    const s = String(u.status_akun || u.status || "").toLowerCase();
+    return s === "disetujui" || s === "approved";
+  }).length;
 
+  const totalmenunggu = users.filter(u => {
+    const s = String(u.status_akun || u.status || "").toLowerCase();
+    return s === "menunggu" || s === "pending" || s === "tidak aktif" || s === "";
+  }).length;
   // === HANDLER FUNGSI ===
   const handleOpenApproval = (account) => {
     setSelectedApproval(account);
@@ -66,7 +72,7 @@ const fetchUsers = async () => {
   };
 
   const handleApproveAccount = () => {
-    const newActiveUser = { ...selectedApproval, status: "approved", id: Date.now() };
+    const newActiveUser = { ...selectedApproval, status_akun: "disetujui", id: Date.now() };
     setUsers([newActiveUser, ...users]); 
     setPendingAccounts(pendingAccounts.filter(acc => acc.id !== selectedApproval.id)); 
     setIsApprovalModalOpen(false);
@@ -159,12 +165,12 @@ const fetchUsers = async () => {
         {/* STATS CARDS */}
         <div className="stats-container">
           <div className="stat-card">
-            <h3>Pengguna Approved</h3>
-            <div className="stat-value text-green">{totalApproved}</div>
+            <h3>Pengguna Disetujui</h3>
+            <div className="stat-value text-green">{totaldisetujui}</div>
           </div>
           <div className="stat-card">
-            <h3>Pengguna Terpending</h3>
-            <div className="stat-value text-red">{totalPending}</div>
+            <h3>Pengguna Menunggu</h3>
+            <div className="stat-value text-red">{totalmenunggu}</div>
           </div>
         </div>
 
@@ -177,7 +183,6 @@ const fetchUsers = async () => {
                 <th>NIP</th>
                 <th>Role</th>
                 <th>Kata Sandi</th>
-                <th>No.HP</th>
                 <th>Nama Lengkap</th>
                 <th>Email</th>
                 <th>Alamat</th>
@@ -196,19 +201,23 @@ const fetchUsers = async () => {
                     </span>
                   </td>
                   <td>{user.password || "-"}</td>
-                  <td>{user.no_hp || "-"}</td>
                   <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
                   <td>{user.email || "-"}</td>
                   <td>{user.alamat || "-"}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    <span className={`status-badge ${user.status === "approved" || user.status === "Approved" ? "badge-active" : "badge-inactive"}`}>
-                      {user.status || "pending"}
-                    </span>
-                  </td>
+                 <td style={{ textAlign: 'center' }}>
+                        <span className={`status-badge ${
+                          String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
+                          String(user.status_akun || user.status || "").toLowerCase() === "approved" 
+                            ? "badge-active" : "badge-inactive"
+                        }`}>
+                          {String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
+                           String(user.status_akun || user.status || "").toLowerCase() === "approved" 
+                            ? "Disetujui" : "Menunggu"}
+                        </span>
+                      </td>
                   <td style={{ textAlign: "center" }}>
                     <div className="action-buttons" style={{ justifyContent: 'center' }}>
                       {/* Aksi di dashboard diarahkan ke halaman Data User agar pengelolaannya terpusat */}
-                      <button className="action-btn text-yellow" title="Kelola di Data User" onClick={() => navigate("/datauser")}>🔑</button>
                       <button className="action-btn text-blue" title="Kelola di Data User" onClick={() => navigate("/datauser")}>📝</button>
                       <button className="action-btn text-red" title="Kelola di Data User" onClick={() => navigate("/datauser")}>🗑️</button>
                     </div>
@@ -216,7 +225,7 @@ const fetchUsers = async () => {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
+                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Memuat data pengguna...</td></tr>
               )}
             </tbody>
           </table>

@@ -45,13 +45,19 @@ function DataUser() {
       setIsInitialLoad(false);
     }
   };
-  // Hitung jumlah untuk Kartu Statistik (Sesuaikan value status dengan yang ada di database, misal "approved" / "pending")
-  const totalAktif = users.filter(u => u.status === "approved").length;
-  const totalTidakAktif = users.filter(u => u.status === "pending" || u.status === "Tidak Aktif").length;
+  // ✅ PERBAIKAN: Kalkulasi aman untuk statistik
+  const totaldisetujui = users.filter(u => {
+    const s = String(u.status_akun || u.status || "").toLowerCase();
+    return s === "disetujui" || s === "approved";
+  }).length;
 
+  const totalmenunggu = users.filter(u => {
+    const s = String(u.status_akun || u.status || "").toLowerCase();
+    return s === "menunggu" || s === "pending" || s === "tidak aktif" || s === "";
+  }).length;
 
 //   // === STATE FORM DATA (Untuk Tambah & Edit) ===
-  const initialFormState = { id: null, nik: "", nip: "", role: "", password: "", no_hp: "", nama_lengkap: "", email: "", alamat: "", status: "" };
+  const initialFormState = { id: null, nik: "", nip: "", role: "", password: "", no_hp: "", nama_lengkap: "", email: "", alamat: "", status_akun: "" };
   const [formData, setFormData] = useState(initialFormState);
 
 //   // === STATE MODAL POP-UP ===
@@ -69,12 +75,22 @@ function DataUser() {
   const [filterStatus, setFilterStatus] = useState("Semua Status");
   const [searchQuery, setSearchQuery] = useState("");
 
-//   // === LOGIKA FILTER ===
+// === LOGIKA FILTER ===
   const filteredUsers = users.filter((user) => {
-    const matchStatus = filterStatus === "Semua Status" || user.status === filterStatus;
+    // 1. Amankan status agar terbaca (cek data lama/baru/huruf besar/kecil)
+    const rawStatus = String(user.status_akun || user.status || "").toLowerCase();
+    const mappedStatus = (rawStatus === "disetujui" || rawStatus === "approved") ? "disetujui" : "menunggu";
+    
+    // 2. Cocokkan dengan dropdown filter
+    const matchStatus = filterStatus === "Semua Status" || mappedStatus === filterStatus;
+    
+    // 3. Cocokkan dengan kolom pencarian
     const name = (user.nama_lengkap || "").toLowerCase();
-    const nik = user.nik || "";
-    const matchSearch = name.includes(searchQuery.toLowerCase()) || nik.includes(searchQuery);
+    const nip = String(user.nip || "").toLowerCase(); 
+    const search = searchQuery.toLowerCase();
+    
+    const matchSearch = name.includes(search) || nip.includes(search);
+    
     return matchStatus && matchSearch;
   });
 
@@ -94,14 +110,13 @@ function DataUser() {
     const newUserPayload = {
       id: Date.now(),
       nip: formData.nip,
-      nik: formData.nik,
       role: formData.role,
       password: formData.password,
       nama_lengkap: formData.nama_lengkap,
       email: formData.email,
       no_hp: formData.no_hp,
       alamat: formData.alamat,
-      status: formData.status
+      status_akun: formData.status_akun
     };
 
     try {
@@ -109,7 +124,6 @@ function DataUser() {
     } catch (err) {
       console.warn("Backend mati. Menyimpan lokal...");
     } finally {
-      // ✅ PERBAIKAN PENTING: Update state & simpan ke LocalStorage agar tidak hilang
       const updatedList = [newUserPayload, ...users];
       setUsers(updatedList);
       localStorage.setItem("localUsers", JSON.stringify(updatedList));
@@ -131,7 +145,7 @@ function DataUser() {
       no_hp: user.no_hp || "",
       alamat: user.alamat || "",
       role: user.role || "",
-      status: user.status || "pending",
+      status_akun: user.status_akun || "pending",
 
     }); // Isi form dengan data user yang diklik
 
@@ -143,7 +157,7 @@ function DataUser() {
     e.preventDefault();
     
     // Validasi form
-    if (!formData.nama_lengkap || !formData.email || !formData.no_hp || !formData.alamat) {
+    if (!formData.nama_lengkap || !formData.email || !formData.alamat) {
       setErrorMessage("Semua field harus diisi!");
       return;
     }
@@ -159,7 +173,7 @@ function DataUser() {
         no_hp: formData.no_hp,
         alamat: formData.alamat,
         role: formData.role,
-        status: formData.status,
+        status_akun: formData.status_akun,
       };
 
       console.log("Payload dikirim:", payload);
@@ -219,16 +233,19 @@ function DataUser() {
     setIsDeleteModalOpen(true);
   };
 
-// === HANDLER NONAKTIFKAN DATA (UBAH KE PENDING) ===
+// === HANDLER HAPUS DATA (PERMANEN) ===
   const confirmDelete = async () => {
     setIsLoading(true);
     try {
-      await axios.put(`http://localhost:8000/admin/update/${userToDelete.id}`, { ...userToDelete, status: "pending" }, { headers: { "Content-Type": "application/json" } });
+      // ✅ Memanggil API Backend untuk menghapus data (Beri tahu teman backend Anda untuk menyiapkan endpoint DELETE ini)
+      await axios.delete(`http://localhost:8000/admin/delete/${userToDelete.id}`);
     } catch (err) {
-      console.warn("Backend mati. Menonaktifkan lokal...");
+      console.warn("Backend mati atau endpoint berbeda. Menghapus data dari tampilan lokal...");
     } finally {
-      // ✅ PERBAIKAN: Ubah status secara lokal dan simpan ke browser
-      const updatedList = users.map(u => u.id === userToDelete.id ? { ...u, status: "pending" } : u);
+      // ✅ PERBAIKAN: Gunakan .filter() untuk membuang data secara permanen dari tabel
+      // Kita mengecek berdasarkan ID dan NIP agar anti-error
+      const updatedList = users.filter(u => u.id !== userToDelete.id && u.nip !== userToDelete.nip);
+      
       setUsers(updatedList);
       localStorage.setItem("localUsers", JSON.stringify(updatedList));
 
@@ -307,8 +324,8 @@ function DataUser() {
           <div className="custom-select-box" style={{ width: '250px' }}>
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="Semua Status">Semua Status</option>
-              <option value="approved">approved</option>
-              <option value="pending">pending</option>
+              <option value="disetujui">Disetujui</option>
+              <option value="menunggu">Menunggu</option>
             </select>
           </div>
           <div className="custom-search-box" style={{ width: '350px' }}>
@@ -329,23 +346,32 @@ function DataUser() {
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
-                <tr><th>NIP</th><th>Role</th><th>Kata Sandi</th><th>No.HP</th><th>Nama Lengkap</th><th>Email</th><th>Alamat</th><th style={{ textAlign: 'center' }}>Status Pegawai</th><th style={{ textAlign: "center" }}>Aksi</th></tr>
+                <tr><th>NIP</th><th>Role</th><th>Kata Sandi</th><th>Nama Lengkap</th><th>Email</th><th>Alamat</th><th style={{ textAlign: 'center' }}>Status Pegawai</th><th style={{ textAlign: "center" }}>Aksi</th></tr>
               </thead>
               <tbody>
                 {filteredUsers && filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <tr key={user.id || Math.random()}>
-                      <td>{user.nik || "-"}</td>
+                      <td>{user.nip|| "-"}</td>
                       <td>
                         <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', backgroundColor: user.role === 'verifikator' ? '#fef08a' : user.role === 'admin' ? '#fecaca' : '#e0e7ff', color: user.role === 'verifikator' ? '#a16207' : user.role === 'admin' ? '#b91c1c' : '#1d4ed8' }}>
                           {user.role || "staff"}
                         </span>
                       </td>
-                      <td>{user.password || "-"}</td><td>{user.no_hp || "-"}</td><td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td><td>{user.email || "-"}</td><td>{user.alamat || "-"}</td>
-                      <td style={{ textAlign: 'center' }}><span className={`status-badge ${user.status === "approved" ? "badge-active" : "badge-inactive"}`}>{user.status || "pending"}</span></td>
+                      <td>{user.password || "-"}</td><td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td><td>{user.email || "-"}</td><td>{user.alamat || "-"}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`status-badge ${
+                          String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
+                          String(user.status_akun || user.status || "").toLowerCase() === "approved" 
+                            ? "badge-active" : "badge-inactive"
+                        }`}>
+                          {String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
+                           String(user.status_akun || user.status || "").toLowerCase() === "approved" 
+                            ? "Disetujui" : "Menunggu"}
+                        </span>
+                      </td>
                       <td style={{ textAlign: "center" }}>
                         <div className="action-buttons-table">
-                          <button className="action-btn-icon text-yellow" title="Ganti Password" onClick={() => setIsPassModalOpen(true)}>🔑</button>
                           <button className="action-btn-icon text-blue" title="Edit Profil" onClick={() => openEditModal(user)}>📝</button>
                           <button className="action-btn-icon text-red" title="Hapus Akun" onClick={() => openDeleteModal(user)}>🗑️</button>
                         </div>
@@ -353,7 +379,7 @@ function DataUser() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                  <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
                     {isInitialLoad ? "Memuat data dari Supabase..." : "Tidak ada data pengguna yang ditemukan."}
                   </td></tr>
                 )}
@@ -418,7 +444,6 @@ function DataUser() {
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap || ""} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Email*</label><input type="email" name="email" value={formData.email || ""} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>No. WhatsApp*</label><input type="text" name="no_hp" value={formData.no_hp || ""} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat || ""} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
@@ -427,8 +452,8 @@ function DataUser() {
                   <h3 className="section-subtitle">Status Akun</h3>
                   <div className="form-group-modal">
                     <div className="radio-group-inline">
-                      <label className="radio-label"><input type="radio" name="status" value="approved" checked={formData.status === "approved"} onChange={handleInputChange} required /><span>approved</span></label>
-                      <label className="radio-label"><input type="radio" name="status" value="pending" checked={formData.status === "pending"} onChange={handleInputChange} required /><span>pending</span></label>
+                      <label className="radio-label"><input type="radio" name="status" value="disetujui" checked={formData.status === "disetujui"} onChange={handleInputChange} required /><span>Disetujui</span></label>
+                      <label className="radio-label"><input type="radio" name="status" value="menunggu" checked={formData.status === "menunggu"} onChange={handleInputChange} required /><span>Menunggu</span></label>
                     </div>
                   </div>
                 </div>
@@ -490,8 +515,7 @@ function DataUser() {
                   <h3 className="section-subtitle">Data Pribadi Staff</h3>
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Email approved*</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>No. WhatsApp*</label><input type="text" name="no_hp" value={formData.no_hp} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Email Disetujui*</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
@@ -500,8 +524,8 @@ function DataUser() {
                   <h3 className="section-subtitle">Status Akun</h3>
                   <div className="form-group-modal">
                     <div className="radio-group-inline">
-                      <label className="radio-label"><input type="radio" name="status" value="approved" checked={formData.status === "approved"} onChange={handleInputChange} /><span>Approved</span></label>
-                      <label className="radio-label"><input type="radio" name="status" value="pending" checked={formData.status === "pending"} onChange={handleInputChange} /><span>Pending</span></label>
+                      <label className="radio-label"><input type="radio" name="status" value="disetujui" checked={formData.status === "disetujui"} onChange={handleInputChange} /><span>Disetujui</span></label>
+                      <label className="radio-label"><input type="radio" name="status" value="menunggu" checked={formData.status === "menunggu"} onChange={handleInputChange} /><span>Menunggu</span></label>
                     </div>
                   </div>
                 </div>
@@ -536,19 +560,19 @@ function DataUser() {
         </div>
       )}
 
-      {/* ================= MODAL HAPUS AKUN (INTERapproved) ================= */}
+      {/* ================= MODAL HAPUS AKUN ================= */}
       {isDeleteModalOpen && userToDelete && (
         <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
           <div className="modal-content modal-small text-center" onClick={(e) => e.stopPropagation()}>
             <div className="modal-body" style={{ padding: '40px 20px 30px' }}>
               <div style={{ fontSize: '50px', marginBottom: '15px' }}>⚠️</div>
-              <h2 style={{ color: '#234a66', fontSize: '20px', marginBottom: '10px' }}>Nonaktifkan Akun?</h2>
+              <h2 style={{ color: '#234a66', fontSize: '20px', marginBottom: '10px' }}>Hapus Akun?</h2>
               <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '30px' }}>
-                Apakah Anda yakin ingin menonaktifkan akses sistem untuk <strong>{userToDelete.nama_lengkap}</strong>?<br/>Akun ini tidak akan bisa digunakan untuk login, namun riwayat dokumen yang dikerjakannya akan tetap aman tersimpan.
+                Apakah Anda yakin ingin menghapus akun <strong>{userToDelete.nama_lengkap}</strong> secara permanen?<br/>Data akun ini akan hilang dari sistem.
               </p>
               <div className="modal-actions">
                 <button type="button" className="btn-modal-cancel" onClick={() => setIsDeleteModalOpen(false)}>Batal</button>
-                <button type="button" className="btn-modal-danger" style={{ backgroundColor: '#ef4444' }} onClick={confirmDelete}>Ya, Nonaktifkan</button>
+                <button type="button" className="btn-modal-danger" style={{ backgroundColor: '#ef4444' }} onClick={confirmDelete}>Ya, Hapus</button>
               </div>
             </div>
           </div>
