@@ -88,7 +88,6 @@ function StaffDashboard() {
           kelurahan: item.kelurahan,
           tanggal: item.tanggal_usulan, // Disamakan dengan state lokal
           alamat: item.alamat,
-          jenis_bansos: item.jenis_bansos, // Field baru
           status_pengusulan: item.status_pengusulan, // Disamakan dengan state lokal
           jenis_bansos: item.jenis_bansos
         })));
@@ -999,10 +998,10 @@ function StaffDashboard() {
 
                         return (
                           <tr key={ang.id || index}>
-                            <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
-                            <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama}</td>
+                            <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik || selectedDtsenData?.no_kk) : ang.nik}</td> 
+                            <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_anggota_keluarga}</td>
                             <td>{ang.hub}</td>
-                            <td>{ang.jk === "-" && index === 0 ? (selectedDtsenData?.jenisKelamin || "-") : ang.jk}</td>
+                            <td>{ang.jk === "-" && index === 0 ? (selectedDtsenData?.jenis_kelamin || "-") : ang.jenis_kelamin}</td>
                             <td>
                               {kondisi.length > 0 ? (
                                 <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>

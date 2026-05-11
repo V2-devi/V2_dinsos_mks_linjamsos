@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter
 from dependencies.auth_dependency import get_current_user
-from services.profile_service import save_profile_service, get_profile_service
+from services.profile_service import  get_profile_service, insert_user_profile
 from schemas.profile_schema import ProfileSchema
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
 
 @router.post("/")
 async def save_profile(data: ProfileSchema, user=Depends(get_current_user)):
-    result = save_profile_service(user.id, data)
+    result = insert_user_profile(user.id, data)
     return {
         "message": "Profile saved",
         "data": result
