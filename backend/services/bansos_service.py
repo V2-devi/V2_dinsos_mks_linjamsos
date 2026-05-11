@@ -40,7 +40,7 @@ def get_pengusulan_service():
             kelurahan,
             nik,
             nama_lengkap,
-            jenis_bansos
+            jenis_bansos,
             keluarga (
                 kecamatan,
                 kelurahan,
@@ -58,10 +58,11 @@ def get_pengusulan_service():
             "nama_lengkap": item["nama_pengusul"],  # mapping di sini
             "tanggal_usulan": item["tanggal_usulan"],
             "status_pengusulan": item["status_pengusulan"],
+            "jenis_bansos": item["jenis_bansos"],
             "alamat": item["keluarga"]["alamat"] if item.get("keluarga") else None,
             "kecamatan": item["keluarga"]["kecamatan"] if item.get("keluarga") else None,
             "kelurahan": item["keluarga"]["kelurahan"] if item.get("keluarga") else None,
-            "jenis_bansos": item["jenis_bansos"],
+            
         })
 
     return data
