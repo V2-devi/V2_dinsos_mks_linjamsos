@@ -22,6 +22,8 @@ function DataUser() {
 // === STATE DATA PENGGUNA ===
   const [users, setUsers] = useState([]);
 
+  
+
 // Update status akun
 const handleUpdateStatus = async () => {
   try {
@@ -35,7 +37,8 @@ const handleUpdateStatus = async () => {
 
         // 👇 INI TEMPATNYA
         body: JSON.stringify({
-          status: "disetujui"
+          // status: "disetujui"
+          status: formData.status
         })
       }
     );
@@ -48,6 +51,9 @@ const handleUpdateStatus = async () => {
     console.error(error);
   }
 };
+
+
+
 
 // Data tambah staff otomatis dari admin
 // const initialStaffForm = {
@@ -87,32 +93,65 @@ const handleUpdateStatus = async () => {
 
 // };
 
-
+const [formData, setFormData] = useState({
+  nama_lengkap: "",
+  email: "",
+  role: "",
+  status: "menunggu"
+});
 
   // ✅ PERBAIKAN: Baca dari LocalStorage saat pertama render
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+const fetchUsers = async () => {
+  setIsInitialLoad(true);
+  try {
+    const res = await axios.get("http://localhost:8000/admin/users");
 
-  const fetchUsers = async () => {
-    setIsInitialLoad(true);
-    try {
-      // Coba fetch dari API dulu
-      const res = await axios.get("http://localhost:8000/admin/users");
-      const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : null;
-      if (data) {
-        setUsers(data);
-        localStorage.setItem("localUsers", JSON.stringify(data)); // Simpan backup ke browser
-      }
-    } catch (err) {
-      console.warn("Backend mati. Memuat dari memori lokal...");
-      // Jika API mati, ambil dari LocalStorage browser
-      const savedUsers = JSON.parse(localStorage.getItem("localUsers")) || [];
-      setUsers(savedUsers);
-    } finally {
-      setIsInitialLoad(false);
+    const data = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data?.data)
+        ? res.data.data
+        : null;
+
+    if (data) {
+      setUsers(data);
+      localStorage.setItem("localUsers", JSON.stringify(data));
     }
-  };
+  } catch (err) {
+    console.warn("Backend mati. Memuat dari memori lokal...");
+    const savedUsers = JSON.parse(localStorage.getItem("localUsers")) || [];
+    setUsers(savedUsers);
+  } finally {
+    setIsInitialLoad(false);
+  }
+};
+
+useEffect(() => {
+  fetchUsers();
+}, []);
+
+
+const handleAddStaff = async () => {
+  try {
+    await fetch("http://127.0.0.1:8000/admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ...formData,
+        status: "menunggu",   // 🔥 penting
+        is_active: false      // 🔥 penting
+      })
+    });
+
+    fetchUsers(); // refresh data
+    alert("Staff berhasil ditambahkan");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
   // ✅ PERBAIKAN: Kalkulasi aman untuk statistik
   const totaldisetujui = users.filter(u => {
     const s = String(u.status || "").toLowerCase();
@@ -135,12 +174,11 @@ const initialFormState = {
   nama_lengkap: "",
   email: "",
   alamat: "",
-
   // ini yang penting untuk radio button
   status: "menunggu"
 };
 
-const [formData, setFormData] = useState(initialFormState);
+// const [formData, setFormData] = useState(initialFormState);
 
 
 //   // === STATE MODAL POP-UP ===
@@ -204,17 +242,22 @@ const [formData, setFormData] = useState(initialFormState);
     };
 
     try {
-      await axios.post("http://localhost:8000/admin/users", newUserPayload, { headers: { "Content-Type": "application/json" } });
-    } catch (err) {
-      console.warn("Backend mati. Menyimpan lokal...");
-    } finally {
-      const updatedList = [newUserPayload, ...users];
-      setUsers(updatedList);
-      localStorage.setItem("localUsers", JSON.stringify(updatedList));
+      const response = await axios.post("http://localhost:8000/admin/users", newUserPayload, { headers: { "Content-Type": "application/json" } });
+      const createdUser = response.data && response.data[0] ? response.data[0] : null;
 
+      if (!createdUser) {
+        throw new Error("Gagal membuat staff di server.");
+      }
+
+      await fetchUsers();
       setIsAddModalOpen(false);
       setFormData(initialFormState);
       showSuccess();
+    } catch (err) {
+      console.error("Error add staff:", err);
+      const serverMessage = err.response?.data?.detail || err.response?.data?.message || err.message;
+      setErrorMessage(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
+    } finally {
       setIsLoading(false);
     }
   };

@@ -5,9 +5,29 @@ from config.database import supabase
 # from services.profile_service import get_all_users
 from services.auth_service import approve_user
 from services.admin_service import create_staff, update_user_service
-from schemas.staff_schema import StaffSchema
+from schemas.staff_schema import StaffSchema, StaffUpdateSchema
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+@router.get("/users")
+def get_all_users():
+    return supabase.table("pengguna").select("*").execute().data
+
+
+@router.put("/update/{user_id}")
+def update_user(user_id: str, data: StaffUpdateSchema):
+    print("DATA MASUK:", data)  # 🔥 DEBUG WAJIB
+
+    result = update_user_service(user_id, data)
+    if isinstance(result, dict) and result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+@router.post("/users")
+def create_staff_route(data: StaffSchema):
+    return create_staff(data)
+
 
 # @router.get("/users/pending")
 # def get_pending_users():
@@ -15,10 +35,6 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
     # if result.error:
     #     raise HTTPException(status_code=400, detail=str(result.error))
     # return result.data
-
-@router.get("/users")
-def get_all_users():
-    return supabase.table("pengguna").select("*").execute().data
 
 # @router.get("/users/pending")
 # def get_pending_users():
@@ -28,19 +44,6 @@ def get_all_users():
 #         .execute()
 
 #     return result.data
-
-
-@router.put("/update/{user_id}")
-def update_user(user_id: str, data: dict = Body(...)):
-    result = update_user_service(user_id, data)
-    if isinstance(result, dict) and result.get("error"):
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
-
-
-@router.post("/admin")
-def create_staff_route(data: StaffSchema):
-    return create_staff(data)
 
 # @router.put("/update/{id}")
 # def update_user(id: str, payload: dict = Body(...)):

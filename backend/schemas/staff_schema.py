@@ -5,7 +5,7 @@ from typing import Optional
 class StaffSchema(BaseModel):
     nama_lengkap: str
     email: EmailStr
-    password: str
+    password: Optional[str] = None
     role: str
     nik: Optional[str] = None
     nip: Optional[str] = None
@@ -15,4 +15,7 @@ class StaffSchema(BaseModel):
     alamat_instansi: Optional[str] = None
     nama_kepala_dinas: Optional[str] = None
     nip_kepala_dinas: Optional[str] = None
+    status: str
+
+class StaffUpdateSchema(BaseModel):
     status: str
