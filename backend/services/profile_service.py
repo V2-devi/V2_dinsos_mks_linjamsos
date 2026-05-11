@@ -57,8 +57,8 @@ def insert_user_profile(data):
 
     result = supabase.table("pengguna").insert({
 
-        "id": str(data["id"]),
 
+        "id": str(data["id"]),
         "email": data["email"],
 
         "nama_lengkap": data["nama_lengkap"],

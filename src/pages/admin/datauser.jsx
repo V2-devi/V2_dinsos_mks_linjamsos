@@ -14,6 +14,7 @@ import axios from "axios";
 
 function DataUser() {
   const navigate = useNavigate();
+  // const status = String(user.status_akun || user.status || "").toLowerCase();
 
 //   // === STATE NOTIFIKASI ===
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -22,12 +23,31 @@ function DataUser() {
   const [users, setUsers] = useState([]);
 
 // Update status akun
-  const approve = async (id) => {
-  await fetch(`http://127.0.0.1:8000/approve/${id}`, {
-    method: "PUT"
-  });
-};
+const handleUpdateStatus = async () => {
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/admin/update/${selectedUser.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
 
+        // 👇 INI TEMPATNYA
+        body: JSON.stringify({
+          status: "disetujui"
+        })
+      }
+    );
+
+    await res.json();
+    fetchUsers();
+    alert("Status berhasil diupdate");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 // Data tambah staff otomatis dari admin
 // const initialStaffForm = {
@@ -95,18 +115,33 @@ function DataUser() {
   };
   // ✅ PERBAIKAN: Kalkulasi aman untuk statistik
   const totaldisetujui = users.filter(u => {
-    const s = String(u.status_akun || u.status || "").toLowerCase();
-    return s === "disetujui" || s === "approved";
+    const s = String(u.status || "").toLowerCase();
+    return s === "disetujui";
   }).length;
 
   const totalmenunggu = users.filter(u => {
-    const s = String(u.status_akun || u.status || "").toLowerCase();
-    return s === "menunggu" || s === "pending" || s === "tidak aktif" || s === "";
+    const s = String(u.status || "").toLowerCase();
+    return s === "menunggu";
   }).length;
 
 //   // === STATE FORM DATA (Untuk Tambah & Edit) ===
-  const initialFormState = { id: null, nik: "", nip: "", role: "", password: "", no_hp: "", nama_lengkap: "", email: "", alamat: "", status_akun: "" };
-  const [formData, setFormData] = useState(initialFormState);
+const initialFormState = {
+  id: null,
+  nik: "",
+  nip: "",
+  role: "",
+  password: "",
+  no_hp: "",
+  nama_lengkap: "",
+  email: "",
+  alamat: "",
+
+  // ini yang penting untuk radio button
+  status: "menunggu"
+};
+
+const [formData, setFormData] = useState(initialFormState);
+
 
 //   // === STATE MODAL POP-UP ===
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -127,7 +162,7 @@ function DataUser() {
 // === LOGIKA FILTER ===
   const filteredUsers = users.filter((user) => {
     // 1. Amankan status agar terbaca (cek data lama/baru/huruf besar/kecil)
-    const rawStatus = String(user.status_akun || user.status || "").toLowerCase();
+    const rawStatus = String(user.status || "").toLowerCase();
     const mappedStatus = (rawStatus === "disetujui" || rawStatus === "approved") ? "disetujui" : "menunggu";
     
     // 2. Cocokkan dengan dropdown filter
@@ -165,7 +200,7 @@ function DataUser() {
       email: formData.email,
       no_hp: formData.no_hp,
       alamat: formData.alamat,
-      status_akun: formData.status_akun
+      status: formData.status
     };
 
     try {
@@ -194,7 +229,7 @@ function DataUser() {
       no_hp: user.no_hp || "",
       alamat: user.alamat || "",
       role: user.role || "",
-      status_akun: user.status_akun || "pending",
+      status: user.status ||  "menunggu",
 
     }); // Isi form dengan data user yang diklik
 
@@ -222,7 +257,7 @@ function DataUser() {
         no_hp: formData.no_hp,
         alamat: formData.alamat,
         role: formData.role,
-        status_akun: formData.status_akun,
+        status: formData.status,
       };
 
       console.log("Payload dikirim:", payload);
@@ -429,15 +464,15 @@ function DataUser() {
                       <td>{user.email || "-"}</td>
                       <td>{user.alamat || "-"}</td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className={`status-badge ${
-                          String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
-                          String(user.status_akun || user.status || "").toLowerCase() === "approved" 
-                            ? "badge-active" : "badge-inactive"
-                        }`}>
-                          {String(user.status_akun || user.status || "").toLowerCase() === "disetujui" || 
-                           String(user.status_akun || user.status || "").toLowerCase() === "approved" 
-                            ? "Disetujui" : "Menunggu"}
-                        </span>
+                        {(() => {
+                          const status = String(user.status || "").toLowerCase();
+                          const isApproved = status === "disetujui" || status === "approved";
+                          return (
+                            <span className={`status-badge ${isApproved ? "badge-active" : "badge-inactive"}`}>
+                              {isApproved ? "Disetujui" : "Menunggu"}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <div className="action-buttons-table">
@@ -595,6 +630,8 @@ function DataUser() {
                     <div className="radio-group-inline">
                       <label className="radio-label"><input type="radio" name="status" value="disetujui" checked={formData.status === "disetujui"} onChange={handleInputChange} /><span>Disetujui</span></label>
                       <label className="radio-label"><input type="radio" name="status" value="menunggu" checked={formData.status === "menunggu"} onChange={handleInputChange} /><span>Menunggu</span></label>
+
+                    
                     </div>
                   </div>
                 </div>

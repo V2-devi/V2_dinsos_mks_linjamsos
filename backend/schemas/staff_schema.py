@@ -15,3 +15,4 @@ class StaffSchema(BaseModel):
     alamat_instansi: Optional[str] = None
     nama_kepala_dinas: Optional[str] = None
     nip_kepala_dinas: Optional[str] = None
+    status: str

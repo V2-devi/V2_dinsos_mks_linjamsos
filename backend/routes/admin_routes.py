@@ -4,7 +4,7 @@ from dependencies.auth_dependency import get_current_user
 from config.database import supabase
 # from services.profile_service import get_all_users
 from services.auth_service import approve_user
-from services.admin_service import create_staff
+from services.admin_service import create_staff, update_user_service
 from schemas.staff_schema import StaffSchema
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -30,9 +30,12 @@ def get_all_users():
 #     return result.data
 
 
-@router.put("/approve/{user_id}")
-def approve(user_id: str):
-    return approve_user(user_id)
+@router.put("/update/{user_id}")
+def update_user(user_id: str, data: dict = Body(...)):
+    result = update_user_service(user_id, data)
+    if isinstance(result, dict) and result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
 
 
 @router.post("/admin")

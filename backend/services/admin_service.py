@@ -33,3 +33,23 @@ def create_staff(data):
         return {
             "error": str(e)
         }
+    
+
+from postgrest.exceptions import APIError
+
+def update_user_service(user_id, data):
+
+    try:
+
+        result = supabase.table("pengguna") \
+            .update({
+                "status": data.get("status") or "menunggu",
+                "is_active": True if data.get("status") == "disetujui" else False
+            }) \
+            .eq("id", user_id) \
+            .execute()
+
+        return result.data
+
+    except APIError as e:
+        return {"error": str(e)}

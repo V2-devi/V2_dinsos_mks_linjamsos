@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr
 class ProfileSchema(BaseModel):
         email: EmailStr
         nama_lengkap: str
-        status_pegawai: str
+        status: str
         nik: str
         nip: str 
         no_hp: str
