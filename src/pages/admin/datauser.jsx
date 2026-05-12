@@ -181,6 +181,40 @@ const initialFormState = {
 // const [formData, setFormData] = useState(initialFormState);
 
 
+
+// email approve akun
+const handleApprove = async (id) => {
+
+  try {
+
+    const res = await fetch(
+
+      `http://127.0.0.1:8000/admin/update/${id}`,
+
+      {
+        method: "PUT"
+      }
+    );
+
+    const data = await res.json();
+
+    console.log(data);
+
+    alert("User berhasil disetujui");
+
+    fetchUsers();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Gagal approve user");
+  }
+};
+
+
+
+
 //   // === STATE MODAL POP-UP ===
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   // const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);

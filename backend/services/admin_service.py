@@ -1,5 +1,6 @@
 from config.database import supabase
 from postgrest.exceptions import APIError
+from services.email_service import send_approval_email
 
 def create_staff(data):
     try:
@@ -37,53 +38,169 @@ def create_staff(data):
         return {"error": str(e)}
 
 
+from services.email_service import send_approval_email
+
+
 def update_user_service(user_id, data):
+
     try:
+
         print(f"DEBUG: Updating user {user_id} with data: {data}")
 
         payload = {}
 
-        # Handle Pydantic model
+        # =====================================
+        # HANDLE PYDANTIC / DICT
+        # =====================================
         if hasattr(data, "dict"):
-            payload = data.dict(exclude_unset=True)
-            print(f"DEBUG: Pydantic payload: {payload}")
-        elif isinstance(data, dict):
-            payload = {k: v for k, v in data.items() if v is not None}
-            print(f"DEBUG: Dict payload: {payload}")
 
-        # Ensure status is processed
-        if "status" in payload and payload["status"] is not None:
-            raw_status = str(payload["status"]).strip().lower()
+            payload = data.dict(exclude_unset=True)
+
+        elif isinstance(data, dict):
+
+            payload = {
+
+                k: v for k, v in data.items()
+
+                if v is not None
+            }
+
+        print("DEBUG PAYLOAD:", payload)
+
+        # =====================================
+        # HANDLE STATUS
+        # =====================================
+        approved = False
+
+        if "status" in payload:
+
+            raw_status = str(
+                payload["status"]
+            ).strip().lower()
+
             if raw_status in ["disetujui", "approved"]:
+
                 payload["status"] = "disetujui"
+
                 payload["is_active"] = True
+
+                approved = True
+
             else:
+
                 payload["status"] = "menunggu"
+
                 payload["is_active"] = False
 
-        print(f"DEBUG: Final payload: {payload}")
+        print("DEBUG FINAL PAYLOAD:", payload)
 
-        if not payload:
-            return {"error": "Tidak ada data untuk diupdate"}
-
-        # Ensure user_id is string
-        user_id_str = str(user_id).strip()
-        print(f"DEBUG: Using user_id: {user_id_str}")
-
+        # =====================================
+        # UPDATE DATABASE
+        # =====================================
         result = supabase.table("pengguna") \
             .update(payload) \
-            .eq("id", user_id_str) \
+            .eq("id", str(user_id)) \
             .execute()
 
-        print(f"DEBUG: Update result: {result}")
+        print("DEBUG UPDATE RESULT:", result)
 
+        # =====================================
+        # CEK RESULT
+        # =====================================
         if not result.data:
-            return {"error": "User tidak ditemukan atau tidak ada perubahan"}
+
+            return {
+
+                "error": "Update gagal"
+            }
+
+        # =====================================
+        # KIRIM EMAIL SETELAH UPDATE
+        # =====================================
+        if approved:
+
+            user_result = supabase.table("pengguna") \
+                .select("*") \
+                .eq("id", str(user_id)) \
+                .single() \
+                .execute()
+
+            user_data = user_result.data
+
+            print("DEBUG USER DATA:", user_data)
+
+            send_approval_email(
+
+                user_data["email"],
+
+                user_data["nama_lengkap"]
+            )
 
         return result.data
+
     except Exception as e:
-        print(f"DEBUG: Exception in update_user_service: {str(e)}")
-        return {"error": str(e)}
+
+        print("DEBUG ERROR:", str(e))
+
+        return {
+
+            "error": str(e)
+        }
+    
+
+
+# def update_user_service(user_id, data):
+#     try:
+#         print(f"DEBUG: Updating user {user_id} with data: {data}")
+
+#         payload = {}
+
+#         # Handle Pydantic model
+#         if hasattr(data, "dict"):
+#             payload = data.dict(exclude_unset=True)
+#             print(f"DEBUG: Pydantic payload: {payload}")
+#         elif isinstance(data, dict):
+#             payload = {k: v for k, v in data.items() if v is not None}
+#             print(f"DEBUG: Dict payload: {payload}")
+
+#         # Ensure status is processed
+#         if "status" in payload and payload["status"] is not None:
+#             raw_status = str(payload["status"]).strip().lower()
+#             if raw_status in ["disetujui", "approved"]:
+#                 payload["status"] = "disetujui"
+#                 payload["is_active"] = True
+#             else:
+#                 payload["status"] = "menunggu"
+#                 payload["is_active"] = False
+
+#         print(f"DEBUG: Final payload: {payload}")
+
+#         if not payload:
+#             return {"error": "Tidak ada data untuk diupdate"}
+
+#         # Ensure user_id is string
+#         user_id_str = str(user_id).strip()
+#         print(f"DEBUG: Using user_id: {user_id_str}")
+
+#         result = supabase.table("pengguna") \
+#             .update(payload) \
+#             .eq("id", user_id_str) \
+#             .execute()
+
+#         print(f"DEBUG: Update result: {result}")
+
+#         if not result.data:
+#             return {"error": "User tidak ditemukan atau tidak ada perubahan"}
+
+#         return result.data
+#     except Exception as e:
+#         print(f"DEBUG: Exception in update_user_service: {str(e)}")
+#         return {"error": str(e)}
+
+
+
+
+
 
 
 # def update_user_service(user_id, data):
