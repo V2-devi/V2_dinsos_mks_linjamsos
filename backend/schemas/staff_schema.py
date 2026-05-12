@@ -18,14 +18,5 @@ class StaffSchema(BaseModel):
     status: str
 
 class StaffUpdateSchema(BaseModel):
-    status: Optional[str] = None
-    nama_lengkap: Optional[str] = None
-    email: Optional[EmailStr] = None
-    role: Optional[str] = None
-    nik: Optional[str] = None
-    nip: Optional[str] = None
-    no_hp: Optional[str] = None
-    alamat: Optional[str] = None
-
-    class Config:
-        extra = "ignore"
+    status: str
+  
