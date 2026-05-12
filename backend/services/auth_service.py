@@ -86,31 +86,48 @@ def register_user(data):
 # =========================================================
 def login_user(data):
     try:
-        # login auth
+
+        # =====================================
+        # LOGIN AUTH
+        # =====================================
         auth = supabase.auth.sign_in_with_password({
             "email": data.email,
             "password": data.password
         })
 
-        # cek session
+        # =====================================
+        # CEK SESSION
+        # =====================================
         if not auth.session:
             return {
                 "error": "Login gagal"
             }
-        # cek email verification
-        if not auth.user.email_confirmed_at:
+
+        auth_user = auth.user
+
+        # =====================================
+        # CEK EMAIL VERIFIED
+        # =====================================
+        if not auth_user.email_confirmed_at:
             return {
                 "error": "Email belum diverifikasi"
             }
-        auth_user = auth.user
 
-        # cek profile pengguna
-        profile = get_user_by_email(data.email)
+        # =====================================
+        # AMBIL PROFILE PENGGUNA
+        # =====================================
+        profile = supabase.table("pengguna") \
+            .select("*") \
+            .eq("email", data.email) \
+            .execute()
 
-        # =================================================
-        # JIKA PROFILE BELUM ADA -> INSERT OTOMATIS
-        # =================================================
-        if not profile or not profile.data:
+        # DEBUG
+        print("PROFILE:", profile.data)
+
+        # =====================================
+        # JIKA PROFILE BELUM ADA
+        # =====================================
+        if not profile.data:
 
             insert_user_profile({
 
@@ -135,20 +152,31 @@ def login_user(data):
                 "is_active": False
             })
 
-            # ambil ulang profile
-            profile = get_user_by_email(data.email)
+            # ambil ulang
+            profile = supabase.table("pengguna") \
+                .select("*") \
+                .eq("email", data.email) \
+                .execute()
 
+        # =====================================
+        # AMBIL USER
+        # =====================================
         user = profile.data[0]
 
-        # =================================================
+        print("USER:", user)
+
+        # =====================================
         # CEK APPROVAL ADMIN
-        # =================================================
-        if not user.get("is_active"):
+        # =====================================
+        if user["is_active"] is not True:
 
             return {
                 "error": "Akun belum disetujui admin"
             }
 
+        # =====================================
+        # LOGIN BERHASIL
+        # =====================================
         return {
 
             "access_token": auth.session.access_token,
@@ -159,6 +187,8 @@ def login_user(data):
         }
 
     except Exception as e:
+
+        print("LOGIN ERROR:", str(e))
 
         return {
             "error": str(e)

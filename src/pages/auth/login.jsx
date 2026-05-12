@@ -8,35 +8,230 @@ import logoLinjamsos from "../../assets/logo_linjamsos.png";
 
 import { login } from "../../services/AuthService";
 
-function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+
+
+
+
+function LoginPage() {
+
+  // =====================================
+  // NAVIGATE
+  // =====================================
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  // =====================================
+  // STATE FORM LOGIN
+  // =====================================
+  const [formData, setFormData] = useState({
+
+    email: "",
+
+    password: ""
+  });
+
+  // =====================================
+  // HANDLE INPUT
+  // =====================================
+  const handleInputChange = (e) => {
+
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    setFormData({
+
+      ...formData,
+
+      [name]: value
+    });
   };
 
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
+  // =====================================
+  // HANDLE LOGIN
+  // =====================================
+  const handleLogin = async () => {
     try {
-      const res = await login(form);
-      if (res.error) {
-        alert(res.error);
+      const data = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log("LOGIN RESPONSE:", data);
+
+      if (!data || data.error || data.detail) {
+        const errorMessage = data?.error || data?.detail || "Login gagal";
+        alert(errorMessage);
         return;
       }
 
-      localStorage.setItem("access_token", res.access_token);
-      navigate("/staff");
+      if (!data.access_token || !data.user) {
+        alert("Login gagal: respons server tidak valid");
+        return;
+      }
+
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      if (data.user.role === "admin") {
+        window.location.href = "/admin";
+      } else if (data.user.role === "staff") {
+        window.location.href = "/staff";
+      } else if (data.user.role === "verifikator") {
+        window.location.href = "/verifikator";
+      } else {
+        window.location.href = "/";
+      }
     } catch (error) {
-      alert(error.message || "Login gagal. Silakan coba lagi.");
+      console.error("LOGIN ERROR:", error);
+
+      const message =
+        error?.response?.data?.detail ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Gagal login";
+      alert(message);
     }
   };
+
+// function Login() {
+//   const [form, setForm] = useState({ email: "", password: "" });
+//   const navigate = useNavigate();
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setForm((prev) => ({
+//       ...prev,
+//       [name]: value,
+//     }));
+//   };
+
+
+// const handleLogin = async () => {
+
+//   try {
+
+//     const res = await fetch(
+//       "http://127.0.0.1:8000/login",
+//       {
+//         method: "POST",
+
+//         headers: {
+//           "Content-Type": "application/json"
+//         },
+
+//         body: JSON.stringify({
+//           email,
+//           password
+//         })
+//       }
+//     );
+
+//     const data = await res.json();
+
+//     console.log("LOGIN RESPONSE:", data);
+
+//     // =====================================
+//     // CEK ERROR
+//     // =====================================
+//     if (data.error) {
+//       alert(data.error);
+//       return;
+//     }
+
+//     // =====================================
+//     // SIMPAN TOKEN
+//     // =====================================
+//     localStorage.setItem(
+//       "token",
+//       data.access_token
+//     );
+
+//     // =====================================
+//     // SIMPAN USER
+//     // =====================================
+//     localStorage.setItem(
+//       "user",
+//       JSON.stringify(data.user)
+//     );
+
+//     alert("Login berhasil");
+
+//     // =====================================
+//     // REDIRECT BERDASARKAN ROLE
+//     // =====================================
+//     if (data.user.role === "staff") {
+
+//       window.location.href = "/staff";
+
+//     } else if (data.user.role === "verifikator") {
+
+//       window.location.href = "/verifikator";
+
+//     } else {
+//         window.location.href = "/admin";
+//     }
+
+//   } catch (error) {
+
+//     console.error(error);
+
+//     alert("Gagal login");
+//   }
+// };
+
+
+// const handleLogin = async () => {
+
+//   try {
+
+//     const res = await fetch(
+//       "http://127.0.0.1:8000/login",
+//       {
+//         method: "POST",
+
+//         headers: {
+//           "Content-Type": "application/json"
+//         },
+
+//         body: JSON.stringify({
+
+//           email: formData.email,
+
+//           password: formData.password
+//         })
+//       }
+//     );
+
+//     const data = await res.json();
+
+//     console.log("LOGIN RESPONSE:", data);
+
+//     if (data.error) {
+
+//       alert(data.error);
+
+//       return;
+//     }
+
+//     // simpan token
+//     localStorage.setItem(
+//       "token",
+//       data.access_token
+//     );
+
+//     // simpan user
+//     localStorage.setItem(
+//       "user",
+//       JSON.stringify(data.user)
+//     );
+
+//     alert("Login berhasil");
+
+//   } catch (error) {
+
+//     console.error("LOGIN ERROR:", error);
+
+//     alert(error.message);
+//   }
+// };
 
   return (
     <div className="auth-container">
@@ -69,14 +264,20 @@ function Login() {
             <p>Silahkan masukkan kredential Anda</p>
           </div>
 
-          <form onSubmit={handleLogin}>
+          {/* <form onSubmit={handleLogin}> */}
+          <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleLogin();
+              }}
+            >
             <div className="form-group">
               <label>Alamat Email*</label>
               <input
                 type="email"
                 name="email"
-                value={form.email}
-                onChange={handleChange}
+                value={formData.email}
+                onChange={handleInputChange}
                 placeholder="contoh@gmail.com"
                 required
               />
@@ -98,8 +299,8 @@ function Login() {
               <input
                 type="password"
                 name="password"
-                value={form.password}
-                onChange={handleChange}
+                value={formData.password}
+                onChange={handleInputChange}
                 placeholder="**********"
                 required
               />
@@ -133,4 +334,4 @@ function Login() {
   );
 }
   
-export default Login;
+export default LoginPage;

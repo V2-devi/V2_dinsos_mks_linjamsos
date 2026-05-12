@@ -8,17 +8,65 @@ function AdminProfile() {
 
 // === STATE DATA PROFIL ===
   const [profileData, setProfileData] = useState({
-    namaLengkap: "Firliany Firdaus",
-    nip: "0000000000000000",
-    email: "snhsxiqb@gmail.com",
-    noHp: "+6280000000000",
-    alamat: "Jl.mana saja",
-    role: "admin",
-    namaInstansi: "Dinas Sosial Kota Makassar",
-    alamatInstansi: "Jln.",
-    kepalaDinas: "Xxxxxxxxxxxxx",
-    nipKadis: "0000000000000000"
+    nama_lengkap: "",
+    nip: "",
+    email: "",
+    no_hp: "",
+    alamat: "",
+    role: "",
+    instansi: "",
+    alamat_instansi: " ",
+    nama_kepala_dinas: "",
+     nip_kepala_dinas: " "
   });
+
+
+  const fetchProfile = async (id) => {
+    try {
+
+      const res = await fetch(
+        `http://127.0.0.1:8000/profile/${id}`
+      );
+
+      const data = await res.json();
+
+      setProfile(data);
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+const handleSaveProfile = async () => {
+
+  try {
+
+    const res = await fetch(
+      "http://127.0.0.1:8000/profile",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+
+          // 🔥 POSISI AUTHORIZATION
+          Authorization: `Bearer ${token}`
+        },
+
+        body: JSON.stringify(formData)
+      }
+    );
+
+    const data = await res.json();
+
+    console.log(data);
+
+    alert("Profile berhasil disimpan");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   // === STATE FORM & MODAL ===
   const [formData, setFormData] = useState({ ...profileData });
@@ -48,6 +96,36 @@ function AdminProfile() {
     setIsSuccessModalOpen(true);
     setTimeout(() => setIsSuccessModalOpen(false), 2500);
   };
+
+
+const handleUpdateProfile = async () => {
+  try {
+
+    const res = await fetch(
+      `http://127.0.0.1:8000/profile/${user.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      }
+    );
+
+    const data = await res.json();
+
+    console.log(data);
+
+    alert("Profile berhasil diupdate");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+
+
 
   return (
     <div className="profile-page-container">
@@ -83,20 +161,20 @@ function AdminProfile() {
             
             <h2 className="profile-section-title">Data Staff</h2>
             <div className="profile-info-grid">
-              <span className="grid-label">Nama Lengkap</span><span className="grid-colon">:</span><span className="grid-value">{profileData.namaLengkap}</span>
+              <span className="grid-label">Nama Lengkap</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nama_lengkap}</span>
               <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nip}</span>
               <span className="grid-label">Email Aktif</span><span className="grid-colon">:</span><span className="grid-value">{profileData.email}</span>
-              <span className="grid-label">No.HP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.noHp}</span>
+              <span className="grid-label">No.HP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.no_hp}</span>
               <span className="grid-label">Alamat</span><span className="grid-colon">:</span><span className="grid-value">{profileData.alamat}</span>
               <span className="grid-label">Role</span><span className="grid-colon">:</span><span className="grid-value">{profileData.role}</span>
             </div>
 
             <h2 className="profile-section-title" style={{ marginTop: '40px' }}>Instansi</h2>
             <div className="profile-info-grid">
-              <span className="grid-label">Nama Instansi</span><span className="grid-colon">:</span><span className="grid-value">{profileData.namaInstansi}</span>
-              <span className="grid-label">Alamat</span><span className="grid-colon">:</span><span className="grid-value">{profileData.alamatInstansi}</span>
-              <span className="grid-label">Kepala Dinas</span><span className="grid-colon">:</span><span className="grid-value">{profileData.kepalaDinas}</span>
-              <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nipKadis}</span>
+              <span className="grid-label">Nama Instansi</span><span className="grid-colon">:</span><span className="grid-value">{profileData.instansi}</span>
+              <span className="grid-label">Alamat</span><span className="grid-colon">:</span><span className="grid-value">{profileData.alamat_instansi}</span>
+              <span className="grid-label">Kepala Dinas</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nama_kepala_dinas}</span>
+              <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData. nip_kepala_dinas}</span>
             </div>
 
           </div>
@@ -130,7 +208,7 @@ function AdminProfile() {
                 <div className="modal-section">
                   <h3 className="section-subtitle">Data Pribadi Staff</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="namaLengkap" value={formData.namaLengkap} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleInputChange} required /></div>
                     
                     {/* INPUT NIK DIUBAH MENJADI DROPDOWN ROLE */}
                     <div className="form-group-modal">
@@ -144,7 +222,7 @@ function AdminProfile() {
 
                     <div className="form-group-modal"><label>NIP</label><input type="text" name="nip" value={formData.nip} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Email Aktif</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>No. HP</label><input type="text" name="noHp" value={formData.noHp} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>No. HP</label><input type="text" name="no_hp" value={formData.no_hp} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat</label><input type="text" name="alamat" value={formData.alamat} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
@@ -152,10 +230,10 @@ function AdminProfile() {
                 <div className="modal-section" style={{ marginTop: '10px' }}>
                   <h3 className="section-subtitle">Data Instansi</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>Nama Instansi</label><input type="text" name="namaInstansi" value={formData.namaInstansi} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Alamat Instansi</label><input type="text" name="alamatInstansi" value={formData.alamatInstansi} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Nama Kepala Dinas</label><input type="text" name="kepalaDinas" value={formData.kepalaDinas} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>NIP Kepala Dinas</label><input type="text" name="nipKadis" value={formData.nipKadis} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Nama Instansi</label><input type="text" name="instansi" value={formData.instansi} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Alamat Instansi</label><input type="text" name="alamat_instansi" value={formData.alamat_instansi} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Nama Kepala Dinas</label><input type="text" name="nama_kepala_dinas" value={formData.nama_kepala_dinas} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>NIP Kepala Dinas</label><input type="text" name=" nip_kepala_dinas" value={formData. nip_kepala_dinas} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
 

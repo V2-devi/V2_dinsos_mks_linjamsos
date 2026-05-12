@@ -54,7 +54,7 @@ function AppRoutes() {
 
       {/* RUTE STAFF / PENGISI DATA */}
       <Route path="/staff" element={<StaffDashboard />} />
-
+      {/* <Route path="/admin" element={<AdminDashboard />} /> */}
       <Route path="/verifikator" element={<VerifikatorDashboard />} />
       <Route path="/staffprofile" element={<StaffProfile />} />
 

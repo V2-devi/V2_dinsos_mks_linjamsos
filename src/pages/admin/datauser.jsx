@@ -132,7 +132,7 @@ useEffect(() => {
 
 const handleAddStaff = async () => {
   try {
-    await fetch("http://127.0.0.1:8000/admin", {
+    await fetch("http://127.0.0.1:8000/admin/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -301,6 +301,8 @@ const initialFormState = {
         alamat: formData.alamat,
         role: formData.role,
         status: formData.status,
+        nip: formData.nip || null,
+        nik: formData.nik || null,
       };
 
       console.log("Payload dikirim:", payload);
