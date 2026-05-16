@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./adminprofile.css"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
@@ -6,122 +6,176 @@ import logoLinjamsos from "../../assets/logo_linjamsos.png";
 function AdminProfile() {
   const navigate = useNavigate();
 
+ // =================================================
+  // 1. USER (AMAN DARI NULL)
+  // =================================================
+  const userData = localStorage.getItem("user");
+
+  const user = userData
+    ? JSON.parse(userData)
+    : null;
+
 // === STATE DATA PROFIL ===
   const [profileData, setProfileData] = useState({
     nama_lengkap: "",
     nip: "",
+    nik: "",
     email: "",
     no_hp: "",
     alamat: "",
     role: "",
     instansi: "",
-    alamat_instansi: " ",
+    alamat_instansi: "",
     nama_kepala_dinas: "",
-     nip_kepala_dinas: " "
+    nip_kepala_dinas: ""
   });
 
 
-  const fetchProfile = async (id) => {
+
+ // =================================================
+  // 3. FETCH PROFILE (AMBIL DARI BACKEND)
+  // =================================================
+  const fetchProfile = async () => {
+
     try {
 
       const res = await fetch(
-        `http://127.0.0.1:8000/profile/${id}`
+        `http://127.0.0.1:8000/profile/${user.id}`
       );
 
       const data = await res.json();
 
-      setProfile(data);
+      console.log("PROFILE FROM BE:", data);
+
+      const profile = Array.isArray(data)
+        ? data[0]
+        : data;
+
+      if (!profile) return;
+
+      setProfileData(profile);
 
     } catch (error) {
-      console.error(error);
+
+      console.error("FETCH ERROR:", error);
     }
   };
 
-const handleSaveProfile = async () => {
+  // =================================================
+  // 4. LOAD SAAT PAGE MUNCUL (INI WAJIB)
+  // =================================================
+  useEffect(() => {
 
-  try {
+    if (user?.id) {
 
-    const res = await fetch(
-      "http://127.0.0.1:8000/profile",
-      {
-        method: "POST",
+      fetchProfile();
+    }
 
-        headers: {
-          "Content-Type": "application/json",
+  }, [user?.id]);
 
-          // 🔥 POSISI AUTHORIZATION
-          Authorization: `Bearer ${token}`
-        },
 
-        body: JSON.stringify(formData)
-      }
-    );
 
-    const data = await res.json();
 
-    console.log(data);
-
-    alert("Profile berhasil disimpan");
-
-  } catch (error) {
-    console.error(error);
-  }
-};
 
   // === STATE FORM & MODAL ===
-  const [formData, setFormData] = useState({ ...profileData });
+  // const [profileData, setprofileData] = useState({ ...profileData });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   // === HANDLER ===
-  const handleOpenEdit = () => {
-    setFormData({ ...profileData });
-    setIsEditModalOpen(true);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e, type) => {
-    e.preventDefault();
-    if (type === "edit") {
-      setProfileData(formData);
-      setIsEditModalOpen(false);
-    }
-    if (type === "pass") setIsPassModalOpen(false);
-    
-    setIsSuccessModalOpen(true);
-    setTimeout(() => setIsSuccessModalOpen(false), 2500);
-  };
+  // const handleOpenEdit = () => {
+  //    setProfileData({ ...profileData });
+  //   setIsEditModalOpen(true);
+  // };
 
 
-const handleUpdateProfile = async () => {
-  try {
-
-    const res = await fetch(
-      `http://127.0.0.1:8000/profile/${user.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formData)
-      }
-    );
-
-    const data = await res.json();
-
-    console.log(data);
-
-    alert("Profile berhasil diupdate");
-
-  } catch (error) {
-    console.error(error);
-  }
+const handleOpenEdit = () => {
+  setProfileData((prev) => ({ ...prev }));
+  setIsEditModalOpen(true);
 };
+
+ // =================================================
+  // 5. INPUT HANDLER
+  // =================================================
+  const handleInputChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setProfileData({
+
+      ...profileData,
+
+      [name]: value
+    });
+  };
+
+  // =================================================
+  // 6. UPDATE PROFILE KE BACKEND
+  // =================================================
+  const handleUpdateProfile = async () => {
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/profile/${user.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(profileData)
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("UPDATE ERROR:", data);
+        return { success: false, error: data.detail || data.error || "Update gagal" };
+      }
+
+      await fetchProfile();
+      setIsEditModalOpen(false);
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("UPDATE ERROR:", error);
+      return { success: false, error: error.message || "Update gagal" };
+    }
+  };
+
+
+  const handleSubmit = async (e, type) => {
+    e.preventDefault();
+
+    if (type === "edit") {
+      const result = await handleUpdateProfile();
+      if (result.success) {
+        setIsSuccessModalOpen(true);
+        setTimeout(() => setIsSuccessModalOpen(false), 2500);
+      } else {
+        alert(`Gagal update profile: ${result.error}`);
+      }
+    }
+
+    if (type === "pass") {
+      setIsPassModalOpen(false);
+      setIsSuccessModalOpen(true);
+      setTimeout(() => setIsSuccessModalOpen(false), 2500);
+    }
+  };
+
+  // const handleSubmit = (e, type) => {
+  //   e.preventDefault();
+  //   if (type === "edit") {
+  //     setProfileData(profileData);
+  //     setIsEditModalOpen(false);
+  //   }
+  //   if (type === "pass") setIsPassModalOpen(false);
+    
+  //   setIsSuccessModalOpen(true);
+  //   setTimeout(() => setIsSuccessModalOpen(false), 2500);
+  // };
+
 
 
 
@@ -174,7 +228,7 @@ const handleUpdateProfile = async () => {
               <span className="grid-label">Nama Instansi</span><span className="grid-colon">:</span><span className="grid-value">{profileData.instansi}</span>
               <span className="grid-label">Alamat</span><span className="grid-colon">:</span><span className="grid-value">{profileData.alamat_instansi}</span>
               <span className="grid-label">Kepala Dinas</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nama_kepala_dinas}</span>
-              <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData. nip_kepala_dinas}</span>
+              <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nip_kepala_dinas}</span>
             </div>
 
           </div>
@@ -208,32 +262,32 @@ const handleUpdateProfile = async () => {
                 <div className="modal-section">
                   <h3 className="section-subtitle">Data Pribadi Staff</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={profileData.nama_lengkap} onChange={handleInputChange} required /></div>
                     
                     {/* INPUT NIK DIUBAH MENJADI DROPDOWN ROLE */}
                     <div className="form-group-modal">
                       <label>Role</label>
-                      <select name="role" value={formData.role} onChange={handleInputChange} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+                      <select name="role" value={profileData.role} onChange={handleInputChange} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
                         <option value="staff">staff</option>
                         <option value="verifikator">verifikator</option>
                         <option value="admin">admin</option>
                       </select>
                     </div>
 
-                    <div className="form-group-modal"><label>NIP</label><input type="text" name="nip" value={formData.nip} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Email Aktif</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>No. HP</label><input type="text" name="no_hp" value={formData.no_hp} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Alamat</label><input type="text" name="alamat" value={formData.alamat} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>NIP</label><input type="text" name="nip" value={profileData.nip} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Email Aktif</label><input type="email" name="email" value={profileData.email} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>No. HP</label><input type="text" name="no_hp" value={profileData.no_hp} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Alamat</label><input type="text" name="alamat" value={profileData.alamat} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
 
                 <div className="modal-section" style={{ marginTop: '10px' }}>
                   <h3 className="section-subtitle">Data Instansi</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>Nama Instansi</label><input type="text" name="instansi" value={formData.instansi} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Alamat Instansi</label><input type="text" name="alamat_instansi" value={formData.alamat_instansi} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>Nama Kepala Dinas</label><input type="text" name="nama_kepala_dinas" value={formData.nama_kepala_dinas} onChange={handleInputChange} required /></div>
-                    <div className="form-group-modal"><label>NIP Kepala Dinas</label><input type="text" name=" nip_kepala_dinas" value={formData. nip_kepala_dinas} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Nama Instansi</label><input type="text" name="instansi" value={profileData.instansi} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Alamat Instansi</label><input type="text" name="alamat_instansi" value={profileData.alamat_instansi} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>Nama Kepala Dinas</label><input type="text" name="nama_kepala_dinas" value={profileData.nama_kepala_dinas} onChange={handleInputChange} required /></div>
+                    <div className="form-group-modal"><label>NIP Kepala Dinas</label><input type="text" name="nip_kepala_dinas" value={profileData. nip_kepala_dinas} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
 

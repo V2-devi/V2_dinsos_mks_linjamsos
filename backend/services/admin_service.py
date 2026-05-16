@@ -1,25 +1,130 @@
 from config.database import supabase
 from postgrest.exceptions import APIError
-from services.email_service import send_approval_email
+from services.email_service import send_approval_email, send_staff_account_email
+from services.profile_service import insert_user_profile
+import secrets
+
+
+
+import random
+import string
+
+
+def generate_password(length=8):
+
+    chars = string.ascii_letters + string.digits
+
+    return ''.join(
+        random.choice(chars)
+        for _ in range(length)
+    )
+
+
+# def create_staff(data):
+
+#     try:
+
+#         # =====================================
+#         # PASSWORD OTOMATIS
+#         # =====================================
+#         temp_password = generate_password()
+
+#         # =====================================
+#         # CREATE AUTH USER
+#         # =====================================
+#         auth_user = supabase.auth.admin.create_user({
+
+#             "email": data.email,
+
+#             "password": temp_password,
+
+#             "email_confirm": True
+#         })
+
+#         user = auth_user.user
+
+#         # =====================================
+#         # INSERT KE TABEL PENGGUNA
+#         # =====================================
+#         supabase.table("pengguna").insert({
+
+#             "id": str(user.id),
+
+#             "email": data.email,
+
+#             "nama_lengkap": data.nama_lengkap,
+
+#             "nik": data.nik,
+
+#             "nip": data.nip,
+
+#             "no_hp": data.no_hp,
+
+#             "alamat": data.alamat,
+
+#             "role": data.role,
+
+#             "status": "disetujui",
+
+#             "is_active": True,
+
+#             # PROFILE DEFAULT
+#             "instansi": "",
+
+#             "alamat_instansi": "",
+
+#             "nama_kepala_dinas": "",
+
+#             "nip_kepala_dinas": ""
+
+#         }).execute()
+
+#         return {
+
+#             "message": "Akun berhasil dibuat",
+
+#             "password": temp_password
+#         }
+
+#     except Exception as e:
+
+#         return {
+#             "error": str(e)
+#         }
+
 
 def create_staff(data):
+
     try:
+
+        # ====================================
+        # GENERATE PASSWORD RANDOM
+        # ====================================
+        temporary_password = secrets.token_hex(4)
+
+        print("PASSWORD:", temporary_password)
+
+        # ====================================
+        # BUAT USER AUTH
+        # ====================================
         auth_user = supabase.auth.admin.create_user({
             "email": data.email,
-            "password": data.password,
+            "password": temporary_password,
             "email_confirm": True
         })
 
-        # 🔥 CEK ERROR AUTH
         if hasattr(auth_user, "error") and auth_user.error:
             return {"error": auth_user.error.message}
 
         user = auth_user.user
 
         if not user:
-            return {"error": "Gagal membuat user auth"}
+            return {"error": "Gagal membuat akun auth"}
 
-        result = supabase.table("pengguna").insert({
+        # ====================================
+        # SIMPAN PROFILE
+        # ====================================
+        result = insert_user_profile({
             "id": str(user.id),
             "email": data.email,
             "nama_lengkap": data.nama_lengkap,
@@ -30,15 +135,30 @@ def create_staff(data):
             "no_hp": data.no_hp,
             "status": "disetujui",
             "is_active": True
-        }).execute()
+        })
 
-        return result.data
+        if not result:
+            return {"error": "Gagal menyimpan profil pengguna"}
+
+        # ====================================
+        # KIRIM EMAIL
+        # ====================================
+        send_staff_account_email(
+            data.email,
+            data.nama_lengkap,
+            temporary_password,
+            data.role
+        )
+
+        return result
 
     except Exception as e:
         return {"error": str(e)}
 
 
-from services.email_service import send_approval_email
+
+
+
 
 
 def update_user_service(user_id, data):
