@@ -1,44 +1,122 @@
 from config.database import supabase
 from postgrest.exceptions import APIError
-from services.email_service import send_approval_email
+from services.email_service import send_approval_email, send_staff_account_email
+import secrets
+
 
 def create_staff(data):
+
     try:
+
+        # ====================================
+        # GENERATE PASSWORD RANDOM
+        # ====================================
+        temporary_password = secrets.token_hex(4)
+
+        print("PASSWORD:", temporary_password)
+
+        # ====================================
+        # BUAT USER AUTH
+        # ====================================
         auth_user = supabase.auth.admin.create_user({
+
             "email": data.email,
-            "password": data.password,
+
+            "password": temporary_password,
+
             "email_confirm": True
         })
 
-        # 🔥 CEK ERROR AUTH
-        if hasattr(auth_user, "error") and auth_user.error:
-            return {"error": auth_user.error.message}
-
         user = auth_user.user
 
-        if not user:
-            return {"error": "Gagal membuat user auth"}
-
+        # ====================================
+        # SIMPAN PROFILE
+        # ====================================
         result = supabase.table("pengguna").insert({
+
             "id": str(user.id),
+
             "email": data.email,
+
             "nama_lengkap": data.nama_lengkap,
+
             "nik": data.nik,
+
             "nip": data.nip,
+
             "role": data.role,
+
             "alamat": data.alamat,
+
             "no_hp": data.no_hp,
+
             "status": "disetujui",
+
             "is_active": True
+
         }).execute()
+
+        # ====================================
+        # KIRIM EMAIL
+        # ====================================
+        send_staff_account_email(
+
+            data.email,
+
+            data.nama_lengkap,
+
+            temporary_password,
+
+            data.role
+        )
 
         return result.data
 
     except Exception as e:
-        return {"error": str(e)}
+
+        return {
+
+            "error": str(e)
+        }
+# def create_staff(data):
+#     try:
+#         auth_user = supabase.auth.admin.create_user({
+#             "email": data.email,
+#             "password": data.password,
+#             "email_confirm": True
+#         })
+
+#         # 🔥 CEK ERROR AUTH
+#         if hasattr(auth_user, "error") and auth_user.error:
+#             return {"error": auth_user.error.message}
+
+#         user = auth_user.user
+
+#         if not user:
+#             return {"error": "Gagal membuat user auth"}
+
+#         result = supabase.table("pengguna").insert({
+#             "id": str(user.id),
+#             "email": data.email,
+#             "nama_lengkap": data.nama_lengkap,
+#             "nik": data.nik,
+#             "nip": data.nip,
+#             "role": data.role,
+#             "alamat": data.alamat,
+#             "no_hp": data.no_hp,
+#             "status": "disetujui",
+#             "is_active": True
+#         }).execute()
+
+#         return result.data
+
+#     except Exception as e:
+#         return {"error": str(e)}
 
 
-from services.email_service import send_approval_email
+
+
+
 
 
 def update_user_service(user_id, data):
