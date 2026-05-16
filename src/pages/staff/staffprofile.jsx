@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./staffdashboard.css"; 
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
+import "../admin/adminprofile.css";
 
 function StaffProfile() {
   const navigate = useNavigate();
