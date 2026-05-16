@@ -1,18 +1,24 @@
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, HTTPException
 from dependencies.auth_dependency import get_current_user
-from services.profile_service import  get_profile_service, insert_user_profile
+from services.profile_service import get_profile_service, insert_user_profile, update_user_profile
 from schemas.profile_schema import ProfileSchema
+from uuid import UUID
 
 
-
-from config.database import supabase
 router = APIRouter(prefix="/profile", tags=["Profile"])
-
 
 
 @router.post("/")
 async def save_profile(data: ProfileSchema, user=Depends(get_current_user)):
-    result = insert_user_profile(user.id, data)
+    payload = data.dict(exclude_unset=True)
+    payload["id"] = str(user.id)
+    if not payload.get("email"):
+        payload["email"] = getattr(user, "email", None)
+
+    result = insert_user_profile(payload)
+    if isinstance(result, dict) and result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"])
+
     return {
         "message": "Profile saved",
         "data": result
@@ -24,36 +30,53 @@ async def save_profile(data: ProfileSchema, user=Depends(get_current_user)):
 
 #     return result
 
-@router.get("/profile/{user_id}")
-def get_profile(user_id: str):
-    result = supabase.table("pengguna") \
-        .select("*") \
-        .eq("id", user_id) \
-        .single() \
-        .execute()
+# @router.get("/profile/{user_id}")
+# def get_profile(user_id: str):
+#     result = supabase.table("pengguna") \
+#         .select("*") \
+#         .eq("id", user_id) \
+#         .single() \
+#         .execute()
 
-    return result.data
-
-
-@router.put("/profile/{user_id}")
-def update_profile(user_id: str, data: dict = ProfileSchema):
-
-    result = supabase.table("pengguna") \
-        .update({
-            "nama_lengkap": data.get("nama_lengkap"),
-            "nik": data.get("nik"),
-            "nip": data.get("nip"),
-            "no_hp": data.get("no_hp"),
-            "alamat": data.get("alamat"),
-            "instansi": data.get("instansi"),
-            "alamat_instansi": data.get("alamat_instansi")
-        }) \
-        .eq("id", user_id) \
-        .execute()
-
-    return result.data
+#     return result.data
 
 
+# @router.put("/profile/{user_id}")
+# def update_profile(user_id: str, data: dict = ProfileSchema):
+
+#     result = supabase.table("pengguna") \
+#         .update({
+#             "nama_lengkap": data.get("nama_lengkap"),
+#             "nik": data.get("nik"),
+#             "nip": data.get("nip"),
+#             "no_hp": data.get("no_hp"),
+#             "alamat": data.get("alamat"),
+#             "instansi": data.get("instansi"),
+#             "alamat_instansi": data.get("alamat_instansi")
+#         }) \
+#         .eq("id", user_id) \
+#         .execute()
+
+#     return result.data
+
+
+@router.get("/{user_id}")
+def get_profile_route(user_id: str):
+    try:
+        result = get_profile_service(user_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Profile tidak ditemukan")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/{user_id}")
+def update_profile_route(user_id: str, data: ProfileSchema):
+    result = update_user_profile(user_id, data)
+    if isinstance(result, dict) and result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
 
 
 
