@@ -813,6 +813,8 @@ function StaffDashboard() {
                     <thead>
                       <tr>
                         <th>Nama Lengkap</th>
+                        <th>NIK</th>
+                        <th>No. KK</th>
                         <th>Kecamatan</th>
                         <th>Kelurahan</th>
                         <th>Tanggal Pengusulan</th>
@@ -824,7 +826,9 @@ function StaffDashboard() {
                     <tbody>
                       {tableDataFiltered.map((item) => (
                         <tr key={item.id}>
-                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
+                          <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span></td>
+                          <td>{item.nik}</td>
+                          <td>{item.no_kk}</td>
                           <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan)}</td><td>{item.alamat}</td>
                           <td style={{ textAlign: "center" }}>
                             {item.status_pengusulan === "Layak" && <span className="status-badge badge-active">Layak</span>}
@@ -1688,7 +1692,6 @@ function StaffDashboard() {
 
                 {/* Baris 2: Nama dan Tanggal Pengusulan */}
                 <div className="form-grid-2">
-
                   <div className="form-group-modal">
                     <label>Nama Lengkap (Sesuai KTP)*</label>
                     <input type="text" name="nama" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama_lengkap: e.target.value})} required placeholder="Masukkan Nama Lengkap" />
@@ -1698,19 +1701,6 @@ function StaffDashboard() {
                     <label>Tanggal Pengusulan*</label>
                     <input type="date" name="tanggal" value={formData.tanggal_usulan} onChange={(e) => setFormData({...formData, tanggal_usulan: e.target.value})} required />
                   </div>
-
-                  <div className="form-group-modal">
-                    <label>Nama Pengusul</label>
-                    <input type="text" name="nama_pengusul" value={formData.nama_pengusul} onChange={(e) => setFormData({...formData, nama_pengusul: e.target.value})} required placeholder="Masukkan Nama Pengusul" />
-                  </div>
-
-
-                   <div className="form-group-modal">
-                    <label>Penginput</label>
-                    {/* ✅ PERBAIKAN: Input 'Penginput' dinonaktifkan (readOnly) dan mengambil nilai dari state currentStaff */}
-                    <input type="text" name="penginput" value={currentStaff.nama} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#475569' }} />
-                  </div>
-                    
                 </div>
 
                 {/* Baris 3: Kecamatan dan Kelurahan */}
