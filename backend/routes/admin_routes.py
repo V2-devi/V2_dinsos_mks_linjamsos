@@ -26,10 +26,7 @@ def update_user(user_id: str, data: StaffUpdateSchema):
 
 @router.post("/users")
 def create_staff_route(data: StaffSchema):
-    result = create_staff(data)
-    if isinstance(result, dict) and result.get("error"):
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
+    return create_staff(data)
 
 
 # @router.get("/users/pending")
