@@ -4,6 +4,10 @@ import "./staffdashboard.css";
 import logoLinjamsos from "../../assets/logo_linjamsos.png";
 import { supabase } from "../../config/supabase";
 
+
+
+
+
 function StaffDashboard() {
   // ✅ STATE BARU UNTUK PROFIL SIDEBAR
   const [currentStaff, setCurrentStaff] = useState({
@@ -11,17 +15,17 @@ function StaffDashboard() {
     nip: "12345678912131230"
   });
 
-  const approve = async (id) => {
-    await fetch(`/pengusulan/${id}/approve`, {
-      method: "PUT"
-    });
-  };
+  // const approve = async (id) => {
+  //   await fetch(`/pengusulan/${id}/approve`, {
+  //     method: "PUT"
+  //   });
+  // };
 
-  const reject = async (id) => {
-    await fetch(`/pengusulan/${id}/reject`, {
-      method: "PUT"
-    });
-  };
+  // const reject = async (id) => {
+  //   await fetch(`/pengusulan/${id}/reject`, {
+  //     method: "PUT"
+  //   });
+  // };
 
   const [form, setForm] = useState({
     nama_lengkap: "",
@@ -35,16 +39,16 @@ function StaffDashboard() {
     jenis_bansos: ""
   });
 
-  const handleSubmit = async () => {
-    await fetch("/pengusulan", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // ✅ SYNTAX ERROR DIPERBAIKI DI SINI (Koma yang salah dihapus agar tidak crash)
-      body: JSON.stringify(form)
-    });
-  };
+  // const handleSubmit = async () => {
+  //   await fetch("/pengusulan", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     // ✅ SYNTAX ERROR DIPERBAIKI DI SINI (Koma yang salah dihapus agar tidak crash)
+  //     body: JSON.stringify(form)
+  //   });
+  // };
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,93 +73,136 @@ function StaffDashboard() {
   // === STATE DATA & MODAL DTSEN ===
   const [isAddDtsenModalOpen, setIsAddDtsenModalOpen] = useState(false);
   const [selectedDtsenData, setSelectedDtsenData] = useState(null);
-  const [detailDtsenInnerTab, setDetailDtsenInnerTab] = useState("anggota"); 
-
-  // Fetch data from Supabase on mount
-  useEffect(() => {
-    // ✅ TARIK DATA NIP DAN NAMA DARI MEMORI BROWSER
-    const savedStaffData = localStorage.getItem("currentStaffUser");
-    if (savedStaffData) {
-      const parsedData = JSON.parse(savedStaffData);
-      const namaDepan = parsedData.namaLengkap ? parsedData.namaLengkap.split(' ')[0] : "Firliany";
-      setCurrentStaff({
-        nama: namaDepan,
-        nip: parsedData.nip || "12345678912131230"
-      });
-    }
-    
-    const fetchData = async () => {
-      try {
-        // Fetch pengusulan
-        const { data: pengusulanData, error: pengusulanError } = await supabase
-          .from('pengusulan_bansos')
-          .select('*');
-        if (pengusulanError) throw pengusulanError;
-        
-        // PERBAIKAN: Menambahkan jenis_bansos ke state mapping
-        setUsulanData((pengusulanData || []).map(item => ({
-          id: item.id,
-          nik: item.nik,
-          no_kk: item.no_kk,
-          nama_lengkap: item.nama_lengkap,
-          nama_pengusul: item.nama_pengusul,
-          penginput: item.penginput,
-          kecamatan: item.kecamatan,
-          kelurahan: item.kelurahan,
-          tanggal: item.tanggal_usulan, // Disamakan dengan state lokal
-          alamat: item.alamat,
-          status_pengusulan: item.status_pengusulan, // Disamakan dengan state lokal
-          jenis_bansos: item.jenis_bansos
-        })));
-
-        // Fetch DTSEN
-        const { data: dtsenDataFetched, error: dtsenError } = await supabase
-          .from('keluarga')
-          .select('*');
-        if (dtsenError) throw dtsenError;
-        setDtsenData((dtsenDataFetched || []).map(item => ({
-          id: item.id,
-          no_kk: item.no_kk,
-          nama_kepala_keluarga: item.nama_kepala_keluarga,
-          kecamatan: item.kecamatan,
-          kelurahan: item.kelurahan,
-          alamat: item.alamat,
-          desil: item.desil || "Belum Dihitung",
-          anggota: [] 
-        })));
-
-        // Fetch PPKS
-        const { data: ppksData, error: ppksError } = await supabase
-          .from('ppks')
-          .select('*');
-        if (ppksError) throw ppksError;
-        setDummyPPKS((ppksData || []).map(item => ({
-          id: item.id,
-          nik: item.nik,
-          nama_lengkap: item.nama_lengkap,
-          kategori: item.kategori,
-          kecamatan: item.kecamatan,
-          lokasi: item.lokasi,
-          tanggal: item.tanggal_laporan,
-          status_penanganan: item.status_penanganan
-        })));
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    fetchData();
-  }, []); 
-
-  // === STATE MODAL ANGGOTA & 39 VARIABEL DTSEN ===
+  const [detailDtsenInnerTab, setDetailDtsenInnerTab] = useState("anggota");
+  
+  // === STATE MODAL ANGGOTA ===
   const [isAddAnggotaModalOpen, setIsAddAnggotaModalOpen] = useState(false);
   const [isDetailAnggotaModalOpen, setIsDetailAnggotaModalOpen] = useState(false);
   const [selectedAnggotaData, setSelectedAnggotaData] = useState(null);
   const [isEditAsetModalOpen, setIsEditAsetModalOpen] = useState(false);
+  
+  // === STATE DATA UNTUK SELURUH MENU ===
+  const [usulanData, setUsulanData] = useState([]);
+  const [dtsenData, setDtsenData] = useState([]);
+  const [dummyPPKS, setDummyPPKS] = useState([]);
+  
+  // === STATE UNTUK FORM & FILTER ===
+  const [formAset, setFormAset] = useState({});
+  const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
+  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
+  const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
+  const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", nama: "" });
+  const [filterDesil, setFilterDesil] = useState({ kecamatan: "", no_kk: "" });
+  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
+  
+  // === STATE UNTUK FORM DETAIL ===
   const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
   const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", lokasi: "", tanggal: "" };
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
+  const [selectedPPKSData, setSelectedPPKSData] = useState(null);
+  const [catatanAssessment, setCatatanAssessment] = useState("");
   
+  const initialFormState = { 
+    nik: "", 
+    no_kk: "", 
+    nama_lengkap: "", 
+    penginput: "",
+    nama_pengusul: "",
+    kecamatan: "", 
+    kelurahan: "", 
+    tanggal: "", 
+    alamat: "", 
+    desil: "", 
+    jenis_bansos: "", 
+    status_pengusulan: "Belum" 
+  };
+  const [formData, setFormData] = useState(initialFormState);
+  const [formDtsen, setFormDtsen] = useState(
+    { no_kk: "", 
+      nama_kepala_keluarga: "", 
+      jenis_kelamin:"",
+      nik_kepala:"",
+      kecamatan: "", 
+      kelurahan: "", 
+      alamat: "" });
+
+  // Fetch data from Supabase on mount
+  // useEffect(() => {
+  //   // ✅ TARIK DATA NIP DAN NAMA DARI MEMORI BROWSER
+  //   const savedStaffData = localStorage.getItem("currentStaffUser");
+  //   if (savedStaffData) {
+  //     const parsedData = JSON.parse(savedStaffData);
+  //     const namaDepan = parsedData.namaLengkap ? parsedData.namaLengkap.split(' ')[0] : "Firliany";
+  //     setCurrentStaff({
+  //       nama: namaDepan,
+  //       nip: parsedData.nip || "12345678912131230"
+  //     });
+  //   }
+    
+    // const fetchData = async () => {
+    //   try {
+    //     // Fetch pengusulan
+    //     const { data: pengusulanData, error: pengusulanError } = await supabase
+    //       .from('pengusulan_bansos')
+    //       .select('*');
+    //     if (pengusulanError) throw pengusulanError;
+        
+    //     // PERBAIKAN: Menambahkan jenis_bansos ke state mapping
+    //     setUsulanData((pengusulanData || []).map(item => ({
+    //       id: item.id,
+    //       nik: item.nik,
+    //       no_kk: item.no_kk,
+    //       nama_lengkap: item.nama_lengkap,
+    //       nama_pengusul: item.nama_pengusul,
+    //       penginput: item.penginput,
+    //       kecamatan: item.kecamatan,
+    //       kelurahan: item.kelurahan,
+    //       tanggal_usulan: item.tanggal_usulan,
+    //       alamat: item.alamat,
+    //       status_pengusulan: item.status_pengusulan,
+    //       jenis_bansos: item.jenis_bansos
+    //     })));
+
+  //       // Fetch DTSEN
+  //       const { data: dtsenDataFetched, error: dtsenError } = await supabase
+  //         .from('keluarga')
+  //         .select('*');
+  //       if (dtsenError) throw dtsenError;
+  //       setDtsenData((dtsenDataFetched || []).map(item => ({
+  //         id: item.id,
+  //         no_kk: item.no_kk,
+  //         nama_kepala_keluarga: item.nama_kepala_keluarga,
+  //         kecamatan: item.kecamatan,
+  //         kelurahan: item.kelurahan,
+  //         alamat: item.alamat,
+  //         desil: item.desil || "Belum Dihitung",
+  //         anggota: [] 
+  //       })));
+
+  //       // Fetch PPKS
+  //       const { data: ppksData, error: ppksError } = await supabase
+  //         .from('ppks')
+  //         .select('*');
+  //       if (ppksError) throw ppksError;
+  //       setDummyPPKS((ppksData || []).map(item => ({
+  //         id: item.id,
+  //         nik: item.nik,
+  //         nama_lengkap: item.nama_lengkap,
+  //         kategori: item.kategori,
+  //         kecamatan: item.kecamatan,
+  //         lokasi: item.lokasi,
+  //         tanggal_laporan: item.tanggal_laporan,
+  //         status_penanganan: item.status_penanganan
+  //       })));
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, []);
+
+  // === HANDLE ADD PPKS ===
   const handleAddPPKSSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -176,6 +223,7 @@ function StaffDashboard() {
       const newPPKS = {
         ...formPPKS,
         id: data[0].id,
+        tanggal_laporan: formPPKS.tanggal,
         status_penanganan: "Menunggu Kelayakan",
         nik: formPPKS.nik || "Belum Diketahui", 
         nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas"
@@ -189,9 +237,6 @@ function StaffDashboard() {
       alert('Gagal menambah laporan PPKS: ' + error.message);
     }
   };
-
-  const [selectedPPKSData, setSelectedPPKSData] = useState(null);
-  const [catatanAssessment, setCatatanAssessment] = useState("");
 
   const handleOpenDetailPPKS = (data) => {
     setSelectedPPKSData(data);
@@ -220,29 +265,6 @@ function StaffDashboard() {
     }
   };
   
-  const [formAset, setFormAset] = useState({});
-
-  const [usulanData, setUsulanData] = useState([]);
-  
-  const initialFormState = { 
-    nik: "", 
-    no_kk: "", 
-    nama_lengkap: "", 
-    penginput: "",
-    nama_pengusul: "",
-    kecamatan: "", 
-    kelurahan: "", 
-    tanggal: "", 
-    alamat: "", 
-    desil: "", 
-    jenis_bansos: "", // Field Jenis Bansos dipastikan ada
-    status_pengusulan: "Belum" 
-  };
-  const [formData, setFormData] = useState(initialFormState);
-  
-  const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
-  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
-
   const getQuarter = (dateString) => {
     if (!dateString) return "q1";
     const month = new Date(dateString).getMonth() + 1;
@@ -306,9 +328,9 @@ function StaffDashboard() {
         nama_pengusul: formData.nama_pengusul,
         kecamatan: formData.kecamatan,
         kelurahan: formData.kelurahan,
-        tanggal: formData.tanggal,
+        tanggal_usulan: formData.tanggal,
         alamat: formData.alamat,
-        jenis_bansos: formData.jenis_bansos, // Field jenis bansos
+        jenis_bansos: formData.jenis_bansos,
         status_pengusulan: "Belum"
       };
       
@@ -327,17 +349,6 @@ function StaffDashboard() {
     setSelectedDetailData(data); 
     setActiveTab("detail_usulan"); 
   };
-
-  const [dtsenData, setDtsenData] = useState([]);
-
-  const [formDtsen, setFormDtsen] = useState(
-    { no_kk: "", 
-      nama_kepala_keluarga: "", 
-      jenis_kelamin:"",
-      nik_kepala:"",
-      kecamatan: "", 
-      kelurahan: "", 
-      alamat: "" });
 
   const handleAddDtsen = async (e) => {
     e.preventDefault();
@@ -445,18 +456,11 @@ function StaffDashboard() {
   };
 
   const notifData = [{ id: 1, title: "Sistem", date: "Hari ini", desc: "Data berhasil dimuat." }];
-  const [dummyPPKS, setDummyPPKS] = useState([]);
-
-  const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
-  const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", nama: "" });
-  const [filterDesil, setFilterDesil] = useState({ kecamatan: "", no_kk: "" });
 
   const handleFilterDesilChange = (e) => {
     const { name, value } = e.target;
     setFilterDesil({ ...filterDesil, [name]: value });
   };
-
-  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
 
   const jalankanAlgoritmaPMT = () => {
     const keluargaAsli = dtsenData.find(item => item.no_kk === selectedKalkulasi.no_kk);
@@ -556,7 +560,7 @@ function StaffDashboard() {
     return matchKecamatan && matchNoKk;
   });
 
-  const dashboardPPKSFiltered = dummyPPKS.filter(item => getQuarter(item.tanggal) === filterPeriodePPKS);
+  const dashboardPPKSFiltered = dummyPPKS.filter(item => getQuarter(item.tanggal_laporan) === filterPeriodePPKS);
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status === "Kasus Aktif").length;
   const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status === "Menunggu Kelayakan").length;
 
@@ -575,12 +579,16 @@ function StaffDashboard() {
   const tabelPPKSFiltered = dummyPPKS.filter(item => {
     const matchKategori = filterTabelPPKS.kategori === "" || item.kategori === filterTabelPPKS.kategori;
     const matchKecamatan = filterTabelPPKS.kecamatan === "" || item.kecamatan === filterTabelPPKS.kecamatan;
-    const matchNama = filterTabelPPKS.nama_lengkap === "" || item.nama_lengkap.toLowerCase().includes(filterTabelPPKS.nama_lengkap.toLowerCase()) || item.nik.includes(filterTabelPPKS.nama_lengkap);
+    const itemNama = item.nama_lengkap || "";
+    const itemNik = item.nik || "";
+    const matchNama = filterTabelPPKS.nama_lengkap === "" || itemNama.toLowerCase().includes(filterTabelPPKS.nama_lengkap.toLowerCase()) || itemNik.includes(filterTabelPPKS.nama_lengkap);
     return matchKategori && matchKecamatan && matchNama;
   });
 
   const showSuccess = () => { setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 2500); };
   const formatDateIndo = (dateStr) => { if(!dateStr || dateStr === "-") return "-"; const date = new Date(dateStr); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; };
+
+
 
   return (
     <div className="staff-layout relative">
@@ -1246,9 +1254,9 @@ function StaffDashboard() {
                           <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
                           <td>{item.kategori}</td>
                           <td>{item.lokasi}</td>
-                          <td>{formatDateIndo(item.tanggal)}</td>
+                          <td>{formatDateIndo(item.tanggal_laporan)}</td>
                           <td style={{ textAlign: "center" }}>
-                            <span className={`badge-ppks ${item.status === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status}</span>
+                            <span className={`badge-ppks ${item.status_penanganan === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status_penanganan}</span>
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <button className="btn-icon-keterangan" title="Lihat Detail & Penanganan" onClick={() => handleOpenDetailPPKS(item)}>
@@ -1906,3 +1914,324 @@ function StaffDashboard() {
 }
 
 export default StaffDashboard;
+
+
+// function StaffDashboard() {
+
+//   // =================================================
+//   // LOCAL STORAGE USER
+//   // =================================================
+//   const userData =
+//     localStorage.getItem("user");
+
+//   const user = userData
+//     ? JSON.parse(userData)
+//     : null;
+
+//   console.log("USER:", user);
+
+//   // =================================================
+//   // STATE PROFILE
+//   // =================================================
+//   const [profileData, setProfileData] =
+//     useState({
+
+//       nama_lengkap: "",
+//       email: "",
+//       nip: "",
+//       nik: "",
+//       no_hp: "",
+//       alamat: "",
+//       role: "",
+//       instansi: "",
+//       alamat_instansi: "",
+//       nama_kepala_dinas: "",
+//       nip_kepala_dinas: ""
+
+//     });
+
+//   // =================================================
+//   // FETCH PROFILE
+//   // =================================================
+//   const fetchProfile = async () => {
+
+//     try {
+
+//       console.log("FETCH PROFILE JALAN");
+
+//       // =============================================
+//       // CEK USER
+//       // =============================================
+//       if (!user?.id) {
+
+//         console.log("USER ID TIDAK ADA");
+
+//         return;
+//       }
+
+//       // =============================================
+//       // FETCH KE BACKEND
+//       // =============================================
+//       const res = await fetch(
+
+//         `http://127.0.0.1:8000/profile/${user.id}`
+
+//       );
+
+//       const data = await res.json();
+
+//       console.log("DATA PROFILE:", data);
+
+//       // =============================================
+//       // HANDLE ARRAY / OBJECT
+//       // =============================================
+//       const profile = Array.isArray(data)
+//         ? data[0]
+//         : data;
+
+//       // =============================================
+//       // JIKA DATA KOSONG
+//       // =============================================
+//       if (!profile) {
+
+//         console.log("PROFILE KOSONG");
+
+//         return;
+//       }
+
+//       // =============================================
+//       // SIMPAN KE STATE
+//       // =============================================
+//       setProfileData({
+
+//         nama_lengkap:
+//           profile.nama_lengkap || "",
+
+//         email:
+//           profile.email || "",
+
+//         nip:
+//           profile.nip || "",
+
+//         nik:
+//           profile.nik || "",
+
+//         no_hp:
+//           profile.no_hp || "",
+
+//         alamat:
+//           profile.alamat || "",
+
+//         role:
+//           profile.role || "",
+
+//         instansi:
+//           profile.instansi || "",
+
+//         alamat_instansi:
+//           profile.alamat_instansi || "",
+
+//         nama_kepala_dinas:
+//           profile.nama_kepala_dinas || "",
+
+//         nip_kepala_dinas:
+//           profile.nip_kepala_dinas || ""
+
+//       });
+
+//     } catch (error) {
+
+//       console.error(
+//         "FETCH PROFILE ERROR:",
+//         error
+//       );
+//     }
+//   };
+
+//   // =================================================
+//   // LOAD DATA SAAT HALAMAN DIBUKA
+//   // =================================================
+//   useEffect(() => {
+
+//     console.log("USE EFFECT JALAN");
+
+//     if (user?.id) {
+
+//       fetchProfile();
+//     }
+
+//   }, [user?.id]);
+
+//   // =================================================
+//   // HANDLE INPUT
+//   // =================================================
+//   const handleInputChange = (e) => {
+
+//     const { name, value } = e.target;
+
+//     setProfileData({
+
+//       ...profileData,
+
+//       [name]: value
+//     });
+//   };
+
+//   // =================================================
+//   // UPDATE PROFILE
+//   // =================================================
+//   const handleUpdateProfile = async (e) => {
+
+//     e.preventDefault();
+
+//     try {
+
+//       console.log(
+//         "DATA YANG DIKIRIM:",
+//         profileData
+//       );
+
+//       const res = await fetch(
+
+//         `http://127.0.0.1:8000/profile/${user.id}`,
+
+//         {
+//           method: "PUT",
+
+//           headers: {
+//             "Content-Type": "application/json"
+//           },
+
+//           body: JSON.stringify(profileData)
+//         }
+//       );
+
+//       const data = await res.json();
+
+//       console.log(
+//         "UPDATE RESPONSE:",
+//         data
+//       );
+
+//       // =============================================
+//       // JIKA ERROR
+//       // =============================================
+//       if (data?.error) {
+
+//         alert("Update gagal");
+
+//         return;
+//       }
+
+//       // =============================================
+//       // FETCH ULANG DARI DB
+//       // =============================================
+//       await fetchProfile();
+
+//       alert("Profile berhasil diupdate");
+
+//     } catch (error) {
+
+//       console.error(
+//         "UPDATE ERROR:",
+//         error
+//       );
+//     }
+//   };
+
+//   // =================================================
+//   // UI
+//   // =================================================
+//   return (
+
+//     <div style={{ padding: "20px" }}>
+
+//       <h1>HALAMAN STAFF</h1>
+
+//       <hr />
+
+//       <h3>DATA PROFILE</h3>
+
+//       <p>
+//         <b>Nama:</b>
+//         {" "}
+//         {profileData.nama_lengkap}
+//       </p>
+
+//       <p>
+//         <b>Email:</b>
+//         {" "}
+//         {profileData.email}
+//       </p>
+
+//       <p>
+//         <b>NIP:</b>
+//         {" "}
+//         {profileData.nip}
+//       </p>
+
+//       <p>
+//         <b>Instansi:</b>
+//         {" "}
+//         {profileData.instansi}
+//       </p>
+
+//       <hr />
+
+//       <h3>EDIT PROFILE</h3>
+
+//       <form onSubmit={handleUpdateProfile}>
+
+//         <input
+//           type="text"
+//           name="nama_lengkap"
+//           placeholder="Nama Lengkap"
+//           value={profileData.nama_lengkap}
+//           onChange={handleInputChange}
+//         />
+
+//         <br /><br />
+
+//         <input
+//           type="text"
+//           name="nip"
+//           placeholder="NIP"
+//           value={profileData.nip}
+//           onChange={handleInputChange}
+//         />
+
+//         <br /><br />
+
+//         <input
+//           type="text"
+//           name="instansi"
+//           placeholder="Instansi"
+//           value={profileData.instansi}
+//           onChange={handleInputChange}
+//         />
+
+//         <br /><br />
+
+//         <input
+//           type="text"
+//           name="nip_kepala_dinas"
+//           placeholder="NIP Kepala Dinas"
+//           value={profileData.nip_kepala_dinas}
+//           onChange={handleInputChange}
+//         />
+
+//         <br /><br />
+
+//         <button type="submit">
+
+//           Simpan Profile
+
+//         </button>
+
+//       </form>
+
+//     </div>
+//   );
+// }
+
+// export default StaffDashboard;
