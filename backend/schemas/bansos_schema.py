@@ -5,7 +5,7 @@ from typing import Optional
 class PengusulanCreate(BaseModel):
     id: int
     no_kk: int 
-    nama_pengusul: str
+    # nama_pengusul: Optional[str] = None
     tanggal_usulan: datetime
     penginput: str
     catatan_verifikator: str
