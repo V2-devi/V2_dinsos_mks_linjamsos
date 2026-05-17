@@ -49,13 +49,13 @@ function StaffDashboard() {
   const [catatanAssessment, setCatatanAssessment] = useState("");
 
   const initialFormState = { 
-    nik: "", no_kk: "", nama_lengkap: "", penginput: "", nama_pengusul: "",
+    nik: "", no_kk: "", nama_lengkap: "", penginput: "",
     kecamatan: "", kelurahan: "", tanggal: "", alamat: "", desil: "", 
     jenis_bansos: "", status_pengusulan: "Belum" 
   };
   const [formData, setFormData] = useState(initialFormState);
   const [form, setForm] = useState({
-    nama_lengkap: "", nama_pengusul: "", nik: "", no_kk: "",
+    nama_lengkap: "", nik: "", no_kk: "",
     kecamatan: "", kelurahan: "", alamat: "", penginput: "", jenis_bansos: ""
   });
   const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
@@ -155,7 +155,7 @@ function StaffDashboard() {
         const { data: pengusulanData, error: pengusulanError } = await supabase.from('pengusulan_bansos').select('*');
         if (pengusulanError) throw pengusulanError;
         setUsulanData((pengusulanData || []).map(item => ({
-          id: item.id, nik: item.nik, no_kk: item.no_kk, nama_lengkap: item.nama_lengkap, nama_pengusul: item.nama_pengusul,
+          id: item.id, nik: item.nik, no_kk: item.no_kk, nama_lengkap: item.nama_lengkap, 
           penginput: item.penginput, kecamatan: item.kecamatan, kelurahan: item.kelurahan, tanggal: item.tanggal_usulan, 
           alamat: item.alamat, status_pengusulan: item.status_pengusulan, jenis_bansos: item.jenis_bansos
         })));
@@ -199,13 +199,13 @@ function StaffDashboard() {
     e.preventDefault();
     try {
       const { data, error } = await supabase.from('pengusulan_bansos').insert([{
-        nama_lengkap: formData.nama_lengkap, nama_pengusul: null, nik: formData.nik || null, no_kk: formData.no_kk || null,
+        nama_lengkap: formData.nama_lengkap, nik: formData.nik || null, no_kk: formData.no_kk || null,
         kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, alamat: formData.alamat, penginput: currentStaff.nama || "Staff", 
         status_pengusulan: "Belum", jenis_bansos: formData.jenis_bansos
       }]).select(); 
       if (error) throw error;
       const newUsulan = {
-        id: data[0].id, nik: formData.nik, no_kk: formData.no_kk, nama_lengkap: formData.nama_lengkap, nama_pengusul: null,
+        id: data[0].id, nik: formData.nik, no_kk: formData.no_kk, nama_lengkap: formData.nama_lengkap, 
         kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, tanggal: formData.tanggal, alamat: formData.alamat,
         jenis_bansos: formData.jenis_bansos, status_pengusulan: "Belum"
       };

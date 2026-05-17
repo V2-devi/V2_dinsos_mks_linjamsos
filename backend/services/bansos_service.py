@@ -10,8 +10,7 @@ def create_pengusulan (data: PengusulanCreate):
         supabase.table("pengusulan_bansos").insert({
         "id": data.id,
         "no_kk": data.no_kk,
-        "nama_pengusul": data.nama_pengusul,
-        "tanggal_usulan": data.tanggal_usulan,
+        "tanggal_usulan": data.tanggal_usulan.isoformat(),
         "penginput": data.penginput,
         "catatan_verifikator": data.catatan_verifikator,
         "alamat": data.alamat,
@@ -30,7 +29,7 @@ def get_pengusulan_service():
         .select("""
             id,
             no_kk,
-            nama_pengusul,
+       
             tanggal_usulan,
             status_pengusulan,
             penginput,
