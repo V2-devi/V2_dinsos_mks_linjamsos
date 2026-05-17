@@ -10,6 +10,23 @@ function PenentuanDesil({
   setIsKalkulasiModalOpen,
   setIsCalculated
 }) {
+
+  // Menyaring data untuk tab "Menunggu Penentuan"
+  const menungguFiltered = dtsenData.filter(item => {
+    const isMenunggu = item.asetLengkap === true && item.desil === 'Belum Dihitung';
+    const matchKecamatan = filterDesil.kecamatan === "" || item.kecamatan === filterDesil.kecamatan;
+    const matchKk = filterDesil.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDesil.no_kk));
+    return isMenunggu && matchKecamatan && matchKk;
+  });
+
+  // Menyaring data untuk tab "Riwayat Penentuan"
+  const riwayatFiltered = dtsenData.filter(item => {
+    const isRiwayat = item.desil !== 'Belum Dihitung';
+    const matchKecamatan = filterDesil.kecamatan === "" || item.kecamatan === filterDesil.kecamatan;
+    const matchKk = filterDesil.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDesil.no_kk));
+    return isRiwayat && matchKecamatan && matchKk;
+  });
+
   return (
     <>
       <div className="tabs-container">
@@ -45,16 +62,16 @@ function PenentuanDesil({
           <div className="table-wrapper">
             <div className="table-responsive">
               <table className="staff-table">
-                <thead><tr><th>No. KK</th><th>Nama Kepala Keluarga</th><th>Kelurahan</th><th>Terakhir Update</th><th style={{ textAlign: "center" }}>Aksi Kalkulasi</th></tr></thead>
+                <thead><tr><th>No. KK</th><th>Nama Kepala Keluarga</th><th>Kecamatan</th><th>Terakhir Update</th><th style={{ textAlign: "center" }}>Aksi Kalkulasi</th></tr></thead>
                 <tbody>
-                  {dtsenData.filter(item => item.asetLengkap === true && item.desil === 'Belum Dihitung').length > 0 ? 
-                    dtsenData.filter(item => item.asetLengkap === true && item.desil === 'Belum Dihitung').map((item) => (
+                  {menungguFiltered.length > 0 ? 
+                    menungguFiltered.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kelurahan}</td><td>{item.tglUpdate}</td>
+                      <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kecamatan}</td><td>{item.tglUpdate}</td>
                       <td style={{ textAlign: "center" }}><button className="btn-hitung-desil" onClick={() => { setSelectedKalkulasi(item); setIsKalkulasiModalOpen(true); setIsCalculated(false); }}><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Hitung Desil</button></td>
                     </tr>
                   )) : (
-                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada data keluarga yang menunggu kalkulasi. Isi 39 Variabel terlebih dahulu.</td></tr>
+                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada data keluarga yang cocok dengan pencarian Anda.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -87,13 +104,13 @@ function PenentuanDesil({
             <div className="table-wrapper">
               <div className="table-responsive">
                 <table className="staff-table">
-                  <thead><tr><th>No. KK</th><th>Nama Kepala Keluarga</th><th>Kelurahan</th><th>Tgl Hitung</th><th>Skor PMT</th><th style={{ textAlign: "center" }}>Hasil Desil</th></tr></thead>
+                  <thead><tr><th>No. KK</th><th>Nama Kepala Keluarga</th><th>Kecamatan</th><th>Tgl Hitung</th><th>Skor PMT</th><th style={{ textAlign: "center" }}>Hasil Desil</th></tr></thead>
                   <tbody>
-                    {dtsenData.filter(item => item.desil !== 'Belum Dihitung').length > 0 ? 
-                      dtsenData.filter(item => item.desil !== 'Belum Dihitung').map((item, idx) => (
-                      <tr key={idx}><td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kelurahan}</td><td>{item.tglHitung}</td><td>{item.skorPMT}</td><td style={{ textAlign: "center" }}><span className="desil-badge-table">{item.desil}</span></td></tr>
+                    {riwayatFiltered.length > 0 ? 
+                      riwayatFiltered.map((item, idx) => (
+                      <tr key={idx}><td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kecamatan}</td><td>{item.tglHitung}</td><td>{item.skorPMT}</td><td style={{ textAlign: "center" }}><span className="desil-badge-table">{item.desil}</span></td></tr>
                     )) : (
-                      <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada riwayat yang cocok.</td></tr>
+                      <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada riwayat yang cocok dengan pencarian Anda.</td></tr>
                     )}
                   </tbody>
                 </table>

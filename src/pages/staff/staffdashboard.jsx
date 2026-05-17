@@ -367,6 +367,24 @@ function StaffDashboard() {
   const notifData = [{ id: 1, title: "Sistem", date: "Hari ini", desc: "Data berhasil dimuat." }];
   const showSuccess = () => { setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 2500); };
   const formatDateIndo = (dateStr) => { if(!dateStr || dateStr === "-") return "-"; const date = new Date(dateStr); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; };
+  const getKategoriPendidikan = (tglLahir) => {
+    if (!tglLahir || tglLahir === "-") return "Belum Ada Data";
+    const birthDate = new Date(tglLahir);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    if (age >= 0 && age <= 5) return `Balita (${age} Tahun)`;
+    if (age === 6) return `TK (${age} Tahun)`;
+    if (age >= 7 && age <= 12) return `SD (${age} Tahun)`;
+    if (age >= 13 && age <= 15) return `SMP (${age} Tahun)`;
+    if (age >= 16 && age <= 18) return `SMA (${age} Tahun)`;
+    if (age >= 19 && age <= 25) return `Pendidikan Tinggi (${age} Tahun)`;
+    return `Dewasa Umum (${age} Tahun)`;
+  };
 
   // ==========================================
   // RENDER TAMPILAN (MASTER LAYOUT)
@@ -594,8 +612,53 @@ function StaffDashboard() {
             <div className="modal-header"><div className="modal-header-title"><h2>Detail Kondisi Anggota</h2></div></div>
             <div className="modal-body">
               <form onSubmit={handleEditAnggotaSubmit}>
-                <div className="modal-section"><h3 className="section-subtitle">Data Pribadi</h3><div className="form-grid-2"><div className="form-group-modal"><label>NIK</label><input type="text" name="nik" value={selectedAnggotaData.nik} onChange={handleEditAnggotaChange} /></div><div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={selectedAnggotaData.nama_lengkap} onChange={handleEditAnggotaChange} /></div><div className="form-group-modal"><label>Hubungan Keluarga</label><div className="select-container-custom"><select name="hub" value={selectedAnggotaData.hub} onChange={handleEditAnggotaChange}><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div><div className="form-group-modal"><label>Status Keadaan</label><div className="select-container-custom"><select name="status" value={selectedAnggotaData.status} onChange={handleEditAnggotaChange}><option>Hidup</option><option>Meninggal</option></select></div></div></div></div>
-                <div className="modal-section" style={{ marginTop: '10px' }}><h3 className="section-subtitle" style={{ color: '#ef4444', borderColor: '#fca5a5' }}>Kondisi Khusus (Penting Untuk Bansos)</h3><div className="form-grid-2"><div className="form-group-modal"><label>Status Kehamilan (Bagi Perempuan)</label><div className="select-container-custom"><select name="hamil" value={selectedAnggotaData.hamil || "Tidak Sedang Hamil"} onChange={handleEditAnggotaChange}><option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option><option value="Sedang Hamil">Sedang Hamil</option></select></div></div><div className="form-group-modal"><label>Kategori Disabilitas</label><div className="select-container-custom"><select name="disabilitas" value={selectedAnggotaData.disabilitas || "Tidak Ada Disabilitas"} onChange={handleEditAnggotaChange}><option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option><option value="Disabilitas Fisik">Disabilitas Fisik</option><option value="Disabilitas Intelektual">Disabilitas Intelektual</option><option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option><option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option><option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option><option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option><option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option></select></div></div><div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Penyakit Kronis / Menahun</label><input type="text" name="penyakit" value={selectedAnggotaData.penyakit || ""} onChange={handleEditAnggotaChange} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." /></div></div></div>
+                <div className="modal-section">
+                  <h3 className="section-subtitle">Data Pribadi</h3>
+                  <div className="form-grid-2">
+                    <div className="form-group-modal"><label>NIK</label><input type="text" name="nik" value={selectedAnggotaData.nik} onChange={handleEditAnggotaChange} /></div>
+                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={selectedAnggotaData.nama_lengkap} onChange={handleEditAnggotaChange} /></div>
+                    <div className="form-group-modal"><label>Hubungan Keluarga</label><div className="select-container-custom"><select name="hub" value={selectedAnggotaData.hub} onChange={handleEditAnggotaChange}><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
+                    <div className="form-group-modal"><label>Status Keadaan</label><div className="select-container-custom"><select name="status" value={selectedAnggotaData.status} onChange={handleEditAnggotaChange}><option>Hidup</option><option>Meninggal</option></select></div></div>
+                    
+                    {/* ✅ INPUT BARU: Kategori Pendidikan Otomatis (Read-Only) */}
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
+                      <label>Estimasi Kategori Pendidikan/Usia (Otomatis dari Tanggal Lahir)</label>
+                      <input 
+                        type="text" 
+                        value={getKategoriPendidikan(selectedAnggotaData.tglLahir)} 
+                        readOnly 
+                        style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', fontWeight: 'bold' }} 
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="modal-section" style={{ marginTop: '10px' }}>
+                  <h3 className="section-subtitle" style={{ color: '#ef4444', borderColor: '#fca5a5' }}>Kondisi Khusus (Penting Untuk Bansos)</h3>
+                  <div className="form-grid-2">
+                    
+                    {/* ✅ LOGIKA BARU: Jika Laki-laki, terkunci dan otomatis "Tidak Sedang Hamil" */}
+                    <div className="form-group-modal">
+                      <label>Status Kehamilan (Bagi Perempuan)</label>
+                      <div className="select-container-custom">
+                        <select 
+                          name="hamil" 
+                          value={selectedAnggotaData.jk === 'Laki-laki' ? "Tidak Sedang Hamil" : (selectedAnggotaData.hamil || "Tidak Sedang Hamil")} 
+                          onChange={handleEditAnggotaChange}
+                          disabled={selectedAnggotaData.jk === 'Laki-laki'}
+                          style={selectedAnggotaData.jk === 'Laki-laki' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8' } : {}}
+                        >
+                          <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
+                          <option value="Sedang Hamil">Sedang Hamil</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group-modal"><label>Kategori Disabilitas</label><div className="select-container-custom"><select name="disabilitas" value={selectedAnggotaData.disabilitas || "Tidak Ada Disabilitas"} onChange={handleEditAnggotaChange}><option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option><option value="Disabilitas Fisik">Disabilitas Fisik</option><option value="Disabilitas Intelektual">Disabilitas Intelektual</option><option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option><option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option><option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option><option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option><option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option></select></div></div>
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Penyakit Kronis / Menahun</label><input type="text" name="penyakit" value={selectedAnggotaData.penyakit || ""} onChange={handleEditAnggotaChange} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." /></div>
+                  </div>
+                </div>
+                
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDetailAnggotaModalOpen(false)}>Tutup</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div>
               </form>
             </div>

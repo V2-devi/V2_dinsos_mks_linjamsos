@@ -35,7 +35,9 @@ function Dtsen({
 }) {
   return (
     <>
-      {/* TABS NAVIGASI DINAMIS DTSEN */}
+      {/* =======================================================
+          TABS NAVIGASI DINAMIS MENU DTSEN
+      ======================================================= */}
       {activeMenu === "lihat_dtsen" && activeTab !== "detail_dtsen" && (
         <div className="tabs-container">
           <button className={`tab-btn ${activeTab === "dashboard_dtsen" ? "active" : ""}`} onClick={() => setActiveTab("dashboard_dtsen")}>Dashboard DTSEN</button>
@@ -43,7 +45,9 @@ function Dtsen({
         </div>
       )}
       
-      {/* TABS NAVIGASI DINAMIS PPKS */}
+      {/* =======================================================
+          TABS NAVIGASI DINAMIS MENU PPKS
+      ======================================================= */}
       {activeMenu === "ppks" && activeTab !== "detail_ppks" && (
         <div className="tabs-container">
           <button className={`tab-btn ${activeTab === "dashboard_ppks" ? "active" : ""}`} onClick={() => setActiveTab("dashboard_ppks")}>Dashboard Data PPKS</button>
@@ -51,7 +55,9 @@ function Dtsen({
         </div>
       )}
 
-      {/* ================= 🌟 VIRTUAL PAGE: DETAIL & PENANGANAN PPKS 🌟 ================= */}
+      {/* =======================================================
+          🌟 VIRTUAL PAGE: DETAIL & PENANGANAN PPKS 🌟
+      ======================================================= */}
       {activeMenu === "ppks" && activeTab === "detail_ppks" && selectedPPKSData && (
         <div className="tab-content-wrapper outline-box" style={{ animation: 'fadeInModal 0.3s ease-out' }}>
           
@@ -121,7 +127,9 @@ function Dtsen({
         </div>
       )}
 
-      {/* ================= 2. DTSEN (DASHBOARD) ================= */}
+      {/* =======================================================
+          2. DTSEN (TAB DASHBOARD)
+      ======================================================= */}
       {activeMenu === "lihat_dtsen" && activeTab === "dashboard_dtsen" && (
         <div className="tab-content-wrapper">
           <div className="dtsen-summary-top">
@@ -132,17 +140,43 @@ function Dtsen({
           </div>
           <h3 className="section-title">Sebaran Desil Kesejahteraan</h3>
           <div className="decile-grid">
-            <div className="decile-card d1"><div className="dec-head"><span className="dec-badge d1-bg">Desil 1</span></div><div className="dec-title">Sangat Rentan / Ekstrem</div><div className="dec-val">200</div></div>
-            <div className="decile-card d2"><div className="dec-head"><span className="dec-badge d2-bg">Desil 2</span></div><div className="dec-title">Keluarga Rentan</div><div className="dec-val">350</div></div>
-            <div className="decile-card d3"><div className="dec-head"><span className="dec-badge d3-bg">Desil 3</span></div><div className="dec-title">Hampir Rentan</div><div className="dec-val">400</div></div>
-            <div className="decile-card d4"><div className="dec-head"><span className="dec-badge d4-bg">Desil 4</span></div><div className="dec-title">Rentan Sedang</div><div className="dec-val">250</div></div>
-            <div className="decile-card d5"><div className="dec-head"><span className="dec-badge d5-bg">Desil 5</span></div><div className="dec-title">Menuju Aman</div><div className="dec-val">200</div></div>
-            <div className="decile-card d6"><div className="dec-head"><span className="dec-badge d6-bg">Desil 6-10</span></div><div className="dec-title">Keluarga Mampu / Aman</div><div className="dec-val">100</div></div>
+            <div className="decile-card d1">
+              <div className="dec-head"><span className="dec-badge d1-bg">Desil 1</span></div>
+              <div className="dec-title">Sangat Rentan / Ekstrem</div>
+              <div className="dec-val">{dtsenData.filter(item => item.desil === "1").length}</div>
+            </div>
+            <div className="decile-card d2">
+              <div className="dec-head"><span className="dec-badge d2-bg">Desil 2</span></div>
+              <div className="dec-title">Keluarga Rentan</div>
+              <div className="dec-val">{dtsenData.filter(item => item.desil === "2").length}</div>
+            </div>
+            <div className="decile-card d3">
+              <div className="dec-head"><span className="dec-badge d3-bg">Desil 3</span></div>
+              <div className="dec-title">Hampir Rentan</div>
+              <div className="dec-val">{dtsenData.filter(item => item.desil === "3").length}</div>
+            </div>
+            <div className="decile-card d4">
+              <div className="dec-head"><span className="dec-badge d4-bg">Desil 4</span></div>
+              <div className="dec-title">Rentan Sedang</div>
+              <div className="dec-val">{dtsenData.filter(item => item.desil === "4").length}</div>
+            </div>
+            <div className="decile-card d5">
+              <div className="dec-head"><span className="dec-badge d5-bg">Desil 5</span></div>
+              <div className="dec-title">Menuju Aman</div>
+              <div className="dec-val">{dtsenData.filter(item => item.desil === "5").length}</div>
+            </div>
+            <div className="decile-card d6">
+              <div className="dec-head"><span className="dec-badge d6-bg">Desil 6-10</span></div>
+              <div className="dec-title">Keluarga Mampu / Aman</div>
+              <div className="dec-val">{dtsenData.filter(item => item.desil === "6-10").length}</div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ✅ TAMPILAN DATA DTSEN DAN FILTER OTOMATIS */}
+      {/* =======================================================
+          3. DTSEN (TAB LIHAT DATA TABLE & FILTER UTAMA)
+      ======================================================= */}
       {activeMenu === "lihat_dtsen" && activeTab === "data_dtsen" && (
         <div className="tab-content-wrapper outline-box">
           <div className="pengusulan-filter-grid">
@@ -222,7 +256,7 @@ function Dtsen({
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data keluarga yang cocok dengan pencarian Anda.</td></tr>
+                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data keluarga yang cocok dengan pencarian Anda.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -231,7 +265,9 @@ function Dtsen({
         </div>
       )}
 
-      {/* 🌟 VIRTUAL PAGE: DETAIL DTSEN & ANGGOTA KELUARGA 🌟 */}
+      {/* =======================================================
+          4. DTSEN (VIRTUAL PAGE: DETAIL DATA TERPADU KELUARGA)
+      ======================================================= */}
       {activeMenu === "lihat_dtsen" && activeTab === "detail_dtsen" && selectedDtsenData && (
         <div className="tab-content-wrapper outline-box" style={{ animation: 'fadeInModal 0.3s ease-out' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '20px', marginBottom: '25px' }}>
@@ -272,32 +308,33 @@ function Dtsen({
           {detailDtsenInnerTab === "anggota" && (
             <div className="table-wrapper">
               <table className="staff-table">
-              <thead>
-                    <tr>
-                      <th>NIK</th>
-                      <th>Nama Anggota</th>
-                      <th>Tanggal Lahir</th>
-                      <th>Hub. Keluarga</th>
-                      <th>Jenis Kelamin</th>
-                      <th>Kondisi Khusus</th>
-                      <th>Status Keadaan</th>
-                      <th style={{ textAlign: "center" }}>Aksi Detail</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                      {selectedDtsenData?.anggota?.map((ang, index) => {
-                        const kondisi = [];
-                        if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
-                        if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
-                        if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
+                <thead>
+                  <tr>
+                    <th>NIK</th>
+                    <th>Nama Anggota</th>
+                    <th>Tanggal Lahir</th>
+                    <th>Hub. Keluarga</th>
+                    <th>Jenis Kelamin</th>
+                    <th>Kondisi Khusus</th>
+                    <th>Status Keadaan</th>
+                    <th style={{ textAlign: "center" }}>Aksi Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedDtsenData?.anggota?.map((ang, index) => {
+                    const kondisi = [];
+                    if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
+                    if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
+                    if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
 
-                        return (
-                          <tr key={ang.id || index}>
-                            <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
-                            <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_lengkap || ang.nama_kepala_keluarga}</td>
-                            <td>{ang.tglLahir || "-"}</td>
-                            <td>{ang.hub}</td>
-                        <td>{ang.jk === "-" && index === 0 ? (selectedDtsenData?.jenis_kelamin || "-") : ang.jenis_kelamin}</td>
+                    return (
+                      <tr key={ang.id || index}>
+                        <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
+                        <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_lengkap || ang.nama_kepala_keluarga}</td>
+                        <td>{ang.tglLahir || "-"}</td>
+                        <td>{ang.hub}</td>
+                        {/* ✅ PERBAIKAN SINKRONISASI JENIS KELAMIN */}
+                        <td>{ang.jk && ang.jk !== "-" ? ang.jk : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
                         <td>
                           {kondisi.length > 0 ? (
                             <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -391,7 +428,9 @@ function Dtsen({
         </div>
       )}
 
-      {/* ================= 3. PPKS (DASHBOARD) ================= */}
+      {/* =======================================================
+          5. PPKS (TAB DASHBOARD)
+      ======================================================= */}
       {activeMenu === "ppks" && activeTab === "dashboard_ppks" && (
         <div className="tab-content-wrapper outline-box">
           <div className="filter-row-right">
@@ -433,7 +472,9 @@ function Dtsen({
         </div>
       )}
 
-      {/* ================= DATA PPKS ================= */}
+      {/* =======================================================
+          6. PPKS (TAB DAFTAR DATA TABLE & FILTER PPKS)
+      ======================================================= */}
       {activeMenu === "ppks" && activeTab === "data_ppks" && (
         <div className="tab-content-wrapper outline-box">
           <div className="pengusulan-filter-grid">
@@ -508,9 +549,9 @@ function Dtsen({
                       <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
                       <td>{item.kategori}</td>
                       <td>{item.lokasi}</td>
-                      <td>{formatDateIndo(item.tanggal)}</td>
+                      <td>{formatDateIndo(item.tanggal_laporan)}</td>
                       <td style={{ textAlign: "center" }}>
-                        <span className={`badge-ppks ${item.status === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status}</span>
+                        <span className={`badge-ppks ${item.status_penanganan === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status_penanganan}</span>
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Detail & Penanganan" onClick={() => handleOpenDetailPPKS(item)}>

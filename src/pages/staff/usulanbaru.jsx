@@ -20,6 +20,18 @@ function UsulanBaru({
   handleOpenDetailRiwayat,
   selectedDetailData
 }) {
+  // ✅ RUMUS OTOMATIS DIPINDAHKAN KE SINI (Di dalam area komponen, bukan di dalam parameter props)
+  const getPeriodeOtomatis = (dateString) => {
+    if (!dateString || dateString === "-") return "-";
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1; // Karena Januari dimulai dari 0, kita tambah 1
+    
+    if (month >= 1 && month <= 3) return "Januari - Maret";
+    if (month >= 4 && month <= 6) return "April - Juni";
+    if (month >= 7 && month <= 9) return "Juli - September";
+    return "Oktober - Desember";
+  };
+
   return (
     <>
       <div className="tabs-container">
@@ -116,32 +128,68 @@ function UsulanBaru({
 
       {activeTab === "detail_usulan" && selectedDetailData && (
         <div className="tab-content-wrapper outline-box" style={{ animation: 'fadeInModal 0.3s ease-out' }}>
+          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #f1f5f9', paddingBottom: '20px', marginBottom: '25px' }}>
             <h2 style={{ color: '#234a66', margin: 0, fontSize: '20px', fontWeight: '800' }}>Riwayat Bantuan Keluarga</h2>
             <button className="btn-search-outline" onClick={() => setActiveTab("pengusulan")} style={{ height: '36px' }}>&larr; Kembali ke Daftar</button>
           </div>
-          <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '30px', display: 'flex', gap: '40px' }}>
-            <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Nama Pengusul</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>{selectedDetailData.nama_pengusul}</strong></div>
-            <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>NIK</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>{selectedDetailData.nik}</strong></div>
-            <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Domisili</span><strong style={{ fontSize: '15px', color: '#1e293b' }}>Kec. {selectedDetailData.kecamatan}, Kel. {selectedDetailData.kelurahan}</strong></div>
+
+          {/* ✅ PERBAIKAN HEADER: Disesuaikan dengan desain Detail Data Terpadu Keluarga */}
+          <div className="detail-summary-grid">
+            <div className="summary-col">
+              <div className="summary-item"><span className="sum-label">Nama Kepala Keluarga</span><span className="sum-val">{selectedDetailData.nama_lengkap}</span></div>
+              <div className="summary-item"><span className="sum-label">Nomor Kartu Keluarga (KK)</span><span className="sum-val">{selectedDetailData.no_kk}</span></div>
+            </div>
+            <div className="summary-col">
+              <div className="summary-item"><span className="sum-label">Alamat Domisili</span><span className="sum-val">{selectedDetailData.alamat}</span></div>
+              <div className="summary-item"><span className="sum-label">Kecamatan / Kelurahan</span><span className="sum-val">Kec. {selectedDetailData.kecamatan} / Kel. {selectedDetailData.kelurahan}</span></div>
+            </div>
           </div>
 
-          <h3 style={{ fontSize: '16px', color: '#234a66', marginBottom: '15px', marginTop: '0' }}>Daftar Bantuan Sosial Diterima</h3>
+          <h3 style={{ fontSize: '16px', color: '#234a66', marginBottom: '15px', marginTop: '25px' }}>Daftar Bantuan Sosial Diterima</h3>
+          
+          {/* ✅ PERBAIKAN TABEL: Kolom dan Logika Status Baru */}
           <div className="table-wrapper">
             <div className="table-responsive">
               <table className="staff-table">
-                <thead><tr><th>Nama Penerima Bantuan</th><th>Jenis Bantuan Sosial</th><th>Tanggal Penerimaan</th><th style={{ textAlign: "center" }}>Status Penyaluran</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Jenis Bantuan Sosial</th>
+                    <th>Periode</th>
+                    <th>Nominal</th>
+                    <th>Tanggal Penerimaan</th>
+                    <th style={{ textAlign: "center" }}>Status Penyaluran</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <tr style={{ backgroundColor: '#fffbeb' }}>
-                    <td style={{ fontWeight: '600', color: '#b45309' }}>{selectedDetailData.nama_lengkap} <span style={{fontSize:'10px', color:'#ef4444'}}>(Usulan Baru)</span></td>
-                    <td style={{ color: '#b45309', fontWeight: 'bold' }}>{selectedDetailData.jenis_bansos || "Belum Ditentukan"}</td>
-                    <td style={{ color: '#b45309' }}>{formatDateIndo(selectedDetailData.tanggal_penerimaan)}</td>
-                    <td style={{ textAlign: "center" }}>{selectedDetailData.status_pengusulan === "Layak" && <span className="status-badge badge-active">Selesai</span>}{selectedDetailData.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak Menerima</span>}{selectedDetailData.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Selesai</span>}</td>
+                  <tr style={{ backgroundColor: selectedDetailData.status_pengusulan === "Belum" ? '#fffbeb' : 'transparent' }}>
+                    <td style={{ fontWeight: 'bold', color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#1e293b' }}>
+                      {selectedDetailData.jenis_bansos || "Belum Ditentukan"}
+                      {selectedDetailData.status_pengusulan === "Belum" && <span style={{fontSize:'10px', color:'#ef4444', marginLeft: '5px'}}>(Usulan Baru)</span>}
+                    </td>
+                    
+                    {/* ✅ PERBAIKAN: Periode ditarik otomatis dari tanggal pengusulan */}
+                    <td style={{ color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#475569', fontWeight: '500' }}>
+                      {getPeriodeOtomatis(selectedDetailData.tanggal || selectedDetailData.tanggal_usulan)}
+                    </td>
+                    
+                    <td style={{ color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#475569' }}>-</td>
+                    
+                    <td style={{ color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#475569' }}>
+                      {formatDateIndo(selectedDetailData.tanggal || selectedDetailData.tanggal_usulan)}
+                    </td>
+                    
+                    <td style={{ textAlign: "center" }}>
+                      {selectedDetailData.status_pengusulan === "Layak" && <span className="status-badge badge-active">Selesai</span>}
+                      {selectedDetailData.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
+                      {selectedDetailData.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum</span>}
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
+
         </div>
       )}
     </>
