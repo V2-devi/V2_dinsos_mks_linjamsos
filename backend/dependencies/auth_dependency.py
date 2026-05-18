@@ -1,11 +1,14 @@
 from fastapi import Header, HTTPException
 from config.auth import get_user
 
-def get_current_user(authorization: str = Header(...)):
-    try:
-        if not authorization.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Invalid auth header")
+def get_current_user(authorization: str | None = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header is required")
 
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid auth header")
+
+    try:
         token = authorization.split(" ")[1]
         user = get_user(token)
 

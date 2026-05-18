@@ -1,23 +1,40 @@
 from config.database import supabase
+from schemas.keluarga_schema import Keluarga
 
 # buat/simpan data keluarga saja
-def create_keluarga(id: str, data:dict):
-    payload = {
-        "no_kk": data.get("no_kk"),
-        "user_id": id,
-        "skor_pmt": data.get("skor_pmt"),
-        "tanggal_hitung_desil": data.get("tanggal_hitung_desil"),
-        "nama_kepala_keluarga": data.get("nama_kepala_keluarga"),
-        "alamat_keluarga": data.get("alamat_keluarga"),
-        "kecamatan": data.get("kecamatan"),
-        "kabupaten": data.get("kapubaten")
-        
-    }
+# def create_keluarga(id: str, data:Keluarga):
+#     data_dict = data.dict()
+#     payload = {
+#         "no_kk": data_dict.get("no_kk"),
+#         "user_id": id,
+#         "skor_pmt": data_dict.get("skor_pmt"),
+#         "tanggal_hitung_desil": data_dict.get("tanggal_hitung_desil"),
+#         "nama_kepala_keluarga": data_dict.get("nama_kepala_keluarga"),
+#         "alamat": data_dict.get("alamat"),
+#         "kecamatan": data_dict.get("kecamatan"),
+#         "kabupaten": data_dict.get("kabupaten"),
+#         "jenis_kelamin": data_dict.get("jenis_kelamin"),
+#         "tanggal_lahir": data_dict.get("tanggal_lahir"),
+#         "desil": data_dict.get("desil")
+#     }
 
-    result = supabase.table("keluarga").insert(payload).execute()
+#     result = supabase.table("keluarga").insert(payload).execute()
+#     return result.data
+
+
+def create_keluarga(data: Keluarga):
+
+    data_dict = data.model_dump(mode="json")
+    # Exclude 'id' dan filter None values
+    payload = {k: v for k, v in data_dict.items() if v is not None and k != "id"}
+
+    result = supabase.table("keluarga") \
+        .insert(payload) \
+        .execute()
+
     return result.data
 
-def create_anggota_keluarga(id: str, data: dict):
+def create_anggota_keluarga(id: str, data: Keluarga):
     payload = {
         "user_id": id, 
         "nik" : data.get("nik"),
@@ -46,10 +63,9 @@ def create_anggota_keluarga(id: str, data: dict):
     return result.data
 
 # Ambil keluarga
-def get_keluarga(id: str):
+def get_keluarga():
     result = supabase.table("keluarga") \
         .select("*") \
-        .eq("id", id) \
         .execute()
 
     return result.data

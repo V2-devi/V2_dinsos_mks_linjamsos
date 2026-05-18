@@ -32,7 +32,9 @@ function Dtsen({
   catatanAssessment,
   setCatatanAssessment,
   handleUpdateStatusPPKS
+  
 }) {
+  
   return (
     <>
       {/* =======================================================
@@ -234,7 +236,7 @@ function Dtsen({
                 </thead>
                 <tbody>
                   {tableDtsenFiltered.length > 0 ? tableDtsenFiltered.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.user_id}>
                       <td>{item.no_kk}</td>
                       <td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td>
                       <td>{item.tanggal_lahir || "-"}</td>

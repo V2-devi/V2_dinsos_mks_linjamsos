@@ -1,26 +1,33 @@
 from pydantic import BaseModel
-import datetime
+from datetime import datetime
+from typing import Optional
 
 class Keluarga(BaseModel):
-  updated_at: datetime
-  skor_pmt: int
+  user_id: Optional[int] = None
+  no_kk: str
+  alamat: str
+  skor_pmt: Optional[float] = None
   tanggal_hitung_desil: datetime
+  desil: int
   nama_kepala_keluarga: str
-  kabupaten: str
-  kecamatan : str
-  no_kk: int
-  nik: int
-  pekerjaan: str
-  nama_anggota_keluarga: str
-  tempat_tanggal_lahir: str
-  hubungan_keluarga: str
-  jenis_kelamin : str
-  status_keadaan : str
-  status_kehamilan: str
-  kategori_disabilitas : str
-  penyakit_kronis : str
-  lokasi_penemuan : str
-  tanggal_laporan: datetime 
-  kategori_ppks : str
-  status_penanganan : str
+  kelurahan: str
+  kecamatan: str
+  jenis_kelamin: str
+  tanggal_lahir: datetime
+  nik: Optional[str] = None
+  updated_at: Optional[datetime] = None
+ 
+ 
+  # nik: int
+  # pekerjaan: str
+  # nama_anggota_keluarga: str
+  # hubungan_keluarga: str
+  # status_keadaan : str
+  # status_kehamilan: str
+  # kategori_disabilitas : str
+  # penyakit_kronis : str
+  # lokasi_penemuan : str
+  # tanggal_laporan: datetime 
+  # kategori_ppks : str
+  # status_penanganan : str
 

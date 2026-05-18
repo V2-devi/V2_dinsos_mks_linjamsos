@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from dependencies.auth_dependency import get_current_user
-
+from schemas.keluarga_schema import Keluarga
+from fastapi.security import HTTPBearer
 from services.keluarga_service import (
     create_keluarga,
     create_anggota_keluarga,
@@ -11,22 +12,29 @@ from services.keluarga_service import (
 )
 
 router = APIRouter(prefix="/keluarga", tags=["Keluarga"])
+security = HTTPBearer()
+# @router.post("/")
+# async def create_keluarga_route(data: Keluarga, user=Depends(get_current_user)):
+#     return create_keluarga(user.id, data)
+
 
 @router.post("/")
-async def create_keluarga_route(data: dict, user=Depends(get_current_user)):
-    return create_keluarga(user.id, data)
+async def create_keluarga_route(data: Keluarga):
+    return create_keluarga(data)
+
 
 @router.post("/{id}/anggota")
 async def create_anggota_keluarga_route(id: str, data: dict, user=Depends(get_current_user)):
     return create_anggota_keluarga(id, data)
 
 @router.get("/")
-async def get_keluarga_route(user=Depends(get_current_user)):
-    return get_keluarga(user.id)
+async def get_keluarga_route():
+    return get_keluarga()
 
-@router.get("/")
-async def get_anggota_keluarga_route(user=Depends(get_current_user)):
-    return get_anggota_keluarga(user.id)
+
+@router.get("/{id}/anggota")
+async def get_anggota_keluarga_route(id: str, user=Depends(get_current_user)):
+    return get_anggota_keluarga(id)
 
 @router.put("/{id}")
 async def update_keluarga(user=Depends(get_current_user)):

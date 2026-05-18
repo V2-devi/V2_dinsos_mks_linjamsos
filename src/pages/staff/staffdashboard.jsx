@@ -13,6 +13,39 @@ function StaffDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
+
+  // const token = localStorage.getItem("token");
+  // console.log(token);
+
+  //   const tableDtsenFiltered = dtsenData.filter(item => {
+  //   const matchKecamatan = filterDtsen.kecamatan === "" || item.kecamatan === filterDtsen.kecamatan;
+  //   const matchKelurahan = filterDtsen.kelurahan === "" || item.kelurahan === filterDtsen.kelurahan;
+  //   const matchKk = filterDtsen.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDtsen.no_kk));
+  //   const matchNama = filterDtsen.nama_kepala_keluarga === "" || (item.nama_kepala_keluarga && String(item.nama_kepala_keluarga).toLowerCase().includes(filterDtsen.nama_kepala_keluarga.toLowerCase()));
+  //   return matchKecamatan && matchKelurahan && matchKk && matchNama;
+  // });
+
+  // FETCH DATA KELUARGA
+//   await fetch(
+//   "http://127.0.0.1:8000/keluarga",
+//   {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify(formData)
+//   }
+// );
+
+//   useEffect(() => {
+
+//   fetchKeluarga();
+
+// }, []);
+
+
+
+
   // ==========================================
   // 1. STATE UTAMA (MANGKUK DATA)
   // ==========================================
@@ -62,7 +95,183 @@ function StaffDashboard() {
   const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", lokasi: "", tanggal: "" };
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
-  const [formDtsen, setFormDtsen] = useState({ no_kk: "", nama_kepala_keluarga: "", jenis_kelamin:"", nik_kepala:"", kecamatan: "", kelurahan: "", alamat: "", tanggal_lahir: "" });
+
+   // =========================================
+  // STATE FORM
+  // =========================================
+  const [formDtsen, setFormDtsen] = useState({
+    no_kk: "",
+    nama_kepala_keluarga: "",
+    jenis_kelamin: "",
+    nik: "",
+    kecamatan: "",
+    kelurahan: "",
+    alamat: "",
+    tanggal_lahir: "",
+    desil: "",
+    tanggal_hitung_desil: ""
+  });
+
+  // =========================================
+  // STATE LIST DATA
+  // =========================================
+  const [keluargaList, setKeluargaList] = useState([]);
+
+  // =========================================
+  // HANDLE INPUT
+  // =========================================
+  const handleChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setFormDtsen({
+      ...formDtsen,
+      [name]: value
+    });
+  };
+
+  // =========================================
+  // FETCH DATA KELUARGA
+  // =========================================
+  const fetchKeluarga = async () => {
+
+  try {
+
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/keluarga",
+      {
+        method: "GET",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("DATA KELUARGA:", data);
+
+    if (Array.isArray(data)) {
+
+      setDtsenData(
+        data.map(item => ({
+          id: item.id,
+          no_kk: item.no_kk,
+          nama_kepala_keluarga: item.nama_kepala_keluarga,
+          kecamatan: item.kecamatan,
+          kelurahan: item.kelurahan,
+          alamat: item.alamat,
+          desil: item.desil || "Belum Dihitung",
+          anggota: item.anggota || []
+        }))
+      );
+
+    } else {
+
+      setDtsenData([]);
+    }
+
+  } catch (error) {
+
+    console.error("FETCH ERROR:", error);
+  }
+};
+
+  // =========================================
+  // LOAD DATA AWAL
+  // =========================================
+  useEffect(() => {
+
+    fetchKeluarga();
+
+  }, []);
+
+  // =========================================
+  // HANDLE SUBMIT
+  // =========================================
+  const handleSubmit = async (e) => {
+
+  e.preventDefault();
+
+  try {
+
+    // =====================================
+    // AMBIL TOKEN LOGIN
+    // =====================================
+    const token = localStorage.getItem("token");
+
+    console.log("TOKEN:", token);
+
+    console.log("DATA DIKIRIM:", formDtsen);
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/keluarga",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+
+        body: JSON.stringify(formDtsen)
+      }
+    );
+
+    console.log("STATUS INSERT:", response.status);
+
+    const data = await response.json();
+    console.log("RESPONSE:", data);
+    console.log("INSERT RESULT:", data);
+
+    // =====================================
+    // CEK GAGAL ATAU TIDAK
+    // =====================================
+    if (!response.ok) {
+
+      alert(JSON.stringify(data, null, 2));
+
+      return;
+    }
+
+    alert("Data keluarga berhasil ditambahkan");
+
+    // =====================================
+    // REFRESH DATA DARI DATABASE
+    // =====================================
+    await fetchKeluarga();
+
+    // =====================================
+    // RESET FORM
+    // =====================================
+    setFormDtsen({
+      no_kk: "",
+      nama_kepala_keluarga: "",
+      jenis_kelamin: "",
+      nik: "",
+      kecamatan: "",
+      kelurahan: "",
+      alamat: "",
+      tanggal_lahir: "",
+      desil: "",
+      tanggal_hitung_desil: ""
+    });
+
+  } catch (error) {
+
+    console.error("SUBMIT ERROR:", error);
+
+    alert("Terjadi kesalahan");
+  }
+};
+
+
+
+
   const [formAset, setFormAset] = useState({});
 
   const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
@@ -160,11 +369,20 @@ function StaffDashboard() {
           alamat: item.alamat, status_pengusulan: item.status_pengusulan, jenis_bansos: item.jenis_bansos
         })));
 
-        const { data: dtsenDataFetched, error: dtsenError } = await supabase.from('keluarga').select('*');
+       const { data: dtsenDataFetched, error: dtsenError } =
+          await supabase.from('keluarga').select('*');
+
         if (dtsenError) throw dtsenError;
+
         setDtsenData((dtsenDataFetched || []).map(item => ({
-          id: item.id, no_kk: item.no_kk, nama_kepala_keluarga: item.nama_kepala_keluarga, kecamatan: item.kecamatan,
-          kelurahan: item.kelurahan, alamat: item.alamat, desil: item.desil || "Belum Dihitung", anggota: [] 
+          id: item.id,
+          no_kk: item.no_kk,
+          nama_kepala_keluarga: item.nama_kepala_keluarga,
+          kecamatan: item.kecamatan,
+          kelurahan: item.kelurahan,
+          alamat: item.alamat,
+          desil: item.desil || "Belum Dihitung",
+          anggota: []
         })));
 
         const { data: ppksData, error: ppksError } = await supabase.from('ppks').select('*');
@@ -186,14 +404,14 @@ function StaffDashboard() {
   const approve = async (id) => { await fetch(`/pengusulan/${id}/approve`, { method: "PUT" }); };
   const reject = async (id) => { await fetch(`/pengusulan/${id}/reject`, { method: "PUT" }); };
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    await fetch("/pengusulan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-  };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   await fetch("/pengusulan", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(form)
+  //   });
+  // };
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
@@ -218,24 +436,100 @@ function StaffDashboard() {
   
   const handleOpenDetailRiwayat = (data) => { setSelectedDetailData(data); setActiveTab("detail_usulan"); };
 
-  const handleAddDtsen = async (e) => {
-    e.preventDefault();
-    const newDtsen = { 
-      ...formDtsen, id: Date.now(), desil: "Belum Dihitung", 
-      anggota: [{ 
-        nik: formDtsen.nik_kepala || "Belum Diinput", 
-        nama_lengkap: formDtsen.nama_kepala_keluarga, 
-        hub: "Kepala Keluarga", 
-        jk: formDtsen.jenis_kelamin || "-", 
-        tglLahir: formDtsen.tanggal_lahir || "-", 
-        status: "Hidup" 
-      }]
+const handleAddDtsen = async (e) => {
+
+  e.preventDefault();
+
+  try {
+
+    // =====================================
+    // AMBIL TOKEN LOGIN
+    // =====================================
+    const token = localStorage.getItem("token");
+
+    // =====================================
+    // DATA YANG DIKIRIM KE BACKEND
+    // =====================================
+    const payload = {
+      no_kk: formDtsen.no_kk,
+      nama_kepala_keluarga: formDtsen.nama_kepala_keluarga,
+      jenis_kelamin: formDtsen.jenis_kelamin,
+      nik: formDtsen.nik_kepala,
+      kecamatan: formDtsen.kecamatan,
+      kelurahan: formDtsen.kelurahan,
+      alamat: formDtsen.alamat,
+      tanggal_lahir: formDtsen.tanggal_lahir,
+      desil: "Belum Dihitung"
     };
-    setDtsenData([newDtsen, ...dtsenData]);
+
+    console.log("PAYLOAD:", payload);
+
+    // =====================================
+    // POST KE BACKEND
+    // =====================================
+    const response = await fetch(
+      "http://127.0.0.1:8000/keluarga",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+
+        body: JSON.stringify(payload)
+      }
+    );
+
+    console.log("STATUS:", response.status);
+
+    const data = await response.json();
+
+    console.log("HASIL INSERT:", data);
+
+    // =====================================
+    // CEK ERROR
+    // =====================================
+    if (!response.ok) {
+
+      alert(data.detail || "Gagal tambah data");
+
+      return;
+    }
+
+    // =====================================
+    // REFRESH DATA DARI DATABASE
+    // =====================================
+    await fetchKeluarga();
+
+    // =====================================
+    // TUTUP MODAL
+    // =====================================
     setIsAddDtsenModalOpen(false);
-    setFormDtsen({ no_kk: "", nama_kepala_keluarga: "", jenis_kelamin:"", nik_kepala:"", kecamatan: "", kelurahan: "", alamat: "", tanggal_lahir: "" });
+
+    // =====================================
+    // RESET FORM
+    // =====================================
+    setFormDtsen({
+      no_kk: "",
+      nama_kepala_keluarga: "",
+      jenis_kelamin: "",
+      nik_kepala: "",
+      kecamatan: "",
+      kelurahan: "",
+      alamat: "",
+      tanggal_lahir: ""
+    });
+
     showSuccess();
-  };
+
+  } catch (error) {
+
+    console.error("ERROR:", error);
+
+    alert("Terjadi kesalahan");
+  }
+};
 
   const handleOpenDetailDtsen = (data) => { setSelectedDtsenData(data); setDetailDtsenInnerTab("anggota"); setActiveTab("detail_dtsen"); };
   const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
