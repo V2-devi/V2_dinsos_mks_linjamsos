@@ -13,7 +13,6 @@ function StaffDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-
   // const token = localStorage.getItem("token");
   // console.log(token);
 
@@ -43,9 +42,6 @@ function StaffDashboard() {
 
 // }, []);
 
-
-
-
   // ==========================================
   // 1. STATE UTAMA (MANGKUK DATA)
   // ==========================================
@@ -62,14 +58,9 @@ function StaffDashboard() {
   const [activeTab, setActiveTab] = useState((location.state && location.state.activeTab) ? location.state.activeTab : "dashboard"); 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddPPKSModalOpen, setIsAddPPKSModalOpen] = useState(false);
-  const [isKalkulasiModalOpen, setIsKalkulasiModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [selectedKalkulasi, setSelectedKalkulasi] = useState(null);
-  const [isCalculated, setIsCalculated] = useState(false); 
 
-  const [selectedDetailData, setSelectedDetailData] = useState(null);
   const [isAddDtsenModalOpen, setIsAddDtsenModalOpen] = useState(false);
   const [selectedDtsenData, setSelectedDtsenData] = useState(null);
   const [detailDtsenInnerTab, setDetailDtsenInnerTab] = useState("anggota"); 
@@ -81,16 +72,6 @@ function StaffDashboard() {
   const [selectedPPKSData, setSelectedPPKSData] = useState(null);
   const [catatanAssessment, setCatatanAssessment] = useState("");
 
-  const initialFormState = { 
-    nik: "", no_kk: "", nama_lengkap: "", penginput: "",
-    kecamatan: "", kelurahan: "", tanggal: "", alamat: "", desil: "", 
-    jenis_bansos: "", status_pengusulan: "Belum" 
-  };
-  const [formData, setFormData] = useState(initialFormState);
-  const [form, setForm] = useState({
-    nama_lengkap: "", nik: "", no_kk: "",
-    kecamatan: "", kelurahan: "", alamat: "", penginput: "", jenis_bansos: ""
-  });
   const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
   const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", kelurahan: "", lokasi: "", tanggal: "" }; 
@@ -270,41 +251,23 @@ function StaffDashboard() {
 };
 
 
-
-
   const [formAset, setFormAset] = useState({});
 
-  const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
-  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
   const [filterDtsen, setFilterDtsen] = useState({ kecamatan: "", kelurahan: "", no_kk: "", nama_kepala_keluarga: "" });
   const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
   const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", kelurahan: "", nama: "" }); 
-  const [filterDesil, setFilterDesil] = useState({ kecamatan: "", no_kk: "" });
-  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
 
   // ==========================================
   // 2. LOGIKA FILTER (DIAMANKAN AGAR TIDAK CRASH)
   // ==========================================
-  const handleFilterChange = (e) => { setFilterTable({ ...filterTable, [e.target.name]: e.target.value }); };
   const handleFilterDtsenChange = (e) => { setFilterDtsen({ ...filterDtsen, [e.target.name]: e.target.value }); };
   const handleFilterPPKSChange = (e) => { setFilterTabelPPKS({ ...filterTabelPPKS, [e.target.name]: e.target.value }); };
-  const handleFilterDesilChange = (e) => { setFilterDesil({ ...filterDesil, [e.target.name]: e.target.value }); };
 
   const getQuarter = (dateString) => {
     if (!dateString) return "q1";
     const month = new Date(dateString).getMonth() + 1;
     return month <= 3 ? "q1" : month <= 6 ? "q2" : month <= 9 ? "q3" : "q4";
   };
-
-  const dashboardDataFiltered = usulanData.filter(item => getQuarter(item.tanggal_usulan) === filterPeriodeDashboard);
-  const tableDataFiltered = usulanData.filter(item => {
-    const itemNik = item.nik ? String(item.nik) : "";
-    const itemNama = item.nama_lengkap ? String(item.nama_lengkap) : "";
-    return (filterTable.kecamatan === "" || item.kecamatan === filterTable.kecamatan) && 
-           (filterTable.kelurahan === "" || item.kelurahan === filterTable.kelurahan) && 
-           (filterTable.nik === "" || itemNik.includes(filterTable.nik)) && 
-           (filterTable.nama_lengkap === "" || itemNama.toLowerCase().includes(filterTable.nama_lengkap.toLowerCase()));
-  });
 
   const tableDtsenFiltered = dtsenData.filter(item => {
     const matchKecamatan = filterDtsen.kecamatan === "" || item.kecamatan === filterDtsen.kecamatan;
@@ -325,21 +288,6 @@ function StaffDashboard() {
     const matchNama = filterTabelPPKS.nama === "" || itemNama.includes(searchVal) || itemNik.includes(searchVal);
     return matchKategori && matchKecamatan && matchKelurahan && matchNama; // ✅ DIUBAH
   });
-  const dummyRiwayatDesil = []; 
-  const tabelRiwayatFiltered = dummyRiwayatDesil.filter((item) => {
-    const matchKecamatan = filterDesil.kecamatan === "" || (item.kelurahan && String(item.kelurahan).includes(filterDesil.kecamatan));
-    const matchNoKk = filterDesil.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDesil.no_kk));
-    return matchKecamatan && matchNoKk;
-  });
-
-  const statTotal = dashboardDataFiltered.length;
-  const statSelesai = dashboardDataFiltered.filter(i => i.status_pengusulan === "Layak" || i.status_pengusulan === "Tidak Layak").length;
-  const statBelum = dashboardDataFiltered.filter(i => i.status_pengusulan === "Belum").length;
-  const statLayak = dashboardDataFiltered.filter(i => i.status_pengusulan === "Layak").length;
-  const statTidakLayak = dashboardDataFiltered.filter(i => i.status_pengusulan === "Tidak Layak").length;
-  const totalVerified = statLayak + statTidakLayak;
-  const pctLayak = totalVerified === 0 ? 0 : Math.round((statLayak / totalVerified) * 100);
-  const pctTidakLayak = totalVerified === 0 ? 0 : 100 - pctLayak;
 
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status === "Kasus Aktif").length;
   const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status === "Menunggu Kelayakan").length;
@@ -351,116 +299,82 @@ function StaffDashboard() {
   // ==========================================
   // 3. LIFECYCLE (USE EFFECT FETCH)
   // ==========================================
- // ==========================================
-// 3. LIFECYCLE (USE EFFECT FETCH)
-// ==========================================
-useEffect(() => {
-  const savedStaffData = localStorage.getItem("currentStaffUser");
-  if (savedStaffData) {
-    const parsedData = JSON.parse(savedStaffData);
-    const namaDepan = parsedData.namaLengkap
-      ? parsedData.namaLengkap.split(' ')[0]
-      : "Firliany";
-    setCurrentStaff({
-      nama: namaDepan,
-      nip: parsedData.nip || "12345678912131230"
-    });
-  }
-
-  const fetchData = async () => {
-    try {
-      // ✅ Usulan Bansos — tetap dari Supabase
-      const { data: pengusulanData, error: pengusulanError } =
-        await supabase.from('pengusulan_bansos').select('*');
-      if (pengusulanError) throw pengusulanError;
-      setUsulanData(
-        (pengusulanData || []).map(item => ({
-          id: item.id,
-          nik: item.nik,
-          no_kk: item.no_kk,
-          nama_lengkap: item.nama_lengkap,
-          penginput: item.penginput,
-          kecamatan: item.kecamatan,
-          kelurahan: item.kelurahan,
-          tanggal: item.tanggal_usulan,
-          alamat: item.alamat,
-          status_pengusulan: item.status_pengusulan,
-          jenis_bansos: item.jenis_bansos
-        }))
-      );
-
-      // ✅ DTSEN — fetch dari backend, BUKAN Supabase
-      // fetchKeluarga() sudah dipanggil di useEffect terpisah di atas,
-      // jadi tidak perlu dipanggil lagi di sini agar tidak terjadi race condition
-      // ❌ HAPUS blok ini:
-      // const { data: dtsenDataFetched, error: dtsenError } =
-      //   await supabase.from('keluarga').select('*');
-      // if (dtsenError) throw dtsenError;
-      // setDtsenData(...);
-
-      // ✅ PPKS — tetap dari Supabase
-      const { data: ppksData, error: ppksError } =
-        await supabase.from('ppks').select('*');
-      if (ppksError) throw ppksError;
-      setDummyPPKS(
-        (ppksData || []).map(item => ({
-          id: item.id,
-          nik: item.nik,
-          nama_lengkap: item.nama_lengkap,
-          kategori: item.kategori,
-          kecamatan: item.kecamatan,
-          lokasi: item.lokasi,
-          tanggal: item.tanggal_laporan,
-          status_penanganan: item.status_penanganan
-        }))
-      );
-    } catch (error) {
-      console.error('Error fetching data:', error);
+  // ==========================================
+  // 3. LIFECYCLE (USE EFFECT FETCH)
+  // ==========================================
+  useEffect(() => {
+    const savedStaffData = localStorage.getItem("currentStaffUser");
+    if (savedStaffData) {
+      const parsedData = JSON.parse(savedStaffData);
+      const namaDepan = parsedData.namaLengkap
+        ? parsedData.namaLengkap.split(' ')[0]
+        : "Firliany";
+      setCurrentStaff({
+        nama: namaDepan,
+        nip: parsedData.nip || "12345678912131230"
+      });
     }
-  };
 
-  fetchData();
-}, []);
+    const fetchData = async () => {
+      try {
+        // ✅ Usulan Bansos — tetap dari Supabase
+        const { data: pengusulanData, error: pengusulanError } =
+          await supabase.from('pengusulan_bansos').select('*');
+        if (pengusulanError) throw pengusulanError;
+        setUsulanData(
+          (pengusulanData || []).map(item => ({
+            id: item.id,
+            nik: item.nik,
+            no_kk: item.no_kk,
+            nama_lengkap: item.nama_lengkap,
+            penginput: item.penginput,
+            kecamatan: item.kecamatan,
+            kelurahan: item.kelurahan,
+            tanggal: item.tanggal_usulan,
+            alamat: item.alamat,
+            status_pengusulan: item.status_pengusulan,
+            jenis_bansos: item.jenis_bansos
+          }))
+        );
+
+        // ✅ DTSEN — fetch dari backend, BUKAN Supabase
+        // fetchKeluarga() sudah dipanggil di useEffect terpisah di atas,
+        // jadi tidak perlu dipanggil lagi di sini agar tidak terjadi race condition
+        // ❌ HAPUS blok ini:
+        // const { data: dtsenDataFetched, error: dtsenError } =
+        //   await supabase.from('keluarga').select('*');
+        // if (dtsenError) throw dtsenError;
+        // setDtsenData(...);
+
+        // ✅ PPKS — tetap dari Supabase
+        const { data: ppksData, error: ppksError } =
+          await supabase.from('ppks').select('*');
+        if (ppksError) throw ppksError;
+        setDummyPPKS(
+          (ppksData || []).map(item => ({
+            id: item.id,
+            nik: item.nik,
+            nama_lengkap: item.nama_lengkap,
+            kategori: item.kategori,
+            kecamatan: item.kecamatan,
+            lokasi: item.lokasi,
+            tanggal: item.tanggal_laporan,
+            status_penanganan: item.status_penanganan
+          }))
+        );
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // ==========================================
   // 4. FUNGSI HANDLER UMUM
   // ==========================================
-  const approve = async (id) => { await fetch(`/pengusulan/${id}/approve`, { method: "PUT" }); };
-  const reject = async (id) => { await fetch(`/pengusulan/${id}/reject`, { method: "PUT" }); };
-  
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   await fetch("/pengusulan", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify(form)
-  //   });
-  // };
 
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data, error } = await supabase.from('pengusulan_bansos').insert([{
-        nama_lengkap: formData.nama_lengkap, nik: formData.nik || null, no_kk: formData.no_kk || null,
-        kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, alamat: formData.alamat, penginput: currentStaff.nama || "Staff", 
-        status_pengusulan: "Belum", jenis_bansos: formData.jenis_bansos
-      }]).select(); 
-      if (error) throw error;
-      const newUsulan = {
-        id: data[0].id, nik: formData.nik, no_kk: formData.no_kk, nama_lengkap: formData.nama_lengkap, 
-        kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, tanggal: formData.tanggal, alamat: formData.alamat,
-        jenis_bansos: formData.jenis_bansos, status_pengusulan: "Belum"
-      };
-      setUsulanData([newUsulan, ...usulanData]);
-      setIsAddModalOpen(false);
-      setFormData(initialFormState); 
-      showSuccess();
-    } catch (error) { console.error('Error adding pengusulan:', error); alert('Gagal menambah pengusulan: ' + error.message); }
-  };
-  
-  const handleOpenDetailRiwayat = (data) => { setSelectedDetailData(data); setActiveTab("detail_usulan"); };
-
-const handleAddDtsen = async (e) => {
+  const handleAddDtsen = async (e) => {
 
   e.preventDefault();
 
@@ -523,8 +437,8 @@ const handleAddDtsen = async (e) => {
       // ✅ Handle validation error dari FastAPI/Pydantic
       const errorMsg = data.detail
         ? Array.isArray(data.detail)
-          ? data.detail.map(d => `${d.loc?.join(".")} → ${d.msg}`).join("\n")
-          : data.detail
+        ? data.detail.map(d => `${d.loc?.join(".")} → ${d.msg}`).join("\n")
+        : data.detail
         : JSON.stringify(data, null, 2);
 
       alert("Gagal:\n" + errorMsg);
@@ -638,63 +552,11 @@ const handleAddDtsen = async (e) => {
     } catch (error) { console.error('Error updating PPKS status:', error); alert('Gagal update status PPKS: ' + error.message); }
   };
 
-  const jalankanAlgoritmaPMT = () => {
-    const keluargaAsli = dtsenData.find(item => item.no_kk === selectedKalkulasi.no_kk);
-    const aset = keluargaAsli?.aset || {}; 
-    let totalSkor = 0;
-    const bobot = {
-      v01: { "Laki-laki": 1.0, "Perempuan": 0.0 }, v02: { "< 25 tahun": 0.2, "25 - 40 tahun": 1.0, "41 - 55 tahun": 0.8, "56 - 65 tahun": 0.5, "> 65 tahun": 0.1 },
-      v03: { "Tidak pernah sekolah": 0.0, "Tidak tamat SD": 0.5, "Tamat SD/sederajat": 1.0, "Tamat SMP/sederajat": 1.8, "Tamat SMA/sederajat": 2.5, "Tamat D1/D2/D3": 3.2, "Tamat S1 ke atas": 4.0 },
-      v04: { "Tidak bekerja": 0.0, "Serabutan": 0.5, "Buruh": 1.0, "Usaha sendiri": 1.5, "Karyawan tetap": 2.5 }, v05: { "Cerai mati": 0.0, "Cerai hidup": 0.2, "Belum kawin": 0.5, "Kawin": 1.0 },
-      v06: { "≥ 8 jiwa": -2.0, "6 - 7 jiwa": -1.2, "4 - 5 jiwa": -0.5, "3 jiwa": 0.0, "1 - 2 jiwa": 0.5 }, v07: { "Menumpang": 0.0, "Sewa": 0.5, "Milik sendiri": 1.5 },
-      v08: { "< 4 m²": 0.0, "4 - 7 m²": 0.5, "8 - 15 m²": 1.5, "> 15 m²": 2.5 }, v09: { "Tanah": 0.0, "Bambu": 0.5, "Semen": 1.5, "Keramik": 3.0 },
-      v10: { "Bambu": 0.0, "Kayu": 0.5, "Tembok tidak diplester": 1.0, "Tembok diplester": 2.0 }, v11: { "Rumbia": 0.0, "Seng": 0.8, "Genteng tanah liat": 1.5, "Genteng beton": 2.0 },
-      v12: { "Sungai": 0.0, "Sumur tak terlindung": 0.3, "Sumur terlindung": 1.0, "Mata air": 1.2, "Air isi ulang": 1.5, "PDAM": 2.0, "kemasan": 2.5 },
-      v13: { "Tidak ada": 0.0, "Bersama": 0.5, "Milik sendiri": 1.5 }, v14: { "Tidak ada": 0.0, "Plengsengan": 0.5, "Leher angsa": 1.5 },
-      v15: { "Sungai": 0.0, "Tangki septik": 1.5, "IPAL komunal": 2.0 }, v16: { "Bukan listrik": 0.0, "Listrik Non-PLN": 0.8, "Listrik PLN": 1.5 },
-      v17: { "Tidak ada": 0.0, "450 Watt": 0.5, "900 Watt": 1.0, "1.300 Watt": 1.8, "2.200 Watt": 3.0 }, v18: { "Kayu bakar": 0.0, "Minyak tanah": 0.3, "3 Kg": 1.0, "5.5 Kg": 2.0, "Listrik": 2.5 },
-      v19: { "Tidak ada": 0.0, "1 tabung": 3.0 }, v20: { "Tidak ada": 0.0, "< 500 m²": 1.0, "≥ 500 m²": 2.5 },
-      v21: { "Tidak ada": 0.0, "Ada": 3.0 }, v22: { "Tidak ada": 0.0, "Ada": 2.0 }, v23: { "Tidak ada": 0.0, "Ada": 0.5 },
-      v24: { "Tidak ada": 0.0, "Ada": 3.0 }, v25: { "Tidak ada": 0.0, "Ada": 5.0 }, v26: { "Tidak ada": 0.0, "Ada": 3.0 },
-      v27: { "Tidak ada": 0.0, "Ada": 1.5 }, v28: { "Tidak ada": 0.0, "Ada": 2.0 }, v29: { "Tidak ada": 0.0, "Ada": 1.2 },
-      v30: { "Tidak ada": 0.0, "Ada": 2.5 }, v31: { "Tidak ada": 0.0, "Ada": 4.0 }, v32: { "Tidak ada": 0.0, "Ada": 1.5 },
-      v33: { "Tidak ada": 0.0, "Ada": 1.0 }, v34: { "Tidak ada": 0.0, "Ada": 0.5 }, v35: { "Tidak ada": 0.0, "1 - 2 ekor": 1.5, "≥ 3 ekor": 3.0 },
-      v36: { "Tidak ada": 0.0, "1 - 5 ekor": 0.8, "≥ 6 ekor": 1.5 }, v37: { "Tidak ada": 0.0, "1 - 10 ekor": 0.3, "≥ 11 ekor": 0.8 },
-      v38: { "Tidak ada": 0.0, "< 10 gram": 1.0, "≥ 10 gram": 2.5 }, v39: { "Tidak ada": 0.0, "< Rp 500.000": 0.5, "Rp 500rb - 5jt": 1.5, "> Rp 5 juta": 3.0 },
-    };
-
-    Object.keys(bobot).forEach(kunci => {
-      const jawabanUser = aset[kunci] || "";
-      const opsiCocok = Object.keys(bobot[kunci]).find(opsi => jawabanUser.toLowerCase().includes(opsi.toLowerCase()));
-      if (opsiCocok) { totalSkor += bobot[kunci][opsiCocok]; }
-    });
-
-    let hasilDesil = "1"; let hasilKat = "Sangat Rentan / Ekstrem";
-    if (totalSkor >= 41.26) { hasilDesil = "6-10"; hasilKat = "Aman / Mampu"; }
-    else if (totalSkor >= 33.01) { hasilDesil = "5"; hasilKat = "Menuju Aman"; }
-    else if (totalSkor >= 24.76) { hasilDesil = "4"; hasilKat = "Rentan Sedang"; }
-    else if (totalSkor >= 16.51) { hasilDesil = "3"; hasilKat = "Hampir Rentan"; }
-    else if (totalSkor >= 8.26) { hasilDesil = "2"; hasilKat = "Rentan"; }
-    else { hasilDesil = "1"; hasilKat = "Sangat Rentan / Ekstrem"; }
-
-    setHasilKalkulasi({ skor: totalSkor.toFixed(2), desil: hasilDesil, kategori: hasilKat }); setIsCalculated(true);
-  };
-
-  const simpanHasilDesilKeluarga = () => {
-      const today = new Date();
-      const tglHitungStr = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
-      const updatedDtsenData = dtsenData.map(family => {
-        if (family.no_kk === selectedKalkulasi.no_kk) {
-          return { ...family, desil: hasilKalkulasi.desil, skorPMT: hasilKalkulasi.skor, kategoriDesil: hasilKalkulasi.kategori, tglHitung: tglHitungStr };
-        }
-        return family;
-      });
-      setDtsenData(updatedDtsenData); setIsKalkulasiModalOpen(false); showSuccess(); setActiveTab("riwayat_penentuan");
-    };
-
   const notifData = [{ id: 1, title: "Sistem", date: "Hari ini", desc: "Data berhasil dimuat." }];
   const showSuccess = () => { setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 2500); };
+  
   const formatDateIndo = (dateStr) => { if(!dateStr || dateStr === "-") return "-"; const date = new Date(dateStr); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; };
+  
   const getKategoriPendidikan = (tglLahir) => {
     if (!tglLahir || tglLahir === "-") return "Belum Ada Data";
     const birthDate = new Date(tglLahir);
@@ -793,13 +655,8 @@ const handleAddDtsen = async (e) => {
         <div className="content-body">
           {activeMenu === "usulan_baru" && (
             <UsulanBaru 
-              activeTab={activeTab} setActiveTab={setActiveTab}
-              filterPeriodeDashboard={filterPeriodeDashboard} setFilterPeriodeDashboard={setFilterPeriodeDashboard}
-              statTotal={statTotal} statSelesai={statSelesai} statBelum={statBelum}
-              statLayak={statLayak} statTidakLayak={statTidakLayak} pctLayak={pctLayak} pctTidakLayak={pctTidakLayak}
-              filterTable={filterTable} handleFilterChange={handleFilterChange} setIsAddModalOpen={setIsAddModalOpen}
-              tableDataFiltered={tableDataFiltered} formatDateIndo={formatDateIndo}
-              handleOpenDetailRiwayat={handleOpenDetailRiwayat} selectedDetailData={selectedDetailData}
+              activeTab={activeTab} setActiveTab={setActiveTab} usulanData={usulanData} setUsulanData={setUsulanData} 
+              currentStaff={currentStaff} showSuccess={showSuccess} formatDateIndo={formatDateIndo} getQuarter={getQuarter}
             />
           )}
 
@@ -824,10 +681,7 @@ const handleAddDtsen = async (e) => {
 
           {activeMenu === "penentuan_desil" && (
             <PenentuanDesil 
-              activeTab={activeTab} setActiveTab={setActiveTab} filterDesil={filterDesil}
-              handleFilterDesilChange={handleFilterDesilChange} dtsenData={dtsenData}
-              setSelectedKalkulasi={setSelectedKalkulasi} setIsKalkulasiModalOpen={setIsKalkulasiModalOpen}
-              setIsCalculated={setIsCalculated}
+              activeTab={activeTab} setActiveTab={setActiveTab} dtsenData={dtsenData} setDtsenData={setDtsenData} showSuccess={showSuccess}
             />
           )}
         </div>
@@ -836,50 +690,6 @@ const handleAddDtsen = async (e) => {
       {/* =======================================================
           SEMUA MODAL (POP-UP) TETAP DISINI AGAR FUNGSI AMAN 
       ======================================================= */}
-      {isAddModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#234a66', color: 'white', padding: '15px 25px' }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>Tambah Usulan Baru</h2>
-              <button type="button" onClick={() => setIsAddModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '28px', cursor: 'pointer', padding: 0, lineHeight: 1 }} title="Tutup">&times;</button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleAddSubmit}>
-                <div className="form-grid-2">
-                  <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16" placeholder="Masukkan NIK 16 digit" /></div>
-                  <div className="form-group-modal"><label>No. Kartu Keluarga*</label><input type="text" name="no_kk" value={formData.no_kk} onChange={(e) => setFormData({...formData, no_kk: e.target.value})} required maxLength="16" placeholder="Masukkan No KK 16 digit" /></div>
-                </div>
-                <div className="form-grid-2">
-                  <div className="form-group-modal"><label>Nama Kepala Keluarga (Sesuai KTP)*</label><input type="text" name="nama" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama_lengkap: e.target.value})} required placeholder="Masukkan Nama Kepala Keluarga" /></div>
-                  <div className="form-group-modal"><label>Tanggal Pengusulan*</label><input type="date" name="tanggal" value={formData.tanggal_usulan} onChange={(e) => setFormData({...formData, tanggal_usulan: e.target.value})} required /></div>
-                </div>
-                <div className="form-grid-2">
-                  <div className="form-group-modal">
-                    <label>Kecamatan*</label>
-                    <div className="select-container-custom"><select name="kecamatan" value={formData.kecamatan} onChange={(e) => setFormData({...formData, kecamatan: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option><option value="Panakkukang">Panakkukang</option></select></div>
-                  </div>
-                  <div className="form-group-modal">
-                    <label>Kelurahan/Desa*</label>
-                    <div className="select-container-custom"><select name="kelurahan" value={formData.kelurahan} onChange={(e) => setFormData({...formData, kelurahan: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option><option value="Pannampu">Pannampu</option></select></div>
-                  </div>
-                </div>
-                <div className="form-grid-1" style={{ marginBottom: '20px' }}>
-                  <div className="form-group-modal">
-                    <label>Jenis Bantuan Sosial yang Diusulkan*</label>
-                    <div className="select-container-custom"><select name="jenis_bansos" value={formData.jenis_bansos} onChange={(e) => setFormData({...formData, jenis_bansos: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Jenis Bantuan</option><option value="Bantuan Langsung Tunai (BLT)">Bantuan Langsung Tunai (BLT)</option><option value="Program Keluarga Harapan (PKH)">Program Keluarga Harapan (PKH)</option><option value="Bantuan Pangan Non Tunai (BPNT)">Bantuan Pangan Non Tunai (BPNT)</option><option value="Bantuan Sosial Tunai (BST)">Bantuan Sosial Tunai (BST)</option></select></div>
-                  </div>
-                  <div className="form-group-modal" style={{ marginTop: '15px' }}><label>Alamat Lengkap*</label><textarea name="alamat" value={formData.alamat} onChange={(e) => setFormData({...formData, alamat: e.target.value})} required placeholder="Masukkan alamat lengkap (Jalan, RT/RW)" style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #94a3b8', resize: 'vertical', minHeight: '60px'}}></textarea></div>
-                </div>
-                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button>
-                  <button type="submit" className="btn-modal-submit">Simpan Data</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MODAL DTSEN */}
       {isAddDtsenModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddDtsenModalOpen(false)}>
@@ -1029,10 +839,6 @@ const handleAddDtsen = async (e) => {
                     <div className="form-group-modal"><label>V17 | Daya Listrik</label><div className="select-container-custom"><select name="v17" value={formAset.v17 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Tidak ada</option><option>450 Watt</option><option>900 Watt</option><option>1.300 Watt</option><option>2.200 Watt ke atas</option></select></div></div>
                     <div className="form-group-modal"><label>V18 | Bahan Bakar Memasak</label><div className="select-container-custom"><select name="v18" value={formAset.v18 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Kayu bakar/arang</option><option>Minyak tanah</option><option>Gas elpiji 3 Kg</option><option>Gas elpiji ≥ 5.5 Kg</option><option>Listrik</option></select></div></div>
                     <div className="form-group-modal"><label>V19 | Jumlah Tabung Gas ≥5.5 Kg</label><div className="select-container-custom"><select name="v19" value={formAset.v19 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Tidak ada</option><option>1 tabung atau lebih</option></select></div></div>
-                    <div className="form-group-modal"><label>21. Tabung Gas 5.5kg / Kulkas</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
-                    <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option></select></div></div>
-                    <div className="form-group-modal"><label>23. Emas / Perhiasan ( 10 Gram)</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
-                    <div className="form-group-modal"><label>24. Lahan Pertanian (Ha)</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>&lt; 0.5 Ha</option><option> 0.5 Ha</option></select></div></div>
                   </div>
                 </div>
                 <div className="modal-section" style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '20px' }}>
@@ -1132,31 +938,6 @@ const handleAddDtsen = async (e) => {
                 </div>
                 <div className="modal-actions" style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsAddPPKSModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Laporan</button></div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL KALKULASI DESIL */}
-      {isKalkulasiModalOpen && selectedKalkulasi && (
-        <div className="modal-overlay" onClick={() => setIsKalkulasiModalOpen(false)}>
-          <div className="modal-content modal-medium" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><h2>Kalkulasi PMT & Desil</h2></div></div>
-            <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
-              <div style={{ marginBottom: '20px' }}><h3 style={{ margin: '0', color: '#234a66', fontSize: '18px' }}>{selectedKalkulasi.nama_lengkap}</h3><p style={{ margin: '5px 0 0 0', fontSize: '13px', fontWeight: '600' }}>No KK: {selectedKalkulasi.no_kk}</p></div>
-              {!isCalculated ? (
-                <button type="button" className="btn-modal-submit" style={{ width: '100%', padding: '15px', fontSize: '16px', backgroundColor: '#3b82f6' }} onClick={jalankanAlgoritmaPMT}>Jalankan Algoritma PMT</button>
-              ) : (
-                <div style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px', animation: 'fadeInModal 0.4s ease-out'}}>
-                  <h4 style={{ color: '#10b981', margin: '0 0 15px 0' }}>✓ Kalkulasi Selesai</h4>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '20px' }}>
-                    <div><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SKOR TOTAL PMT</span><span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>{hasilKalkulasi.skor}</span></div>
-                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>MASUK KE DESIL</span><span style={{ backgroundColor: hasilKalkulasi.desil === "1" ? '#ef4444' : hasilKalkulasi.desil === "2" ? '#f97316' : '#f59e0b', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>{hasilKalkulasi.desil}</span></div>
-                  </div>
-                  <p style={{ fontSize: '14px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong style={{ color: '#1e293b' }}>{hasilKalkulasi.kategori}</strong>.</p>
-                  <div className="modal-actions" style={{ marginTop: '20px' }}><button type="button" className="btn-modal-submit" onClick={simpanHasilDesilKeluarga} style={{ width: '100%' }}>Simpan Hasil ke Database</button></div>
-                </div>
-              )}
             </div>
           </div>
         </div>
