@@ -1,25 +1,88 @@
 import React, { useState } from "react";
+import { supabase } from "../../config/supabase";
 
 function UsulanBaru({
   activeTab,
   setActiveTab,
-  filterPeriodeDashboard,
-  setFilterPeriodeDashboard,
-  statTotal,
-  statSelesai,
-  statBelum,
-  statLayak,
-  statTidakLayak,
-  pctLayak,
-  pctTidakLayak,
-  filterTable,
-  handleFilterChange,
-  setIsAddModalOpen,
-  tableDataFiltered,
+  usulanData,
+  setUsulanData,
+  currentStaff,
+  showSuccess,
   formatDateIndo,
-  handleOpenDetailRiwayat,
-  selectedDetailData
+  getQuarter
 }) {
+  const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
+  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedDetailData, setSelectedDetailData] = useState(null);
+
+  const initialFormState = { 
+    nik: "", no_kk: "", nama_lengkap: "", penginput: "",
+    kecamatan: "", kelurahan: "", tanggal: "", alamat: "", desil: "", 
+    jenis_bansos: "", status_pengusulan: "Belum" 
+  };
+  const [formData, setFormData] = useState(initialFormState);
+  const [form, setForm] = useState({
+    nama_lengkap: "", nik: "", no_kk: "",
+    kecamatan: "", kelurahan: "", alamat: "", penginput: "", jenis_bansos: ""
+  });
+
+  const handleFilterChange = (e) => { setFilterTable({ ...filterTable, [e.target.name]: e.target.value }); };
+
+  const dashboardDataFiltered = usulanData.filter(item => getQuarter(item.tanggal_usulan || item.tanggal) === filterPeriodeDashboard);
+  const tableDataFiltered = usulanData.filter(item => {
+    const itemNik = item.nik ? String(item.nik) : "";
+    const itemNama = item.nama_lengkap ? String(item.nama_lengkap) : "";
+    return (filterTable.kecamatan === "" || item.kecamatan === filterTable.kecamatan) && 
+           (filterTable.kelurahan === "" || item.kelurahan === filterTable.kelurahan) && 
+           (filterTable.nik === "" || itemNik.includes(filterTable.nik)) && 
+           (filterTable.nama_lengkap === "" || itemNama.toLowerCase().includes(filterTable.nama_lengkap.toLowerCase()));
+  });
+
+  const statTotal = dashboardDataFiltered.length;
+  const statSelesai = dashboardDataFiltered.filter(i => i.status_pengusulan === "Layak" || i.status_pengusulan === "Tidak Layak").length;
+  const statBelum = dashboardDataFiltered.filter(i => i.status_pengusulan === "Belum").length;
+  const statLayak = dashboardDataFiltered.filter(i => i.status_pengusulan === "Layak").length;
+  const statTidakLayak = dashboardDataFiltered.filter(i => i.status_pengusulan === "Tidak Layak").length;
+  const totalVerified = statLayak + statTidakLayak;
+  const pctLayak = totalVerified === 0 ? 0 : Math.round((statLayak / totalVerified) * 100);
+  const pctTidakLayak = totalVerified === 0 ? 0 : 100 - pctLayak;
+
+  const approve = async (id) => { await fetch(`/pengusulan/${id}/approve`, { method: "PUT" }); };
+  const reject = async (id) => { await fetch(`/pengusulan/${id}/reject`, { method: "PUT" }); };
+  
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   await fetch("/pengusulan", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(form)
+  //   });
+  // };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase.from('pengusulan_bansos').insert([{
+        nama_lengkap: formData.nama_lengkap, nik: formData.nik || null, no_kk: formData.no_kk || null,
+        kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, alamat: formData.alamat, penginput: currentStaff.nama || "Staff", 
+        status_pengusulan: "Belum", jenis_bansos: formData.jenis_bansos
+      }]).select(); 
+      if (error) throw error;
+      const newUsulan = {
+        id: data[0].id, nik: formData.nik, no_kk: formData.no_kk, nama_lengkap: formData.nama_lengkap, 
+        kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, tanggal: formData.tanggal, alamat: formData.alamat,
+        jenis_bansos: formData.jenis_bansos, status_pengusulan: "Belum"
+      };
+      setUsulanData([newUsulan, ...usulanData]);
+      setIsAddModalOpen(false);
+      setFormData(initialFormState); 
+      showSuccess();
+    } catch (error) { console.error('Error adding pengusulan:', error); alert('Gagal menambah pengusulan: ' + error.message); }
+  };
+  
+  const handleOpenDetailRiwayat = (data) => { setSelectedDetailData(data); setActiveTab("detail_usulan"); };
+
   // ✅ RUMUS OTOMATIS DIPINDAHKAN KE SINI (Di dalam area komponen, bukan di dalam parameter props)
   const getPeriodeOtomatis = (dateString) => {
     if (!dateString || dateString === "-") return "-";
@@ -106,7 +169,7 @@ function UsulanBaru({
                       <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span></td>
                       <td>{item.nik}</td>
                       <td>{item.no_kk}</td>
-                      <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan)}</td><td>{item.alamat}</td>
+                      <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan || item.tanggal)}</td><td>{item.alamat}</td>
                       <td style={{ textAlign: "center" }}>
                         {item.status_pengusulan === "Layak" && <span className="status-badge badge-active">Layak</span>}
                         {item.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
@@ -190,6 +253,53 @@ function UsulanBaru({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* =======================================================
+          MODAL TAMBAH USULAN BARU (DIPINDAHKAN KE SINI)
+      ======================================================= */}
+      {isAddModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#234a66', color: 'white', padding: '15px 25px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>Tambah Usulan Baru</h2>
+              <button type="button" onClick={() => setIsAddModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '28px', cursor: 'pointer', padding: 0, lineHeight: 1 }} title="Tutup">&times;</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleAddSubmit}>
+                <div className="form-grid-2">
+                  <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formData.nik} onChange={(e) => setFormData({...formData, nik: e.target.value})} required maxLength="16" placeholder="Masukkan NIK 16 digit" /></div>
+                  <div className="form-group-modal"><label>No. Kartu Keluarga*</label><input type="text" name="no_kk" value={formData.no_kk} onChange={(e) => setFormData({...formData, no_kk: e.target.value})} required maxLength="16" placeholder="Masukkan No KK 16 digit" /></div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group-modal"><label>Nama Kepala Keluarga (Sesuai KTP)*</label><input type="text" name="nama" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama_lengkap: e.target.value})} required placeholder="Masukkan Nama Kepala Keluarga" /></div>
+                  <div className="form-group-modal"><label>Tanggal Pengusulan*</label><input type="date" name="tanggal" value={formData.tanggal_usulan || formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value, tanggal_usulan: e.target.value})} required /></div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group-modal">
+                    <label>Kecamatan*</label>
+                    <div className="select-container-custom"><select name="kecamatan" value={formData.kecamatan} onChange={(e) => setFormData({...formData, kecamatan: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option><option value="Panakkukang">Panakkukang</option></select></div>
+                  </div>
+                  <div className="form-group-modal">
+                    <label>Kelurahan/Desa*</label>
+                    <div className="select-container-custom"><select name="kelurahan" value={formData.kelurahan} onChange={(e) => setFormData({...formData, kelurahan: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option><option value="Pannampu">Pannampu</option></select></div>
+                  </div>
+                </div>
+                <div className="form-grid-1" style={{ marginBottom: '20px' }}>
+                  <div className="form-group-modal">
+                    <label>Jenis Bantuan Sosial yang Diusulkan*</label>
+                    <div className="select-container-custom"><select name="jenis_bansos" value={formData.jenis_bansos} onChange={(e) => setFormData({...formData, jenis_bansos: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Jenis Bantuan</option><option value="Bantuan Langsung Tunai (BLT)">Bantuan Langsung Tunai (BLT)</option><option value="Program Keluarga Harapan (PKH)">Program Keluarga Harapan (PKH)</option><option value="Bantuan Pangan Non Tunai (BPNT)">Bantuan Pangan Non Tunai (BPNT)</option><option value="Bantuan Sosial Tunai (BST)">Bantuan Sosial Tunai (BST)</option></select></div>
+                  </div>
+                  <div className="form-group-modal" style={{ marginTop: '15px' }}><label>Alamat Lengkap*</label><textarea name="alamat" value={formData.alamat} onChange={(e) => setFormData({...formData, alamat: e.target.value})} required placeholder="Masukkan alamat lengkap (Jalan, RT/RW)" style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #94a3b8', resize: 'vertical', minHeight: '60px'}}></textarea></div>
+                </div>
+                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)}>Batal</button>
+                  <button type="submit" className="btn-modal-submit">Simpan Data</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </>
