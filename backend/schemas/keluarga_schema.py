@@ -14,7 +14,7 @@ class Keluarga(BaseModel):
   kecamatan: str
   jenis_kelamin: str
   tanggal_lahir: datetime
-  nik: Optional[str] = None
+  nik: Optional[int] = None
   updated_at: Optional[datetime] = None
  
  

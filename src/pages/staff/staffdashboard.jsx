@@ -351,52 +351,76 @@ function StaffDashboard() {
   // ==========================================
   // 3. LIFECYCLE (USE EFFECT FETCH)
   // ==========================================
-  useEffect(() => {
-    const savedStaffData = localStorage.getItem("currentStaffUser");
-    if (savedStaffData) {
-      const parsedData = JSON.parse(savedStaffData);
-      const namaDepan = parsedData.namaLengkap ? parsedData.namaLengkap.split(' ')[0] : "Firliany";
-      setCurrentStaff({ nama: namaDepan, nip: parsedData.nip || "12345678912131230" });
-    }
-    
-    const fetchData = async () => {
-      try {
-        const { data: pengusulanData, error: pengusulanError } = await supabase.from('pengusulan_bansos').select('*');
-        if (pengusulanError) throw pengusulanError;
-        setUsulanData((pengusulanData || []).map(item => ({
-          id: item.id, nik: item.nik, no_kk: item.no_kk, nama_lengkap: item.nama_lengkap, 
-          penginput: item.penginput, kecamatan: item.kecamatan, kelurahan: item.kelurahan, tanggal: item.tanggal_usulan, 
-          alamat: item.alamat, status_pengusulan: item.status_pengusulan, jenis_bansos: item.jenis_bansos
-        })));
+ // ==========================================
+// 3. LIFECYCLE (USE EFFECT FETCH)
+// ==========================================
+useEffect(() => {
+  const savedStaffData = localStorage.getItem("currentStaffUser");
+  if (savedStaffData) {
+    const parsedData = JSON.parse(savedStaffData);
+    const namaDepan = parsedData.namaLengkap
+      ? parsedData.namaLengkap.split(' ')[0]
+      : "Firliany";
+    setCurrentStaff({
+      nama: namaDepan,
+      nip: parsedData.nip || "12345678912131230"
+    });
+  }
 
-       const { data: dtsenDataFetched, error: dtsenError } =
-          await supabase.from('keluarga').select('*');
-
-        if (dtsenError) throw dtsenError;
-
-        setDtsenData((dtsenDataFetched || []).map(item => ({
+  const fetchData = async () => {
+    try {
+      // ✅ Usulan Bansos — tetap dari Supabase
+      const { data: pengusulanData, error: pengusulanError } =
+        await supabase.from('pengusulan_bansos').select('*');
+      if (pengusulanError) throw pengusulanError;
+      setUsulanData(
+        (pengusulanData || []).map(item => ({
           id: item.id,
+          nik: item.nik,
           no_kk: item.no_kk,
-          nama_kepala_keluarga: item.nama_kepala_keluarga,
+          nama_lengkap: item.nama_lengkap,
+          penginput: item.penginput,
           kecamatan: item.kecamatan,
           kelurahan: item.kelurahan,
+          tanggal: item.tanggal_usulan,
           alamat: item.alamat,
-          desil: item.desil || "Belum Dihitung",
-          anggota: []
-        })));
+          status_pengusulan: item.status_pengusulan,
+          jenis_bansos: item.jenis_bansos
+        }))
+      );
 
-        const { data: ppksData, error: ppksError } = await supabase.from('ppks').select('*');
-        if (ppksError) throw ppksError;
-        setDummyPPKS((ppksData || []).map(item => ({
-          id: item.id, nik: item.nik, nama_lengkap: item.nama_lengkap, kategori: item.kategori, kecamatan: item.kecamatan,
-          lokasi: item.lokasi, tanggal: item.tanggal_laporan, status_penanganan: item.status_penanganan
-        })));
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    fetchData();
-  }, []); 
+      // ✅ DTSEN — fetch dari backend, BUKAN Supabase
+      // fetchKeluarga() sudah dipanggil di useEffect terpisah di atas,
+      // jadi tidak perlu dipanggil lagi di sini agar tidak terjadi race condition
+      // ❌ HAPUS blok ini:
+      // const { data: dtsenDataFetched, error: dtsenError } =
+      //   await supabase.from('keluarga').select('*');
+      // if (dtsenError) throw dtsenError;
+      // setDtsenData(...);
+
+      // ✅ PPKS — tetap dari Supabase
+      const { data: ppksData, error: ppksError } =
+        await supabase.from('ppks').select('*');
+      if (ppksError) throw ppksError;
+      setDummyPPKS(
+        (ppksData || []).map(item => ({
+          id: item.id,
+          nik: item.nik,
+          nama_lengkap: item.nama_lengkap,
+          kategori: item.kategori,
+          kecamatan: item.kecamatan,
+          lokasi: item.lokasi,
+          tanggal: item.tanggal_laporan,
+          status_penanganan: item.status_penanganan
+        }))
+      );
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  fetchData();
+}, []);
 
   // ==========================================
   // 4. FUNGSI HANDLER UMUM
@@ -454,12 +478,16 @@ const handleAddDtsen = async (e) => {
       no_kk: formDtsen.no_kk,
       nama_kepala_keluarga: formDtsen.nama_kepala_keluarga,
       jenis_kelamin: formDtsen.jenis_kelamin,
-      nik: formDtsen.nik_kepala,
+      nik: formDtsen.nik_kepala || null,
       kecamatan: formDtsen.kecamatan,
       kelurahan: formDtsen.kelurahan,
       alamat: formDtsen.alamat,
-      tanggal_lahir: formDtsen.tanggal_lahir,
-      desil: "Belum Dihitung"
+      tanggal_lahir: formDtsen.tanggal_lahir,  // format "YYYY-MM-DD" dari input date
+      desil: 0,                                 // ✅ int, bukan string
+      tanggal_hitung_desil: new Date().toISOString(), // ✅ wajib ada di schema
+      skor_pmt: 0,
+      user_id: null,
+      updated_at: null
     };
 
     console.log("PAYLOAD:", payload);
@@ -492,7 +520,14 @@ const handleAddDtsen = async (e) => {
     // =====================================
     if (!response.ok) {
 
-      alert(data.detail || "Gagal tambah data");
+      // ✅ Handle validation error dari FastAPI/Pydantic
+      const errorMsg = data.detail
+        ? Array.isArray(data.detail)
+          ? data.detail.map(d => `${d.loc?.join(".")} → ${d.msg}`).join("\n")
+          : data.detail
+        : JSON.stringify(data, null, 2);
+
+      alert("Gagal:\n" + errorMsg);
 
       return;
     }
@@ -526,8 +561,7 @@ const handleAddDtsen = async (e) => {
   } catch (error) {
 
     console.error("ERROR:", error);
-
-    alert("Terjadi kesalahan");
+    alert("Terjadi kesalahan: " + error.message);
   }
 };
 
