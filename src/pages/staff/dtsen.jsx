@@ -66,27 +66,29 @@ function Dtsen({
             <button className="btn-search-outline" onClick={() => setActiveTab("data_ppks")} style={{ height: '36px' }}>&larr; Kembali ke Daftar PPKS</button>
           </div>
 
+          {/* ✅ PERBAIKAN: Status dan Tanggal Laporan akurat dari tabel depan */}
           <div className="info-alert-box" style={{ 
-              backgroundColor: selectedPPKSData.status === 'Kasus Aktif' ? '#eff6ff' : selectedPPKSData.status === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
-              borderColor: selectedPPKSData.status === 'Kasus Aktif' ? '#bfdbfe' : selectedPPKSData.status === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
-              color: selectedPPKSData.status === 'Kasus Aktif' ? '#1e3a8a' : selectedPPKSData.status === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
+              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
+              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
+              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
               marginBottom: '25px', display: 'flex', justifyContent: 'space-between'
             }}>
-            <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status}</strong></span>
-            <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal)}</span>
+            <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status}</strong></span>
+            <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal_laporan || selectedPPKSData.tanggal)}</span>
           </div>
 
+          {/* ✅ PERBAIKAN: Seluruh data ditarik dari inputan form */}
           <div className="detail-summary-grid">
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap}</span></div>
-              <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik}</span></div>
+              <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap || "Tanpa Identitas"}</span></div>
+              <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik || "-"}</span></div>
             </div>
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Kategori PPKS</span><span className="sum-val text-blue">{selectedPPKSData.kategori}</span></div>
-              <div className="summary-item"><span className="sum-label">Kecamatan Penemuan</span><span className="sum-val">{selectedPPKSData.kecamatan}</span></div>
+              <div className="summary-item"><span className="sum-label">Kategori PPKS</span><span className="sum-val text-blue" style={{fontWeight: 'bold'}}>{selectedPPKSData.kategori || "-"}</span></div>
+              <div className="summary-item"><span className="sum-label">Kecamatan Penemuan</span><span className="sum-val">{selectedPPKSData.kecamatan || "-"}</span></div>
             </div>
             <div className="summary-col" style={{ gridColumn: '1 / -1', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
-              <div className="summary-item"><span className="sum-label">Lokasi Penemuan Spesifik</span><span className="sum-val">{selectedPPKSData.lokasi}</span></div>
+              <div className="summary-item"><span className="sum-label">Lokasi Penemuan Spesifik</span><span className="sum-val">{selectedPPKSData.lokasi || "-"}</span></div>
             </div>
           </div>
 
@@ -105,18 +107,28 @@ function Dtsen({
               ></textarea>
             </div>
 
-            <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end' }}>
-              {selectedPPKSData.status === "Menunggu Kelayakan" && (
+            <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end', alignItems: 'center' }}>
+              
+              {/* ✅ DITAMBAHKAN: Tombol Simpan Catatan tanpa mengubah status kasus */}
+              <button 
+                className="btn-search-outline" 
+                style={{ height: '40px', borderColor: '#3b82f6', color: '#3b82f6' }} 
+                onClick={(e) => handleUpdateStatusPPKS(e, selectedPPKSData.status_penanganan || selectedPPKSData.status)}
+              >
+                💾 Simpan Catatan
+              </button>
+
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Menunggu Kelayakan" && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
                   Terima & Ubah ke Kasus Aktif
                 </button>
               )}
-              {selectedPPKSData.status === "Kasus Aktif" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Kasus Aktif" && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#22c55e', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Selesai Ditangani")}>
                   Tandai Selesai / Dirujuk ke Panti
                 </button>
               )}
-              {selectedPPKSData.status === "Selesai Ditangani" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Selesai Ditangani" && (
                 <span style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', color: '#64748b', borderRadius: '8px', fontWeight: '700', fontSize: '13px' }}>
                   Kasus Telah Ditutup
                 </span>
