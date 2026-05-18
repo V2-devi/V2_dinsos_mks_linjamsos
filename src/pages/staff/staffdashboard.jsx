@@ -93,7 +93,7 @@ function StaffDashboard() {
   });
   const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
   const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
-  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", lokasi: "", tanggal: "" };
+  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", kelurahan: "", lokasi: "", tanggal: "" }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
 
    // =========================================
@@ -278,7 +278,7 @@ function StaffDashboard() {
   const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
   const [filterDtsen, setFilterDtsen] = useState({ kecamatan: "", kelurahan: "", no_kk: "", nama_kepala_keluarga: "" });
   const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
-  const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", nama: "" });
+  const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", kelurahan: "", nama: "" }); 
   const [filterDesil, setFilterDesil] = useState({ kecamatan: "", no_kk: "" });
   const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
 
@@ -318,13 +318,13 @@ function StaffDashboard() {
   const tabelPPKSFiltered = dummyPPKS.filter(item => {
     const matchKategori = filterTabelPPKS.kategori === "" || item.kategori === filterTabelPPKS.kategori;
     const matchKecamatan = filterTabelPPKS.kecamatan === "" || item.kecamatan === filterTabelPPKS.kecamatan;
+    const matchKelurahan = filterTabelPPKS.kelurahan === "" || item.kelurahan === filterTabelPPKS.kelurahan; // ✅ DITAMBAHKAN
     const itemNama = item.nama_lengkap ? String(item.nama_lengkap).toLowerCase() : "";
     const itemNik = item.nik ? String(item.nik) : "";
-    const searchVal = filterTabelPPKS.nama.toLowerCase(); 
+    const searchVal = filterTabelPPKS.nama ? filterTabelPPKS.nama.toLowerCase() : ""; 
     const matchNama = filterTabelPPKS.nama === "" || itemNama.includes(searchVal) || itemNik.includes(searchVal);
-    return matchKategori && matchKecamatan && matchNama;
+    return matchKategori && matchKecamatan && matchKelurahan && matchNama; // ✅ DIUBAH
   });
-
   const dummyRiwayatDesil = []; 
   const tabelRiwayatFiltered = dummyRiwayatDesil.filter((item) => {
     const matchKecamatan = filterDesil.kecamatan === "" || (item.kelurahan && String(item.kelurahan).includes(filterDesil.kecamatan));
@@ -584,8 +584,8 @@ const handleAddDtsen = async (e) => {
     try {
       const { data, error } = await supabase.from('ppks').insert([{
         kategori: formPPKS.kategori, tanggal_laporan: formPPKS.tanggal, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
-        kecamatan: formPPKS.kecamatan, lokasi: formPPKS.lokasi, status: "Menunggu Kelayakan"
-      }]);
+        kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi: formPPKS.lokasi, status: "Menunggu Kelayakan" // ✅ DIUBAH
+      }]);;
       if (error) throw error;
       const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
       setDummyPPKS([newPPKS, ...dummyPPKS]); setIsAddPPKSModalOpen(false); setFormPPKS(initialFormPPKS); showSuccess();
@@ -996,7 +996,7 @@ const handleAddDtsen = async (e) => {
                     <div className="form-group-modal"><label>V18 | Bahan Bakar Memasak</label><div className="select-container-custom"><select name="v18" value={formAset.v18 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Kayu bakar/arang</option><option>Minyak tanah</option><option>Gas elpiji 3 Kg</option><option>Gas elpiji ≥ 5.5 Kg</option><option>Listrik</option></select></div></div>
                     <div className="form-group-modal"><label>V19 | Jumlah Tabung Gas ≥5.5 Kg</label><div className="select-container-custom"><select name="v19" value={formAset.v19 || ""} onChange={handleEditAsetChange} required><option value="" hidden>Pilih</option><option>Tidak ada</option><option>1 tabung atau lebih</option></select></div></div>
                     <div className="form-group-modal"><label>21. Tabung Gas 5.5kg / Kulkas</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
-                    <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option><option> 1 Unit</option></select></div></div>
+                    <div className="form-group-modal"><label>22. Sepeda Motor</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>1 Unit</option></select></div></div>
                     <div className="form-group-modal"><label>23. Emas / Perhiasan ( 10 Gram)</label><div className="select-container-custom"><select><option>Ada</option><option>Tidak Ada</option></select></div></div>
                     <div className="form-group-modal"><label>24. Lahan Pertanian (Ha)</label><div className="select-container-custom"><select><option>Tidak Ada</option><option>&lt; 0.5 Ha</option><option> 0.5 Ha</option></select></div></div>
                   </div>
@@ -1047,14 +1047,56 @@ const handleAddDtsen = async (e) => {
               <div className="info-alert-box" style={{ backgroundColor: '#eff6ff', borderColor: '#bfdbfe', color: '#1e3a8a', marginBottom: '20px', fontSize: '13px' }}>Jika PPKS tidak membawa identitas, kosongkan bagian NIK dan Nama. Pastikan Lokasi Penemuan diisi dengan sangat spesifik.</div>
               <form onSubmit={handleAddPPKSSubmit}>
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>Kategori PPKS*</label><div className="select-container-custom"><select name="kategori" value={formPPKS.kategori} onChange={(e) => setFormPPKS({...formPPKS, kategori: e.target.value})} required><option value="" hidden>Pilih Kategori</option><option value="Anak Jalanan">Anak Jalanan</option><option value="Lanjut Usia Terlantar">Lanjut Usia Terlantar</option><option value="Gelandangan & Pengemis">Gelandangan & Pengemis</option><option value="Penyandang Disabilitas">Penyandang Disabilitas</option><option value="Lainnya">Lainnya</option></select></div></div>
+                  <div className="form-group-modal">
+                    <label>Kategori PPKS*</label>
+                    <div className="select-container-custom">
+                      <select name="kategori" value={formPPKS.kategori} onChange={(e) => setFormPPKS({...formPPKS, kategori: e.target.value})} required>
+                        <option value="" hidden>Pilih Kategori</option>
+                        {/* ✅ 26 KATEGORI DITAMBAHKAN */}
+                        <option>Anak Balita Terlantar</option>
+                        <option>Anak Terlantar</option>
+                        <option>Anak yang Berhadapan dengan Hukum</option>
+                        <option>Anak Jalanan</option>
+                        <option>Anak dengan Disabilitas</option>
+                        <option>Anak yang Menjadi Korban Tindak Kekerasan</option>
+                        <option>Anak yang Memerlukan Perlindungan Khusus</option>
+                        <option>Lanjut Usia Terlantar</option>
+                        <option>Penyandang Disabilitas</option>
+                        <option>Tunasusila</option>
+                        <option>Gelandangan</option>
+                        <option>Pengemis</option>
+                        <option>Pemulung</option>
+                        <option>Kelompok Minoritas</option>
+                        <option>Bekas Warga Binaan Lembaga Permasyarakatan</option>
+                        <option>Orang dengan HIV/AIDS</option>
+                        <option>Korban Penyalahgunaan NAPZA</option>
+                        <option>Korban Trafficking</option>
+                        <option>Korban Tindak Kekerasan</option>
+                        <option>Pekerja Migran Bermasalah Sosial</option>
+                        <option>Korban Bencana Alam</option>
+                        <option>Korban Bencana Sosial</option>
+                        <option>Perempuan Rawan Sosial Ekonomi</option>
+                        <option>Fakir Miskin</option>
+                        <option>Keluarga Bermasalah Sosial Psikologi</option>
+                        <option>Komunitas Adat Terpencil</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="form-group-modal"><label>Tanggal Penemuan*</label><input type="date" name="tanggal" value={formPPKS.tanggal} onChange={(e) => setFormPPKS({...formPPKS, tanggal: e.target.value})} required /></div>
+                </div>
+                <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK (Bila Diketahui)</label><input type="text" name="nik" value={formPPKS.nik} onChange={(e) => setFormPPKS({...formPPKS, nik: e.target.value})} maxLength="16" placeholder="Kosongkan jika tidak ada" /></div>
                   <div className="form-group-modal"><label>Nama/Alias (Bila Diketahui)</label><input type="text" name="nama" value={formPPKS.nama_lengkap} onChange={(e) => setFormPPKS({...formPPKS, nama_lengkap: e.target.value})} placeholder="Contoh: Bapak Fulan" /></div>
+                </div>
+                {/* ✅ INPUT KECAMATAN DAN KELURAHAN */}
+                <div className="form-grid-2">
                   <div className="form-group-modal"><label>Kecamatan Penemuan*</label><div className="select-container-custom"><select name="kecamatan" value={formPPKS.kecamatan} onChange={(e) => setFormPPKS({...formPPKS, kecamatan: e.target.value})} required><option value="" hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option><option value="Panakkukang">Panakkukang</option></select></div></div>
+                  <div className="form-group-modal"><label>Kelurahan Penemuan*</label><div className="select-container-custom"><select name="kelurahan" value={formPPKS.kelurahan} onChange={(e) => setFormPPKS({...formPPKS, kelurahan: e.target.value})} required><option value="" hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option><option value="Pannampu">Pannampu</option></select></div></div>
+                </div>
+                <div className="form-grid-1" style={{ marginBottom: '20px' }}>
                   <div className="form-group-modal"><label>Lokasi Penemuan Spesifik*</label><input type="text" name="lokasi" value={formPPKS.lokasi} onChange={(e) => setFormPPKS({...formPPKS, lokasi: e.target.value})} required placeholder="Contoh: Pasar MT Haryono, depan Toko A" /></div>
                 </div>
-                <div className="modal-actions" style={{ marginTop: '20px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsAddPPKSModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Laporan</button></div>
+                <div className="modal-actions" style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsAddPPKSModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Laporan</button></div>
               </form>
             </div>
           </div>

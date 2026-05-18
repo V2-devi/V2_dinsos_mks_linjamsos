@@ -55,9 +55,7 @@ function PenentuanDesil({
               <label>No. KK</label>
               <input type="text" name="no_kk" value={filterDesil.no_kk} onChange={handleFilterDesilChange} className="input-custom" placeholder="Ketik No. KK..." />
             </div>
-            <div className="filter-group-top align-bottom">
-              <button className="btn-search-outline">Cari Data</button>
-            </div>
+            {/* ✅ TOMBOL CARI DATA DIHAPUS DARI SINI */}
           </div>
           <div className="table-wrapper">
             <div className="table-responsive">
@@ -97,9 +95,7 @@ function PenentuanDesil({
                 <label>No. KK</label>
                 <input type="text" name="no_kk" value={filterDesil.no_kk} onChange={handleFilterDesilChange} className="input-custom" placeholder="Ketik No. KK..." />
               </div>
-              <div className="filter-group-top align-bottom">
-                <button className="btn-search-outline">Cari Data</button>
-              </div>
+              {/* ✅ TOMBOL CARI DATA DIHAPUS DARI SINI */}
             </div>
             <div className="table-wrapper">
               <div className="table-responsive">

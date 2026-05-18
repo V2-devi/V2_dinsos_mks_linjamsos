@@ -68,27 +68,29 @@ function Dtsen({
             <button className="btn-search-outline" onClick={() => setActiveTab("data_ppks")} style={{ height: '36px' }}>&larr; Kembali ke Daftar PPKS</button>
           </div>
 
+          {/* ✅ PERBAIKAN: Status dan Tanggal Laporan akurat dari tabel depan */}
           <div className="info-alert-box" style={{ 
-              backgroundColor: selectedPPKSData.status === 'Kasus Aktif' ? '#eff6ff' : selectedPPKSData.status === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
-              borderColor: selectedPPKSData.status === 'Kasus Aktif' ? '#bfdbfe' : selectedPPKSData.status === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
-              color: selectedPPKSData.status === 'Kasus Aktif' ? '#1e3a8a' : selectedPPKSData.status === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
+              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
+              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
+              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
               marginBottom: '25px', display: 'flex', justifyContent: 'space-between'
             }}>
-            <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status}</strong></span>
-            <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal)}</span>
+            <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status}</strong></span>
+            <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal_laporan || selectedPPKSData.tanggal)}</span>
           </div>
 
+          {/* ✅ PERBAIKAN: Seluruh data ditarik dari inputan form */}
           <div className="detail-summary-grid">
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap}</span></div>
-              <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik}</span></div>
+              <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap || "Tanpa Identitas"}</span></div>
+              <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik || "-"}</span></div>
             </div>
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Kategori PPKS</span><span className="sum-val text-blue">{selectedPPKSData.kategori}</span></div>
-              <div className="summary-item"><span className="sum-label">Kecamatan Penemuan</span><span className="sum-val">{selectedPPKSData.kecamatan}</span></div>
+              <div className="summary-item"><span className="sum-label">Kategori PPKS</span><span className="sum-val text-blue" style={{fontWeight: 'bold'}}>{selectedPPKSData.kategori || "-"}</span></div>
+              <div className="summary-item"><span className="sum-label">Kecamatan Penemuan</span><span className="sum-val">{selectedPPKSData.kecamatan || "-"}</span></div>
             </div>
             <div className="summary-col" style={{ gridColumn: '1 / -1', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
-              <div className="summary-item"><span className="sum-label">Lokasi Penemuan Spesifik</span><span className="sum-val">{selectedPPKSData.lokasi}</span></div>
+              <div className="summary-item"><span className="sum-label">Lokasi Penemuan Spesifik</span><span className="sum-val">{selectedPPKSData.lokasi || "-"}</span></div>
             </div>
           </div>
 
@@ -107,18 +109,28 @@ function Dtsen({
               ></textarea>
             </div>
 
-            <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end' }}>
-              {selectedPPKSData.status === "Menunggu Kelayakan" && (
+            <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end', alignItems: 'center' }}>
+              
+              {/* ✅ DITAMBAHKAN: Tombol Simpan Catatan tanpa mengubah status kasus */}
+              <button 
+                className="btn-search-outline" 
+                style={{ height: '40px', borderColor: '#3b82f6', color: '#3b82f6' }} 
+                onClick={(e) => handleUpdateStatusPPKS(e, selectedPPKSData.status_penanganan || selectedPPKSData.status)}
+              >
+                💾 Simpan Catatan
+              </button>
+
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Menunggu Kelayakan" && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
                   Terima & Ubah ke Kasus Aktif
                 </button>
               )}
-              {selectedPPKSData.status === "Kasus Aktif" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Kasus Aktif" && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#22c55e', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Selesai Ditangani")}>
                   Tandai Selesai / Dirujuk ke Panti
                 </button>
               )}
-              {selectedPPKSData.status === "Selesai Ditangani" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Selesai Ditangani" && (
                 <span style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', color: '#64748b', borderRadius: '8px', fontWeight: '700', fontSize: '13px' }}>
                   Kasus Telah Ditutup
                 </span>
@@ -308,62 +320,68 @@ function Dtsen({
           </div>
 
           {detailDtsenInnerTab === "anggota" && (
-            <div className="table-wrapper">
-              <table className="staff-table">
-                <thead>
-                  <tr>
-                    <th>NIK</th>
-                    <th>Nama Anggota</th>
-                    <th>Tanggal Lahir</th>
-                    <th>Hub. Keluarga</th>
-                    <th>Jenis Kelamin</th>
-                    <th>Kondisi Khusus</th>
-                    <th>Status Keadaan</th>
-                    <th style={{ textAlign: "center" }}>Aksi Detail</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedDtsenData?.anggota?.map((ang, index) => {
-                    const kondisi = [];
-                    if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
-                    if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
-                    if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
+            <div>
+              {/* ✅ INI BAGIAN YANG DITAMBAHKAN (Tombol dipindah ke atas tabel) */}
+              <div className="action-row-right" style={{ marginBottom: '15px' }}>
+                <button className="btn-add-staff" onClick={() => setIsAddAnggotaModalOpen(true)}>
+                  <span className="plus-icon">+</span> Tambah Anggota
+                </button>
+              </div>
 
-                    return (
-                      <tr key={ang.id || index}>
-                        <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
-                        <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_lengkap || ang.nama_kepala_keluarga}</td>
-                        <td>{ang.tglLahir || "-"}</td>
-                        <td>{ang.hub}</td>
-                        {/* ✅ PERBAIKAN SINKRONISASI JENIS KELAMIN */}
-                        <td>{ang.jk && ang.jk !== "-" ? ang.jk : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
-                        <td>
-                          {kondisi.length > 0 ? (
-                            <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                              {kondisi.join(", ")}
+              <div className="table-wrapper">
+                <table className="staff-table">
+                  <thead>
+                    <tr>
+                      <th>NIK</th>
+                      <th>Nama Anggota</th>
+                      <th>Tanggal Lahir</th>
+                      <th>Hub. Keluarga</th>
+                      <th>Jenis Kelamin</th>
+                      <th>Kondisi Khusus</th>
+                      <th>Status Keadaan</th>
+                      <th style={{ textAlign: "center" }}>Aksi Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedDtsenData?.anggota?.map((ang, index) => {
+                      const kondisi = [];
+                      if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
+                      if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
+                      if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
+
+                      return (
+                        <tr key={ang.id || index}>
+                          <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
+                          <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_lengkap || ang.nama_kepala_keluarga}</td>
+                          <td>{ang.tglLahir || "-"}</td>
+                          <td>{ang.hub}</td>
+                          <td>{ang.jk && ang.jk !== "-" ? ang.jk : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
+                          <td>
+                            {kondisi.length > 0 ? (
+                              <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                {kondisi.join(", ")}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>-</span>
+                            )}
+                          </td>
+                          <td>
+                            <span style={{ backgroundColor: ang.status === 'Hidup' ? '#22c55e' : '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                              {ang.status}
                             </span>
-                          ) : (
-                            <span style={{ color: '#94a3b8' }}>-</span>
-                          )}
-                        </td>
-                        <td>
-                          <span style={{ backgroundColor: ang.status === 'Hidup' ? '#22c55e' : '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                            {ang.status}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button type="button" className="btn-icon-keterangan" title="Lihat Detail" onClick={() => handleOpenDetailAnggota(ang)}>
-                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div style={{ padding: '15px', textAlign: 'right' }}>
-                <button className="btn-add-staff" style={{ display: 'inline-flex' }} onClick={() => setIsAddAnggotaModalOpen(true)}>+ Tambah Anggota</button>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button type="button" className="btn-icon-keterangan" title="Lihat Detail" onClick={() => handleOpenDetailAnggota(ang)}>
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {/* ✅ TOMBOL YANG SEBELUMNYA DI SINI SUDAH DIHAPUS */}
               </div>
             </div>
           )}
@@ -524,13 +542,22 @@ function Dtsen({
                 </select>
               </div>
             </div>
+            {/* ✅ DITAMBAHKAN: FILTER KELURAHAN */}
+            <div className="filter-group-top">
+              <label>Kelurahan</label>
+              <div className="select-container-custom">
+                <select name="kelurahan" value={filterTabelPPKS.kelurahan} onChange={handleFilterPPKSChange}>
+                  <option value="">Semua Kelurahan</option>
+                  <option value="Wala-walaya">Wala-walaya</option>
+                  <option value="Baraya">Baraya</option>
+                </select>
+              </div>
+            </div>
             <div className="filter-group-top">
               <label>Nama/Identitas</label>
-              <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
+              <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
             </div>
-            <div className="filter-group-top align-bottom">
-              <button className="btn-search-outline">Cari Data</button>
-            </div>
+            {/* ✅ DIHAPUS: Tombol Cari Data */}
           </div>
           
           <div className="action-row-right">
@@ -543,13 +570,18 @@ function Dtsen({
             <div className="table-responsive">
               <table className="staff-table">
                 <thead>
-                  <tr><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
+                  {/* ✅ DIUBAH: Header Tabel Disusun Ulang */}
+                  <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
                 </thead>
                 <tbody>
                   {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
                     <tr key={item.id}>
-                      <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span><br/><span style={{ fontSize: '11px', color: '#64748b' }}>NIK: {item.nik}</span></td>
+                      {/* ✅ DIUBAH: Isi Data Tabel Disusun Ulang */}
+                      <td>{item.nik || "-"}</td>
+                      <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap || "Tanpa Identitas"}</span></td>
                       <td>{item.kategori}</td>
+                      <td>{item.kecamatan}</td>
+                      <td>{item.kelurahan || "-"}</td>
                       <td>{item.lokasi}</td>
                       <td>{formatDateIndo(item.tanggal_laporan)}</td>
                       <td style={{ textAlign: "center" }}>
@@ -562,7 +594,7 @@ function Dtsen({
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data PPKS yang cocok.</td></tr>
+                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data PPKS yang cocok.</td></tr>
                   )}
                 </tbody>
               </table>
