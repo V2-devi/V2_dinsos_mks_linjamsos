@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class PengusulanCreate(BaseModel):
-    id: int
+    id: Optional[int] = None
     no_kk: int 
     # nama_pengusul: Optional[str] = None
     tanggal_usulan: datetime

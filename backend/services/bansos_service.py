@@ -6,11 +6,11 @@ from schemas.bansos_schema import PengusulanCreate
 # services/bansos_service.py
 
 
-def create_pengusulan (data: PengusulanCreate):
-        supabase.table("pengusulan_bansos").insert({
-        "id": data.id,
+def create_pengusulan(data: PengusulanCreate):
+
+    result = supabase.table("pengusulan_bansos").insert({
         "no_kk": data.no_kk,
-        "tanggal_usulan": data.tanggal_usulan.isoformat(),
+        "tanggal_usulan": data.tanggal_usulan,
         "penginput": data.penginput,
         "catatan_verifikator": data.catatan_verifikator,
         "alamat": data.alamat,
@@ -22,12 +22,14 @@ def create_pengusulan (data: PengusulanCreate):
         "jenis_bansos": data.jenis_bansos,
     }).execute()
 
+    return result.data
+
 
 def get_pengusulan_service():
 
     res = supabase.table("pengusulan_bansos") \
         .select("""
-            id,
+         
             no_kk,
        
             tanggal_usulan,
@@ -54,13 +56,17 @@ def get_pengusulan_service():
     for item in res.data:
         data.append({
             "id": item["id"],
-            "nama_lengkap": item["nama_pengusul"],  # mapping di sini
+            "nama_lengkap": item["nama_lengkap"],  # mapping di sini
             "tanggal_usulan": item["tanggal_usulan"],
             "status_pengusulan": item["status_pengusulan"],
             "jenis_bansos": item["jenis_bansos"],
-            "alamat": item["keluarga"]["alamat"] if item.get("keluarga") else None,
-            "kecamatan": item["keluarga"]["kecamatan"] if item.get("keluarga") else None,
-            "kelurahan": item["keluarga"]["kelurahan"] if item.get("keluarga") else None,
+
+            "alamat": item.get("keluarga", {}).get("alamat"),
+            "kecamatan": item.get("keluarga", {}).get("kecamatan"),
+            "kelurahan": item.get("keluarga", {}).get("kelurahan"),
+            # "alamat": item["keluarga"]["alamat"] if item.get("keluarga") else None,
+            # "kecamatan": item["keluarga"]["kecamatan"] if item.get("keluarga") else None,
+            # "kelurahan": item["keluarga"]["kelurahan"] if item.get("keluarga") else None,
             
         })
 
@@ -90,7 +96,7 @@ def approve_pengusulan_service(id: str):
     # insert ke penerima bansos
     supabase.table("penerima_bansos").insert({
         "no_kk": item["no_kk"],
-        "jenis_bantuan_sosial": item.get("jenis_bantuan_sosial", "default")
+        "jenis_bansos": item.get("jenis_bansos", "default")
     }).execute()
 
     return {"message": "Layak"}
