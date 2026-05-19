@@ -74,7 +74,7 @@ function StaffDashboard() {
 
   // const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jenis_kelamin: "", tanggal_lahir: "", status: "Hidup" };
   // const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
-  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", kelurahan: "", lokasi: "", tanggal: "" }; 
+  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "" }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
 
   const [selectedNoKK, setSelectedNoKK] = useState(null);
@@ -417,7 +417,7 @@ const fetchAnggota = async (no_kk) => {
 
   const [filterDtsen, setFilterDtsen] = useState({ kecamatan: "", kelurahan: "", no_kk: "", nama_kepala_keluarga: "" });
   const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
-  const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori: "", kecamatan: "", kelurahan: "", nama: "" }); 
+  const [filterTabelPPKS, setFilterTabelPPKS] = useState({ kategori_ppks: "", kecamatan: "", kelurahan: "", nama: "" }); 
 
   // ==========================================
   // 2. LOGIKA FILTER (DIAMANKAN AGAR TIDAK CRASH)
@@ -439,9 +439,9 @@ const fetchAnggota = async (no_kk) => {
     return matchKecamatan && matchKelurahan && matchKk && matchNama;
   });
 
-  const dashboardPPKSFiltered = dummyPPKS.filter(item => getQuarter(item.tanggal || item.tanggal_laporan) === filterPeriodePPKS);
+  const dashboardPPKSFiltered = dummyPPKS.filter(item => getQuarter(item.tanggal_penemuan || item.tanggal_penemuan) === filterPeriodePPKS);
   const tabelPPKSFiltered = dummyPPKS.filter(item => {
-    const matchKategori = filterTabelPPKS.kategori === "" || item.kategori === filterTabelPPKS.kategori;
+    const matchKategori = filterTabelPPKS.kategori_ppks === "" || item.kategori_ppks === filterTabelPPKS.kategori_ppks;
     const matchKecamatan = filterTabelPPKS.kecamatan === "" || item.kecamatan === filterTabelPPKS.kecamatan;
     const matchKelurahan = filterTabelPPKS.kelurahan === "" || item.kelurahan === filterTabelPPKS.kelurahan; // ✅ DITAMBAHKAN
     const itemNama = item.nama_lengkap ? String(item.nama_lengkap).toLowerCase() : "";
@@ -451,10 +451,10 @@ const fetchAnggota = async (no_kk) => {
     return matchKategori && matchKecamatan && matchKelurahan && matchNama; // ✅ DIUBAH
   });
 
-  const ppksAktif = dashboardPPKSFiltered.filter(i => i.status === "Kasus Aktif").length;
-  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status === "Menunggu Kelayakan").length;
+  const ppksAktif = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
+  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Menunggu Kelayakan").length;
   const kategoriCount = {};
-  dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori] = (kategoriCount[item.kategori] || 0) + 1; });
+  dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori_ppks] = (kategoriCount[item.kategori_ppks] || 0) + 1; });
   const top5PPKS = Object.entries(kategoriCount).map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 5); 
   const maxPPKS = top5PPKS.length > 0 ? top5PPKS[0].jumlah : 1; 
 
@@ -492,7 +492,7 @@ const fetchAnggota = async (no_kk) => {
             penginput: item.penginput,
             kecamatan: item.kecamatan,
             kelurahan: item.kelurahan,
-            tanggal: item.tanggal_usulan,
+            tanggal_usulan: item.tanggal_usulan,
             alamat: item.alamat,
             status_pengusulan: item.status_pengusulan,
             jenis_bansos: item.jenis_bansos
@@ -517,10 +517,10 @@ const fetchAnggota = async (no_kk) => {
             id: item.id,
             nik: item.nik,
             nama_lengkap: item.nama_lengkap,
-            kategori: item.kategori,
+            kategori_ppks: item.kategori_ppks,
             kecamatan: item.kecamatan,
-            lokasi: item.lokasi,
-            tanggal: item.tanggal_laporan,
+            lokasi_penemuan: item.lokasi_penemuan,
+            tanggal_penemuan: item.tanggal_penemuan,
             status_penanganan: item.status_penanganan
           }))
         );
@@ -709,7 +709,8 @@ console.log("TOKEN:", token);
         formAnggota.status_keadaan
 
     };
-
+    console.log("PAYLOAD YANG DIKIRIM:", payload);
+    console.log("kondisi_khusus DI PAYLOAD:", payload.kondisi_khusus);
     console.log("PAYLOAD ANGGOTA:", payload);
 
     // ==============================
@@ -728,7 +729,7 @@ console.log("TOKEN:", token);
         body: JSON.stringify(payload)
       }
     );
-
+      console.log("STATUS RESPONSE:", response.status);
     const data = await response.json();
 
     console.log("INSERT ANGGOTA:", data);
@@ -779,18 +780,64 @@ console.log("TOKEN:", token);
 
   const handleEditAnggotaChange = (e) => { setSelectedAnggotaData({ ...selectedAnggotaData, [e.target.name]: e.target.value }); };
 
-  const handleEditAnggotaSubmit = (e) => {
-    e.preventDefault();
-    const updatedDtsenData = dtsenData.map(family => {
-      if (family.id === selectedDtsenData.id) {
-        const updatedAnggotaList = family.anggota.map(ang => ang.id === selectedAnggotaData.id ? selectedAnggotaData : ang);
-        const updatedFamily = { ...family, anggota: updatedAnggotaList };
-        setSelectedDtsenData(updatedFamily); return updatedFamily;
-      }
-      return family;
-    });
-    setDtsenData(updatedDtsenData); setIsDetailAnggotaModalOpen(false); showSuccess();
-  };
+// ✅ DI StaffDashboard.jsx
+const handleEditAnggotaSubmit = (e) => {
+  e.preventDefault();
+  
+  try {
+    // ✅ Validasi data
+    if (!selectedAnggotaData?.id && !selectedAnggotaData?.nik) {
+      alert("Data anggota tidak valid");
+      return;
+    }
+
+    // ✅ Update state dtsenData dengan data yang sudah diedit
+    setDtsenData(prevData => 
+      prevData.map(family => {
+        // Cari keluarga yang sesuai (bisa by no_kk atau id)
+        if (family.no_kk === selectedDtsenData?.no_kk || family.id === selectedDtsenData?.id) {
+          const updatedAnggotaList = family.anggota?.map(ang => {
+            // Cocokkan anggota by id atau nik
+            if (ang.id === selectedAnggotaData.id || ang.nik === selectedAnggotaData.nik) {
+              return { ...ang, ...selectedAnggotaData }; // ✅ Merge data baru
+            }
+            return ang;
+          });
+          
+          return { 
+            ...family, 
+            anggota: updatedAnggotaList || [selectedAnggotaData] 
+          };
+        }
+        return family;
+      })
+    );
+
+    // ✅ Juga update selectedDtsenData agar UI detail tetap sinkron
+    if (selectedDtsenData) {
+      const updatedAnggotaList = selectedDtsenData.anggota?.map(ang => {
+        if (ang.id === selectedAnggotaData.id || ang.nik === selectedAnggotaData.nik) {
+          return { ...ang, ...selectedAnggotaData };
+        }
+        return ang;
+      });
+      setSelectedDtsenData({
+        ...selectedDtsenData,
+        anggota: updatedAnggotaList
+      });
+    }
+
+    setIsDetailAnggotaModalOpen(false); 
+    showSuccess();
+    
+  } catch (error) {
+    console.error("Error updating anggota:", error);
+    alert("Gagal menyimpan perubahan: " + error.message);
+  }
+};
+
+
+
 
   const handleOpenEditAset = () => { setFormAset(selectedDtsenData.aset || {}); setIsEditAsetModalOpen(true); };
   const handleEditAsetChange = (e) => { setFormAset({ ...formAset, [e.target.name]: e.target.value }); };
@@ -813,14 +860,17 @@ console.log("TOKEN:", token);
     e.preventDefault();
     try {
       const { data, error } = await supabase.from('ppks').insert([{
-        kategori: formPPKS.kategori, tanggal_laporan: formPPKS.tanggal, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
-        kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi: formPPKS.lokasi, status: "Menunggu Kelayakan" // ✅ DIUBAH
+        kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
+        kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" // ✅ DIUBAH
       }]);;
       if (error) throw error;
       const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
       setDummyPPKS([newPPKS, ...dummyPPKS]); setIsAddPPKSModalOpen(false); setFormPPKS(initialFormPPKS); showSuccess();
     } catch (error) { console.error('Error adding PPKS:', error); alert('Gagal menambah laporan PPKS: ' + error.message); }
   };
+
+
+  
 
   const handleOpenDetailPPKS = (data) => { setSelectedPPKSData(data); setCatatanAssessment(data.deskripsiAwal || ""); setActiveTab("detail_ppks"); };
 
@@ -829,7 +879,7 @@ console.log("TOKEN:", token);
     try {
       const { error } = await supabase.from('ppks').update({ status_penanganan: statusBaru }).eq('id', selectedPPKSData.id);
       if (error) throw error;
-      const updatedPPKS = dummyPPKS.map(item => item.id === selectedPPKSData.id ? { ...item, status: statusBaru, deskripsiAwal: catatanAssessment } : item);
+      const updatedPPKS = dummyPPKS.map(item => item.id === selectedPPKSData.id ? { ...item, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment } : item);
       setDummyPPKS(updatedPPKS); setSelectedPPKSData({ ...selectedPPKSData, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment }); showSuccess();
     } catch (error) { console.error('Error updating PPKS status:', error); alert('Gagal update status PPKS: ' + error.message); }
   };
@@ -859,8 +909,15 @@ console.log("TOKEN:", token);
   };
 
   // ==========================================
-  // RENDER TAMPILAN (MASTER LAYOUT)
+  // PPKS
   // ==========================================
+
+
+
+
+  // ==========================================
+  // RENDER TAMPILAN (MASTER LAYOUT)
+  // =========================================
   return (
     <div className="staff-layout relative">
       <aside className="sidebar">
@@ -1173,7 +1230,7 @@ console.log("TOKEN:", token);
                   <div className="form-group-modal">
                     <label>Kategori PPKS*</label>
                     <div className="select-container-custom">
-                      <select name="kategori" value={formPPKS.kategori} onChange={(e) => setFormPPKS({...formPPKS, kategori: e.target.value})} required>
+                      <select name="kategori_ppks" value={formPPKS.kategori_ppks} onChange={(e) => setFormPPKS({...formPPKS, kategori_ppks: e.target.value})} required>
                         <option value="" hidden>Pilih Kategori</option>
                         {/* ✅ 26 KATEGORI DITAMBAHKAN */}
                         <option>Anak Balita Terlantar</option>
@@ -1205,7 +1262,7 @@ console.log("TOKEN:", token);
                       </select>
                     </div>
                   </div>
-                  <div className="form-group-modal"><label>Tanggal Penemuan*</label><input type="date" name="tanggal" value={formPPKS.tanggal} onChange={(e) => setFormPPKS({...formPPKS, tanggal: e.target.value})} required /></div>
+                  <div className="form-group-modal"><label>Tanggal Penemuan*</label><input type="date" name="tanggal_penemuan" value={formPPKS.tanggal_penemuan} onChange={(e) => setFormPPKS({...formPPKS, tanggal_penemuan: e.target.value})} required /></div>
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK (Bila Diketahui)</label><input type="text" name="nik" value={formPPKS.nik} onChange={(e) => setFormPPKS({...formPPKS, nik: e.target.value})} maxLength="16" placeholder="Kosongkan jika tidak ada" /></div>
@@ -1217,7 +1274,7 @@ console.log("TOKEN:", token);
                   <div className="form-group-modal"><label>Kelurahan Penemuan*</label><div className="select-container-custom"><select name="kelurahan" value={formPPKS.kelurahan} onChange={(e) => setFormPPKS({...formPPKS, kelurahan: e.target.value})} required><option value="" hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option><option value="Pannampu">Pannampu</option></select></div></div>
                 </div>
                 <div className="form-grid-1" style={{ marginBottom: '20px' }}>
-                  <div className="form-group-modal"><label>Lokasi Penemuan Spesifik*</label><input type="text" name="lokasi" value={formPPKS.lokasi} onChange={(e) => setFormPPKS({...formPPKS, lokasi: e.target.value})} required placeholder="Contoh: Pasar MT Haryono, depan Toko A" /></div>
+                  <div className="form-group-modal"><label>Lokasi Penemuan Spesifik*</label><input type="text" name="lokasi_penemuan" value={formPPKS.lokasi_penemuan} onChange={(e) => setFormPPKS({...formPPKS, lokasi_penemuan: e.target.value})} required placeholder="Contoh: Pasar MT Haryono, depan Toko A" /></div>
                 </div>
                 <div className="modal-actions" style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}><button type="button" className="btn-modal-cancel" onClick={() => setIsAddPPKSModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Laporan</button></div>
               </form>

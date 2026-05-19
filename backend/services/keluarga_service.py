@@ -170,6 +170,8 @@ def get_anggota_keluarga(no_kk: str):
     return result.data
 
 
+
+
 # # =========================================
 # # CREATE ANGGOTA KELUARGA
 # # =========================================
@@ -216,6 +218,10 @@ def get_anggota_keluarga(no_kk: str):
 #     return result.data
 
 
+
+
+
+
 # =========================================
 # UPDATE KELUARGA
 # =========================================
@@ -227,6 +233,10 @@ def update_keluarga(id: str, data: dict):
         .execute()
 
     return result.data
+
+
+
+
 
 
 # =========================================

@@ -70,13 +70,13 @@ function Dtsen({
 
           {/* ✅ PERBAIKAN: Status dan Tanggal Laporan akurat dari tabel depan */}
           <div className="info-alert-box" style={{ 
-              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
-              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
-              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
+              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
+              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
+              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
               marginBottom: '25px', display: 'flex', justifyContent: 'space-between'
             }}>
-            <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status}</strong></span>
-            <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal_laporan || selectedPPKSData.tanggal)}</span>
+            <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan}</strong></span>
+            <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal_penemuan || selectedPPKSData.tanggal_penemuan)}</span>
           </div>
 
           {/* ✅ PERBAIKAN: Seluruh data ditarik dari inputan form */}
@@ -86,11 +86,11 @@ function Dtsen({
               <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik || "-"}</span></div>
             </div>
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Kategori PPKS</span><span className="sum-val text-blue" style={{fontWeight: 'bold'}}>{selectedPPKSData.kategori || "-"}</span></div>
+              <div className="summary-item"><span className="sum-label">Kategori PPKS</span><span className="sum-val text-blue" style={{fontWeight: 'bold'}}>{selectedPPKSData.kategori_ppks || "-"}</span></div>
               <div className="summary-item"><span className="sum-label">Kecamatan Penemuan</span><span className="sum-val">{selectedPPKSData.kecamatan || "-"}</span></div>
             </div>
             <div className="summary-col" style={{ gridColumn: '1 / -1', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
-              <div className="summary-item"><span className="sum-label">Lokasi Penemuan Spesifik</span><span className="sum-val">{selectedPPKSData.lokasi || "-"}</span></div>
+              <div className="summary-item"><span className="sum-label">Lokasi Penemuan Spesifik</span><span className="sum-val">{selectedPPKSData.lokasi_penemuan || "-"}</span></div>
             </div>
           </div>
 
@@ -115,22 +115,22 @@ function Dtsen({
               <button 
                 className="btn-search-outline" 
                 style={{ height: '40px', borderColor: '#3b82f6', color: '#3b82f6' }} 
-                onClick={(e) => handleUpdateStatusPPKS(e, selectedPPKSData.status_penanganan || selectedPPKSData.status)}
+                onClick={(e) => handleUpdateStatusPPKS(e, selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan)}
               >
                 💾 Simpan Catatan
               </button>
 
-              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Menunggu Kelayakan" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === "Menunggu Kelayakan" && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
                   Terima & Ubah ke Kasus Aktif
                 </button>
               )}
-              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Kasus Aktif" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === "Kasus Aktif" && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#22c55e', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Selesai Ditangani")}>
                   Tandai Selesai / Dirujuk ke Panti
                 </button>
               )}
-              {(selectedPPKSData.status_penanganan || selectedPPKSData.status) === "Selesai Ditangani" && (
+              {(selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === "Selesai Ditangani" && (
                 <span style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', color: '#64748b', borderRadius: '8px', fontWeight: '700', fontSize: '13px' }}>
                   Kasus Telah Ditutup
                 </span>
@@ -344,10 +344,10 @@ function Dtsen({
                   </thead>
                   <tbody>
                     {selectedDtsenData?.anggota?.map((ang, index) => {
-                      const kondisi = [];
-                      if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi.push("Hamil");
-                      if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi.push(ang.disabilitas);
-                      if (ang.penyakit && ang.penyakit.trim() !== "") kondisi.push(ang.penyakit);
+                      const kondisi_khusus = [];
+                      if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi_khusus.push("Hamil");
+                      if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi_khusus.push(ang.disabilitas);
+                      if (ang.penyakit && ang.penyakit.trim() !== "") kondisi_khusus.push(ang.penyakit);
 
                       return (
                         <tr key={ang.id || index}>
@@ -357,10 +357,10 @@ function Dtsen({
                           <td>{ang.hubungan_keluarga}</td>
                           <td>{ang.jenis_kelamin && ang.jenis_kelamin !== "-" ? ang.jenis_kelamin : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
                           <td>
-                            {kondisi.length > 0 ? (
+                            {kondisi_khusus.length > 0 ? (
                               <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                {kondisi.join(", ")}
+                                {kondisi_khusus.join(", ")}
                               </span>
                             ) : (
                               <span style={{ color: '#94a3b8' }}>-</span>
@@ -582,8 +582,8 @@ function Dtsen({
                       <td>{item.kategori}</td>
                       <td>{item.kecamatan}</td>
                       <td>{item.kelurahan || "-"}</td>
-                      <td>{item.lokasi}</td>
-                      <td>{formatDateIndo(item.tanggal_laporan)}</td>
+                      <td>{item.lokasi_penemuan}</td>
+                      <td>{item.tanggal_penemuan}</td>
                       <td style={{ textAlign: "center" }}>
                         <span className={`badge-ppks ${item.status_penanganan === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status_penanganan}</span>
                       </td>
