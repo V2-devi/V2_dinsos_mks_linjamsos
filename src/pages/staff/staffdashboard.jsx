@@ -413,7 +413,7 @@ const fetchAnggota = async (no_kk) => {
 };
 
 
-  const [formAset, setFormAset] = useState({});
+  // const [formAset, setFormAset] = useState({});
 
   const [filterDtsen, setFilterDtsen] = useState({ kecamatan: "", kelurahan: "", no_kk: "", nama_kepala_keluarga: "" });
   const [filterPeriodePPKS, setFilterPeriodePPKS] = useState("q1");
@@ -648,19 +648,73 @@ console.log("TOKEN:", token);
   //     setActiveTab("detail_dtsen"); 
   //   };
 
-  const handleOpenDetailDtsen = (data) => {
+//   const handleOpenDetailDtsen = (data) => {
 
-  console.log("DATA DETAIL:", data);
+//   console.log("DATA DETAIL:", data);
 
+//   setSelectedDtsenData(data);
+
+//   // ✅ INI YANG HILANG
+//   setSelectedNoKK(data.no_kk);
+
+//   setDetailDtsenInnerTab("anggota");
+
+//   setActiveTab("detail_dtsen");
+// }
+
+
+
+const handleOpenDetailDtsen = async (data) => {
+  console.log("📂 Membuka Detail Keluarga:", data.no_kk);
+  
+  // 1. Set data dasar keluarga
   setSelectedDtsenData(data);
-
-  // ✅ INI YANG HILANG
   setSelectedNoKK(data.no_kk);
-
-  setDetailDtsenInnerTab("anggota");
-
+  setDetailDtsenInnerTab("anggota"); // Reset ke tab anggota
   setActiveTab("detail_dtsen");
-}
+
+  // 2. Fetch Data Anggota (Sudah ada)
+  await fetchAnggota(data.no_kk);
+
+  // 3. ✅ FETCH DATA ASET DARI BACKEND (PENTING!)
+  try {
+    const token = localStorage.getItem("token");
+    // Pastikan URL ini sesuai dengan router backend Anda
+    const res = await fetch(`http://127.0.0.1:8000/aset/${data.no_kk}`, {
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      }
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      // Sesuaikan dengan struktur response backend Anda. 
+      // Jika backend return { data: { v01: "...", ... } }, gunakan result.data
+      const asetData = result.data || result; 
+
+      console.log("📦 Data Aset Diterima dari BE:", asetData);
+
+      // Update state selectedDtsenData agar tab Aset bisa merender data ini
+      setSelectedDtsenData(prev => ({
+        ...prev,
+        aset: asetData,
+        asetLengkap: Object.keys(asetData).length > 0
+      }));
+
+      // Update juga list utama dtsenData agar konsisten
+      setDtsenData(prevList => prevList.map(item => 
+        item.no_kk === data.no_kk ? { ...item, aset: asetData, asetLengkap: true } : item
+      ));
+
+    } else {
+      console.log("⚠️ Belum ada data aset untuk KK ini.");
+      setSelectedDtsenData(prev => ({ ...prev, aset: {}, asetLengkap: false }));
+    }
+  } catch (error) {
+    console.error("Gagal fetch aset:", error);
+  }
+};
 
 
   const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
@@ -837,24 +891,79 @@ const handleEditAnggotaSubmit = (e) => {
 };
 
 
+  const handleOpenEditAset = () => {
+  console.log("📂 Membuka Modal Edit Aset");
+  console.log("Data Aset Saat Ini:", selectedDtsenData?.aset);
 
+  // Jika sudah ada data aset sebelumnya, load ke form. Jika belum, pakai object kosong.
+  const existingAset = selectedDtsenData?.aset || {};
+  
+  setFormAset({
+    v01: existingAset.v01 || "",
+    v02: existingAset.v02 || "",
+    v03: existingAset.v03 || "",
+    v04: existingAset.v04 || "",
+    v05: existingAset.v05 || "",
+    v06: existingAset.v06 || "",
+    v07: existingAset.v07 || "",
+    v08: existingAset.v08 || "",
+    v09: existingAset.v09 || "",
+    v10: existingAset.v10 || "",
+    v11: existingAset.v11 || "",
+    v12: existingAset.v12 || "",
+    v13: existingAset.v13 || "",
+    v14: existingAset.v14 || "",
+    v15: existingAset.v15 || "",
+    v16: existingAset.v16 || "",
+    v17: existingAset.v17 || "",
+    v18: existingAset.v18 || "",
+    v19: existingAset.v19 || "",
+    v20: existingAset.v20 || "",
+    v21: existingAset.v21 || "",
+    v22: existingAset.v22 || "",
+    v23: existingAset.v23 || "",
+    v24: existingAset.v24 || "",
+    v25: existingAset.v25 || "",
+    v26: existingAset.v26 || "",
+    v27: existingAset.v27 || "",
+    v28: existingAset.v28 || "",
+    v29: existingAset.v29 || "",
+    v30: existingAset.v30 || "",
+    v31: existingAset.v31 || "",
+    v32: existingAset.v32 || "",
+    v33: existingAset.v33 || "",
+    v34: existingAset.v34 || "",
+    v35: existingAset.v35 || "",
+    v36: existingAset.v36 || "",
+    v37: existingAset.v37 || "",
+    v38: existingAset.v38 || "",
+    v39: existingAset.v39 || ""
+  });
 
-  const handleOpenEditAset = () => { setFormAset(selectedDtsenData.aset || {}); setIsEditAsetModalOpen(true); };
-  const handleEditAsetChange = (e) => { setFormAset({ ...formAset, [e.target.name]: e.target.value }); };
+  setIsEditAsetModalOpen(true);
+};
 
-  const handleEditAsetSubmit = (e) => {
-    e.preventDefault();
-    const today = new Date();
-    const tglSekarang = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
-    const updatedDtsenData = dtsenData.map(family => {
-      if (family.id === selectedDtsenData.id) {
-        const updatedFamily = { ...family, aset: formAset, asetLengkap: true, tglUpdate: tglSekarang };
-        setSelectedDtsenData(updatedFamily); return updatedFamily;
-      }
-      return family;
-    });
-    setDtsenData(updatedDtsenData); setIsEditAsetModalOpen(false); showSuccess();
+  const handleEditAsetChange = (e) => {
+    const { name, value } = e.target;
+    
+    setFormAset((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
+  // const handleEditAsetSubmit = (e) => {
+  //   e.preventDefault();
+  //   const today = new Date();
+  //   const tglSekarang = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
+  //   const updatedDtsenData = dtsenData.map(family => {
+  //     if (family.id === selectedDtsenData.id) {
+  //       const updatedFamily = { ...family, aset: formAset, asetLengkap: true, tglUpdate: tglSekarang };
+  //       setSelectedDtsenData(updatedFamily); return updatedFamily;
+  //     }
+  //     return family;
+  //   });
+  //   setDtsenData(updatedDtsenData); setIsEditAsetModalOpen(false); showSuccess();
+  // };
 
   const handleAddPPKSSubmit = async (e) => {
     e.preventDefault();
@@ -914,6 +1023,164 @@ const handleEditAnggotaSubmit = (e) => {
 
 
 
+
+
+
+  // ==========================================
+  // ASET
+  // ==========================================
+    const [formAset, setFormAset] = useState({
+   no_kk: "",
+
+    v01: "",
+    v02: "",
+    v03: "",
+    v04: "",
+    v05: "",
+    v06: 0,
+
+    v07: "",
+    v08: "",
+    v09: "",
+    v10: "",
+    v11: "",
+    v12: "",
+    v13: "",
+    v14: "",
+    v15: "",
+    v16: "",
+    v17: "",
+    v18: "",
+    v19: "",
+
+    v20: "",
+    v21: "",
+    v22: "",
+    v23: 0,
+    v24: 0,
+    v25: 0,
+    v26: "",
+
+    v27: 0,
+    v28: "",
+    v29: 0,
+    v30: "",
+    v31: 0,
+    v33: "",
+    v34: "",
+    v35: "",
+    v36: "",
+    v37_: "",
+    v38: "",
+    v39: "" 
+});
+
+const handleEditAsetSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem("token");
+    const no_kk = selectedDtsenData?.no_kk;
+
+    if (!no_kk) throw new Error("No KK tidak ditemukan");
+
+    const payload = { ...formAset };
+    console.log("📤 Mengirim Payload Aset:", payload);
+
+    // Ganti URL ini sesuai router backend Anda (misal: /aset/{no_kk})
+    const response = await fetch(`http://127.0.0.1:8000/aset/${no_kk}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || "Gagal menyimpan");
+    }
+
+    const result = await response.json();
+    console.log("✅ Backend Response:", result);
+
+    // 🔄 UPDATE STATE AGAR LANGSUNG TAMPIL DI FE
+    const newAsetData = result.data || formAset; // Gunakan data dari BE jika ada, atau lokal
+
+    // 1. Update selectedDtsenData (untuk view detail saat ini)
+    setSelectedDtsenData(prev => ({
+      ...prev,
+      aset: newAsetData,
+      asetLengkap: true
+    }));
+
+    // 2. Update dtsenData list (agar konsisten jika kembali ke tabel)
+    setDtsenData(prevList => prevList.map(item => 
+      item.no_kk === no_kk ? { ...item, aset: newAsetData, asetLengkap: true } : item
+    ));
+
+    setIsEditAsetModalOpen(false);
+    showSuccess();
+
+  } catch (error) {
+    console.error(error);
+    alert("Gagal: " + error.message);
+  }
+};
+
+
+// setAsetData(
+//   (data || []).map(item => ({
+//     id: item.id,
+//     no_kk: item.no_kk,
+
+//     // 🔥 INI YANG SERING SALAH
+//     v01: item.v01,
+//     v02: item.v02,
+//     v03: item.v03,
+//     v04: item.v04,
+//     v05: item.v05,
+//     v06: item.v06,
+//     v07: item.v07,
+//     v08: item.v08,
+//     v09: item.v09,
+//     v10: item.v10,
+//     v11: item.v11,
+//     v12: item.v12,
+//     v13: item.v13,
+//     v14: item.v14,
+//     v15: item.v15,
+//     v16: item.v16,
+//     v17: item.v17,
+//     v18: item.v18,
+//     v19: item.v19,
+//     v20: item.v20,
+//     v21: item.v21,
+//     v22: item.v22,
+//     v23: item.v23,
+//     v24: item.v24,
+//     v25: item.v25,
+//     v26: item.v26,
+//     v27: item.v27,
+//     v28: item.v28,
+//     v29: item.v29,
+//     v30: item.v30,
+//     v31: item.v31,
+//     v32: item.v32,
+//     v33: item.v33,
+//     v34: item.v34,
+//     v35: item.v35,
+//     v36: item.v36,
+//     v37: item.v37,
+//     v38: item.v38,
+//     v39: item.v39
+//   }))
+// );
+
+
+// useEffect(() => {
+//   fetchAset();
+// }, []);
 
   // ==========================================
   // RENDER TAMPILAN (MASTER LAYOUT)

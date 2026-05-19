@@ -32,7 +32,7 @@ function VerifikatorDashboard() {
   }, []);
 
   const usulanMenunggu = usulanData.filter(i => i.status_pengusulan === "Belum").length;
-  const ppksMenunggu = dummyPPKS.filter(i => i.status_penanganan === "Menunggu Kelayakan" || i.status === "Menunggu Kelayakan").length;
+  const ppksMenunggu = dummyPPKS.filter(i => i.status_penanganan === "Menunggu Kelayakan" || i.status_penanganan === "Menunggu Kelayakan").length;
   const totalDtsen = dtsenData.length;
   const desil1 = dtsenData.filter(i => i.desil === "1").length;
   const desil2 = dtsenData.filter(i => i.desil === "2").length;
@@ -88,12 +88,12 @@ function VerifikatorDashboard() {
   };
 
   const filteredPpksList = ppksList.filter(item => {
-    const matchKategori = filterPPKS.kategori === "" || item.kategori === filterPPKS.kategori;
+    const matchKategori = filterPPKS.kategori_ppks === "" || item.kategori_ppks === filterPPKS.kategori;
     const matchKecamatan = filterPPKS.kecamatan === "" || item.kecamatan === filterPPKS.kecamatan;
     const keyword = filterPPKS.keyword.toLowerCase();
     const matchKeyword = keyword === "" || 
                          (item.nik && String(item.nik).toLowerCase().includes(keyword)) || 
-                         (item.nama && String(item.nama).toLowerCase().includes(keyword));
+                         (item.nama_lengkap && String(item.nama_lengkap).toLowerCase().includes(keyword));
     return matchKategori && matchKecamatan && matchKeyword;
   });
 
@@ -111,11 +111,11 @@ function VerifikatorDashboard() {
       if (errRiwayat) throw errRiwayat;
       setRiwayatList(dataRiwayat);
 
-      const { data: dataPPKS, error: errPPKS } = await supabase.from('ppks').select('*').eq('status', 'Menunggu Kelayakan');
+      const { data: dataPPKS, error: errPPKS } = await supabase.from('ppks').select('*').eq('status_penanganan', 'Menunggu Kelayakan');
       if (errPPKS) throw errPPKS;
       setPpksList(dataPPKS);
 
-      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status', 'Menunggu Kelayakan');
+      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status_penanganan', 'Menunggu Kelayakan');
       if (errRiwayatPPKS) throw errRiwayatPPKS;
       setRiwayatPpksList(dataRiwayatPPKS);
     } catch (error) {
@@ -155,7 +155,7 @@ function VerifikatorDashboard() {
     e.preventDefault();
     if (!selectedPPKSReview) return;
     try {
-      const { error } = await supabase.from('ppks').update({ status: statusKeputusan, catatan_verifikator: catatanValidasi }).eq('id', selectedPPKSReview.id);
+      const { error } = await supabase.from('ppks').update({ status_penanganan: statusKeputusan, catatan_verifikator: catatanValidasi }).eq('id', selectedPPKSReview.id);
       if (error) throw error;
       await fetchDataVerifikator(); 
       setIsReviewPPKSModalOpen(false); setSelectedPPKSReview(null); setCatatanValidasi(""); 

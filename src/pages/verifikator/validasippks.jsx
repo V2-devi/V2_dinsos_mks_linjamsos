@@ -31,7 +31,7 @@ function ValidasiPPKS({
             <div className="filter-group-top">
               <label>Kategori PPKS</label>
               <div className="select-container-custom">
-                <select name="kategori" value={filterPPKS.kategori} onChange={handleFilterPPKSChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
+                <select name="kategori" value={filterPPKS.kategori_ppks} onChange={handleFilterPPKSChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
                   <option value="">Semua Kategori</option>
                   <option value="Anak Balita Terlantar">Anak Balita Terlantar</option>
                   <option value="Anak Terlantar">Anak Terlantar</option>
@@ -106,12 +106,12 @@ function ValidasiPPKS({
                   {filteredPpksList.length > 0 ? filteredPpksList.map((item) => (
                     <tr key={item.id}>
                       <td style={{ fontWeight: '600' }}>
-                        {item.nama || "Tanpa Identitas"}<br/>
+                        {item.nama_lengkap || "Tanpa Identitas"}<br/>
                         <span style={{fontSize:'11px', color:'#64748b', fontWeight:'normal'}}>NIK: {item.nik || "-"}</span>
                       </td>
-                      <td>{item.kategori}</td>
+                      <td>{item.kategori_ppks}</td>
                       <td>{item.kecamatan}</td>
-                      <td>{item.lokasi}</td>
+                      <td>{item.lokasi_penemuan}</td>
                       <td>{formatDateIndo(item.tanggal_laporan)}</td>
                       <td style={{ textAlign: "center" }}><span className="badge-status-v waiting">Menunggu Review</span></td>
                       <td style={{ textAlign: "center" }}>
@@ -150,16 +150,16 @@ function ValidasiPPKS({
                   {riwayatPpksList.length > 0 ? riwayatPpksList.map((item) => (
                     <tr key={item.id}>
                       <td style={{ fontWeight: '600' }}>
-                        {item.nama || "Tanpa Identitas"}<br/>
+                        {item.nama_lengkap || "Tanpa Identitas"}<br/>
                         <span style={{fontSize:'11px', color:'#64748b', fontWeight:'normal'}}>NIK: {item.nik || "-"}</span>
                       </td>
                       <td>{item.kategori}</td>
                       <td>{item.kecamatan}</td>
-                      <td>{item.lokasi}</td>
+                      <td>{item.lokasi_penemuan}</td>
                       <td>{formatDateIndo(item.tanggal_laporan)}</td>
                       <td style={{ textAlign: "center" }}>
-                        <span className={`badge-status-v ${item.status === 'Kasus Aktif' ? 'approved' : 'rejected'}`}>
-                          {item.status}
+                        <span className={`badge-status-v ${item.status_penanganan === 'Kasus Aktif' ? 'approved' : 'rejected'}`}>
+                          {item.status_penanganan}
                         </span>
                       </td>
                       <td style={{ color: '#64748b', fontSize: '12px', maxWidth: '200px' }}>
