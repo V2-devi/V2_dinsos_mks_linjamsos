@@ -72,11 +72,12 @@ function StaffDashboard() {
   const [selectedPPKSData, setSelectedPPKSData] = useState(null);
   const [catatanAssessment, setCatatanAssessment] = useState("");
 
-  const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jk: "", tglLahir: "", status: "Hidup" };
-  const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
+  // const initialFormAnggota = { nik: "", nama_lengkap: "", hub: "", jenis_kelamin: "", tanggal_lahir: "", status: "Hidup" };
+  // const [formAnggota, setFormAnggota] = useState(initialFormAnggota);
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori: "", kecamatan: "", kelurahan: "", lokasi: "", tanggal: "" }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
 
+  const [selectedNoKK, setSelectedNoKK] = useState(null);
    // =========================================
   // STATE FORM
   // =========================================
@@ -96,7 +97,7 @@ function StaffDashboard() {
   // =========================================
   // STATE LIST DATA
   // =========================================
-  const [keluargaList, setKeluargaList] = useState([]);
+  // const [keluargaList, setKeluargaList] = useState([]);
 
   // =========================================
   // HANDLE INPUT
@@ -119,6 +120,7 @@ function StaffDashboard() {
   try {
 
     const token = localStorage.getItem("token");
+    console.log("TOKEN:", token);
 
     const response = await fetch(
       "http://127.0.0.1:8000/keluarga",
@@ -142,6 +144,7 @@ function StaffDashboard() {
         data.map(item => ({
           id: item.id,
           no_kk: item.no_kk,
+          nik: item.nik,
           nama_kepala_keluarga: item.nama_kepala_keluarga,
           kecamatan: item.kecamatan,
           kelurahan: item.kelurahan,
@@ -244,9 +247,141 @@ function StaffDashboard() {
 
   } catch (error) {
 
-    console.error("SUBMIT ERROR:", error);
+      console.error("SUBMIT ANGGOTA ERROR:", error);
 
-    alert("Terjadi kesalahan");
+      alert(error.message);
+}
+};
+
+// Anggota Keluarga
+
+const [formAnggota, setFormAnggota] = useState({
+  nik: "",
+  nama_anggota_keluarga: "",
+  hubungan_keluarga: "",
+  jenis_kelamin: "",
+  tanggal_lahir: "",
+  status_keadaan: ""
+  
+});
+
+const login = async () => {
+  const res = await fetch("http://127.0.0.1:8000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email,
+      password
+    })
+  });
+
+  const data = await res.json();
+
+  localStorage.setItem("token", data.access_token);
+};
+
+const handleChangeAnggota = (e) => {
+  const { name, value } = e.target;
+
+  setFormAnggota((prev) => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
+const createKeluarga = async (formDtsen) => {
+  const res = await fetch("http://127.0.0.1:8000/keluarga", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(formDtsen)
+  });
+
+  const data = await res.json();
+  console.log(data);
+};
+
+
+const createAnggota = async (no_kk, formData) => {
+
+  const token = localStorage.getItem("token");
+
+  console.log("TOKEN:", token);
+
+  const res = await fetch(
+    `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(formData)
+    }
+  );
+
+  const data = await res.json();
+  console.log(data);
+};
+
+
+const submitAnggota = async (no_kk) => {
+
+  const token = localStorage.getItem("token");
+  console.log("TOKEN:", token);
+
+  const res = await fetch(
+    `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(formAnggota)
+    }
+  );
+
+  const data = await res.json();
+  console.log(data);
+};
+
+
+
+
+
+
+const fetchAnggota = async (no_kk) => {
+
+  try {
+
+    const token = localStorage.getItem("token");
+
+    console.log("FETCH ANGGOTA KK:", no_kk);
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
+      {
+        method: "GET",
+
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("DATA ANGGOTA:", data);
+
+    setAnggotaList(data);
+
+  } catch (error) {
+
+    console.error("FETCH ANGGOTA ERROR:", error);
   }
 };
 
@@ -385,6 +520,7 @@ function StaffDashboard() {
     // =====================================
     const token = localStorage.getItem("token");
 
+console.log("TOKEN:", token);
     // =====================================
     // DATA YANG DIKIRIM KE BACKEND
     // =====================================
@@ -392,8 +528,8 @@ function StaffDashboard() {
       no_kk: formDtsen.no_kk,
       nama_kepala_keluarga: formDtsen.nama_kepala_keluarga,
       jenis_kelamin: formDtsen.jenis_kelamin,
-      nik: formDtsen.nik_kepala || null,
-      kecamatan: formDtsen.kecamatan,
+      nik: formDtsen.nik || null,
+      kecamatan: formDtsen.kecamatan ,
       kelurahan: formDtsen.kelurahan,
       alamat: formDtsen.alamat,
       tanggal_lahir: formDtsen.tanggal_lahir,  // format "YYYY-MM-DD" dari input date
@@ -463,7 +599,7 @@ function StaffDashboard() {
       no_kk: "",
       nama_kepala_keluarga: "",
       jenis_kelamin: "",
-      nik_kepala: "",
+      nik: "",
       kecamatan: "",
       kelurahan: "",
       alamat: "",
@@ -482,18 +618,78 @@ function StaffDashboard() {
   const handleOpenDetailDtsen = (data) => { setSelectedDtsenData(data); setDetailDtsenInnerTab("anggota"); setActiveTab("detail_dtsen"); };
   const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
 
-  const handleAddAnggotaSubmit = (e) => {
-    e.preventDefault();
-    const newAnggota = { ...formAnggota, id: Date.now() };
-    const updatedDtsenData = dtsenData.map(family => {
-      if (family.id === selectedDtsenData.id) {
-        const updatedFamily = { ...family, anggota: [...family.anggota, newAnggota] };
-        setSelectedDtsenData(updatedFamily); return updatedFamily;
+ const handleAddAnggotaSubmit = async (e) => {
+
+  e.preventDefault();
+
+  try {
+
+    const token = localStorage.getItem("token");
+
+    console.log("FORM ANGGOTA:", formAnggota);
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/keluarga/${selectedNoKK}/anggota`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+
+        body: JSON.stringify(formAnggota)
       }
-      return family;
+    );
+
+    const data = await response.json();
+
+    console.log("INSERT ANGGOTA:", data);
+
+    // ==============================
+    // HANDLE ERROR
+    // ==============================
+    if (!response.ok) {
+
+      alert(JSON.stringify(data, null, 2));
+
+      return;
+    }
+
+    // ==============================
+    // REFRESH DATA ANGGOTA
+    // ==============================
+    await fetchAnggota(selectedNoKK);
+
+    // ==============================
+    // TUTUP MODAL
+    // ==============================
+    setIsAddAnggotaModalOpen(false);
+
+    // ==============================
+    // RESET FORM
+    // ==============================
+    setFormAnggota({
+      nik: "",
+      nama_anggota_keluarga: "",
+      hubungan_keluarga: "",
+      jenis_kelamin: "",
+      tanggal_lahir: "",
+      status_keadaan: ""
+      
     });
-    setDtsenData(updatedDtsenData); setIsAddAnggotaModalOpen(false); setFormAnggota(initialFormAnggota); showSuccess();
-  };
+
+    showSuccess();
+
+  } catch (error) {
+
+    console.error("SUBMIT ANGGOTA ERROR:", error);
+
+    alert(error.message);
+  }
+};
+
+
 
   const handleEditAnggotaChange = (e) => { setSelectedAnggotaData({ ...selectedAnggotaData, [e.target.name]: e.target.value }); };
 
@@ -557,9 +753,9 @@ function StaffDashboard() {
   
   const formatDateIndo = (dateStr) => { if(!dateStr || dateStr === "-") return "-"; const date = new Date(dateStr); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; };
   
-  const getKategoriPendidikan = (tglLahir) => {
-    if (!tglLahir || tglLahir === "-") return "Belum Ada Data";
-    const birthDate = new Date(tglLahir);
+  const getKategoriPendidikan = (tanggal_lahir) => {
+    if (!tanggal_lahir || tanggal_lahir === "-") return "Belum Ada Data";
+    const birthDate = new Date(tanggal_lahir);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
@@ -700,7 +896,7 @@ function StaffDashboard() {
               <form onSubmit={handleAddDtsen}>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>No. Kartu Keluarga (KK)*</label><input type="text" name="no_kk" value={formDtsen.no_kk} onChange={(e) => setFormDtsen({...formDtsen, no_kk: e.target.value})} required maxLength="16" placeholder="Masukkan 16 Digit KK"/></div>
-                  <div className="form-group-modal"><label>NIK Kepala Keluarga*</label><input type="text" name="nik_kepala" value={formDtsen.nik_kepala} onChange={(e) => setFormDtsen({...formDtsen, nik_kepala: e.target.value})} required maxLength="16" placeholder="Masukkan 16 Digit NIK"/></div>
+                  <div className="form-group-modal"><label>NIK Kepala Keluarga*</label><input type="text" name="nik" value={formDtsen.nik} onChange={(e) => setFormDtsen({...formDtsen, nik: e.target.value})} required maxLength="16" placeholder="Masukkan 16 Digit NIK"/></div>
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>Nama Kepala Keluarga*</label><input type="text" name="nama_kepala_keluarga" value={formDtsen.nama_kepala_keluarga} onChange={(e) => setFormDtsen({...formDtsen, nama_kepala_keluarga: e.target.value})} required placeholder="Sesuai KTP"/></div>
@@ -731,11 +927,12 @@ function StaffDashboard() {
               <form onSubmit={handleAddAnggotaSubmit}>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formAnggota.nik} onChange={(e) => setFormAnggota({...formAnggota, nik: e.target.value})} required maxLength="16" placeholder="Ketik NIK..." /></div>
-                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formAnggota.nama_lengkap} onChange={(e) => setFormAnggota({...formAnggota, nama_lengkap: e.target.value})} required placeholder="Ketik Nama..." /></div>
-                  <div className="form-group-modal"><label>Hubungan Keluarga*</label><div className="select-container-custom"><select name="hub" value={formAnggota.hub} onChange={(e) => setFormAnggota({...formAnggota, hub: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
-                  <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jk" value={formAnggota.jk} onChange={(e) => setFormAnggota({...formAnggota, jk: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
-                  <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tglLahir" value={formAnggota.tglLahir} onChange={(e) => setFormAnggota({...formAnggota, tglLahir: e.target.value})} required /></div>
-                  <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status" value={formAnggota.status} onChange={(e) => setFormAnggota({...formAnggota, status: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
+                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_anggota_keluarga" value={formAnggota.nama_anggota_keluarga} onChange={(e) => setFormAnggota({...formAnggota, nama_anggota_keluarga: e.target.value})} required placeholder="Ketik Nama..." /></div>
+                  <div className="form-group-modal"><label>Hubungan Keluarga*</label><div className="select-container-custom"><select name="hubungan_keluarga" value={formAnggota.hubungan_keluarga} onChange={(e) => setFormAnggota({...formAnggota, hubungan_keluarga: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
+                  <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
+                  <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
+                  <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
+                  
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
               </form>
@@ -754,16 +951,16 @@ function StaffDashboard() {
                   <h3 className="section-subtitle">Data Pribadi</h3>
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>NIK</label><input type="text" name="nik" value={selectedAnggotaData.nik} onChange={handleEditAnggotaChange} /></div>
-                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={selectedAnggotaData.nama_lengkap} onChange={handleEditAnggotaChange} /></div>
-                    <div className="form-group-modal"><label>Hubungan Keluarga</label><div className="select-container-custom"><select name="hub" value={selectedAnggotaData.hub} onChange={handleEditAnggotaChange}><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
-                    <div className="form-group-modal"><label>Status Keadaan</label><div className="select-container-custom"><select name="status" value={selectedAnggotaData.status} onChange={handleEditAnggotaChange}><option>Hidup</option><option>Meninggal</option></select></div></div>
+                    <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_anggota_keluarga" value={selectedAnggotaData.nama_anggota_keluarga} onChange={handleEditAnggotaChange} /></div>
+                    <div className="form-group-modal"><label>Hubungan Keluarga</label><div className="select-container-custom"><select name="hubungan_keluarga" value={selectedAnggotaData.hubungan_keluarga} onChange={handleEditAnggotaChange}><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
+                    <div className="form-group-modal"><label>Status Keadaan</label><div className="select-container-custom"><select name="status_keadaan" value={selectedAnggotaData.status_keadaan} onChange={handleEditAnggotaChange}><option>Hidup</option><option>Meninggal</option></select></div></div>
                     
                     {/* ✅ INPUT BARU: Kategori Pendidikan Otomatis (Read-Only) */}
                     <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
                       <label>Estimasi Kategori Pendidikan/Usia (Otomatis dari Tanggal Lahir)</label>
                       <input 
                         type="text" 
-                        value={getKategoriPendidikan(selectedAnggotaData.tglLahir)} 
+                        value={getKategoriPendidikan(selectedAnggotaData.tanggal_lahir)} 
                         readOnly 
                         style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', fontWeight: 'bold' }} 
                       />
@@ -781,10 +978,10 @@ function StaffDashboard() {
                       <div className="select-container-custom">
                         <select 
                           name="hamil" 
-                          value={selectedAnggotaData.jk === 'Laki-laki' ? "Tidak Sedang Hamil" : (selectedAnggotaData.hamil || "Tidak Sedang Hamil")} 
+                          value={selectedAnggotaData.jenis_kelamin === 'Laki-laki' ? "Tidak Sedang Hamil" : (selectedAnggotaData.hamil || "Tidak Sedang Hamil")} 
                           onChange={handleEditAnggotaChange}
-                          disabled={selectedAnggotaData.jk === 'Laki-laki'}
-                          style={selectedAnggotaData.jk === 'Laki-laki' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8' } : {}}
+                          disabled={selectedAnggotaData.jenis_kelamin === 'Laki-laki'}
+                          style={selectedAnggotaData.jenis_kelamin === 'Laki-laki' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8' } : {}}
                         >
                           <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
                           <option value="Sedang Hamil">Sedang Hamil</option>

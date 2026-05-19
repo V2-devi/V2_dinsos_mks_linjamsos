@@ -337,7 +337,7 @@ function Dtsen({
                       <th>Tanggal Lahir</th>
                       <th>Hub. Keluarga</th>
                       <th>Jenis Kelamin</th>
-                      <th>Kondisi Khusus</th>
+                      {/* <th>Kondisi Khusus</th> */}
                       <th>Status Keadaan</th>
                       <th style={{ textAlign: "center" }}>Aksi Detail</th>
                     </tr>
@@ -353,9 +353,9 @@ function Dtsen({
                         <tr key={ang.id || index}>
                           <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
                           <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_lengkap || ang.nama_kepala_keluarga}</td>
-                          <td>{ang.tglLahir || "-"}</td>
-                          <td>{ang.hub}</td>
-                          <td>{ang.jk && ang.jk !== "-" ? ang.jk : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
+                          <td>{ang.tanggal_lahir || "-"}</td>
+                          <td>{ang.hubungan_keluarga}</td>
+                          <td>{ang.jenis_kelamin && ang.jenis_kelamin !== "-" ? ang.jenis_kelamin : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
                           <td>
                             {kondisi.length > 0 ? (
                               <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -367,8 +367,8 @@ function Dtsen({
                             )}
                           </td>
                           <td>
-                            <span style={{ backgroundColor: ang.status === 'Hidup' ? '#22c55e' : '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                              {ang.status}
+                            <span style={{ backgroundColor: ang.status_keadaan === 'Hidup' ? '#22c55e' : '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                              {ang.status_keadaan}
                             </span>
                           </td>
                           <td style={{ textAlign: 'center' }}>

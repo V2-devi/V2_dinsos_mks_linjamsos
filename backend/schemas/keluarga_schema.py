@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class Keluarga(BaseModel):
-  user_id: Optional[int] = None
+  # user_id: Optional[int] = None
   no_kk: str
   alamat: str
   skor_pmt: Optional[float] = None
