@@ -141,7 +141,7 @@ function StaffDashboard() {
     if (Array.isArray(data)) {
 
       setDtsenData(
-        data.map(item => ({
+        (data || []).map(item => ({
           id: item.id,
           no_kk: item.no_kk,
           nik: item.nik,
@@ -150,7 +150,9 @@ function StaffDashboard() {
           kelurahan: item.kelurahan,
           alamat: item.alamat,
           desil: item.desil || "Belum Dihitung",
-          anggota: item.anggota || []
+
+          // 🔥 INI YANG FIX UTAMA
+          anggota: item.anggota_keluarga || []
         }))
       );
 
@@ -265,22 +267,22 @@ const [formAnggota, setFormAnggota] = useState({
   
 });
 
-const login = async () => {
-  const res = await fetch("http://127.0.0.1:8000/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      email,
-      password
-    })
-  });
+// const login = async () => {
+//   const res = await fetch("http://127.0.0.1:8000/login", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//       email,
+//       password
+//     })
+//   });
 
-  const data = await res.json();
+//   const data = await res.json();
 
-  localStorage.setItem("token", data.access_token);
-};
+//   localStorage.setItem("token", data.access_token);
+// };
 
 const handleChangeAnggota = (e) => {
   const { name, value } = e.target;
@@ -305,49 +307,49 @@ const createKeluarga = async (formDtsen) => {
 };
 
 
-const createAnggota = async (no_kk, formData) => {
+// const createAnggota = async (no_kk, formData) => {
 
-  const token = localStorage.getItem("token");
+//   const token = localStorage.getItem("token");
 
-  console.log("TOKEN:", token);
+//   console.log("TOKEN:", token);
 
-  const res = await fetch(
-    `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(formData)
-    }
-  );
+//   const res = await fetch(
+//     `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
+//     {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         "Authorization": `Bearer ${token}`
+//       },
+//       body: JSON.stringify(formData)
+//     }
+//   );
 
-  const data = await res.json();
-  console.log(data);
-};
+//   const data = await res.json();
+//   console.log(data);
+// };
 
 
-const submitAnggota = async (no_kk) => {
+// const submitAnggota = async (no_kk) => {
 
-  const token = localStorage.getItem("token");
-  console.log("TOKEN:", token);
+//   const token = localStorage.getItem("token");
+//   console.log("TOKEN:", token);
 
-  const res = await fetch(
-    `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(formAnggota)
-    }
-  );
+//   const res = await fetch(
+//     `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
+//     {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         "Authorization": `Bearer ${token}`
+//       },
+//       body: JSON.stringify(formAnggota)
+//     }
+//   );
 
-  const data = await res.json();
-  console.log(data);
-};
+//   const data = await res.json();
+//   console.log(data);
+// };
 
 
 
@@ -359,8 +361,6 @@ const fetchAnggota = async (no_kk) => {
   try {
 
     const token = localStorage.getItem("token");
-
-    console.log("FETCH ANGGOTA KK:", no_kk);
 
     const response = await fetch(
       `http://127.0.0.1:8000/keluarga/${no_kk}/anggota`,
@@ -377,7 +377,34 @@ const fetchAnggota = async (no_kk) => {
 
     console.log("DATA ANGGOTA:", data);
 
-    setAnggotaList(data);
+    // =========================
+    // UPDATE dtsenData
+    // =========================
+    const updatedDtsen = dtsenData.map((item) => {
+
+      if (item.no_kk === no_kk) {
+
+        return {
+          ...item,
+          anggota: data
+        };
+      }
+
+      return item;
+    });
+
+    setDtsenData(updatedDtsen);
+
+    // =========================
+    // UPDATE selected detail
+    // =========================
+    if (selectedDtsenData?.no_kk === no_kk) {
+
+      setSelectedDtsenData({
+        ...selectedDtsenData,
+        anggota: data
+      });
+    }
 
   } catch (error) {
 
@@ -552,7 +579,7 @@ console.log("TOKEN:", token);
 
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          // Authorization: `Bearer ${token}`
         },
 
         body: JSON.stringify(payload)
@@ -615,7 +642,27 @@ console.log("TOKEN:", token);
   }
 };
 
-  const handleOpenDetailDtsen = (data) => { setSelectedDtsenData(data); setDetailDtsenInnerTab("anggota"); setActiveTab("detail_dtsen"); };
+  // const handleOpenDetailDtsen = (data) => 
+  //   { setSelectedDtsenData(data); 
+  //     setDetailDtsenInnerTab("anggota"); 
+  //     setActiveTab("detail_dtsen"); 
+  //   };
+
+  const handleOpenDetailDtsen = (data) => {
+
+  console.log("DATA DETAIL:", data);
+
+  setSelectedDtsenData(data);
+
+  // ✅ INI YANG HILANG
+  setSelectedNoKK(data.no_kk);
+
+  setDetailDtsenInnerTab("anggota");
+
+  setActiveTab("detail_dtsen");
+}
+
+
   const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
 
  const handleAddAnggotaSubmit = async (e) => {
@@ -624,12 +671,52 @@ console.log("TOKEN:", token);
 
   try {
 
+    // ==============================
+    // VALIDASI
+    // ==============================
+    if (!formAnggota.nik) {
+      alert("NIK wajib diisi");
+      return;
+    }
+
+    if (!selectedNoKK) {
+      alert("No KK tidak ditemukan");
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
-    console.log("FORM ANGGOTA:", formAnggota);
+    // ==============================
+    // PAYLOAD
+    // ==============================
+    const payload = {
 
+      nik: String(formAnggota.nik),
+
+      nama_anggota_keluarga:
+        formAnggota.nama_anggota_keluarga,
+
+      hubungan_keluarga:
+        formAnggota.hubungan_keluarga,
+
+      jenis_kelamin:
+        formAnggota.jenis_kelamin,
+
+      tanggal_lahir:
+        formAnggota.tanggal_lahir,
+
+      status_keadaan:
+        formAnggota.status_keadaan
+
+    };
+
+    console.log("PAYLOAD ANGGOTA:", payload);
+
+    // ==============================
+    // FETCH
+    // ==============================
     const response = await fetch(
-      `http://127.0.0.1:8000/keluarga/${selectedNoKK}/anggota`,
+      `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`,
       {
         method: "POST",
 
@@ -638,7 +725,7 @@ console.log("TOKEN:", token);
           Authorization: `Bearer ${token}`
         },
 
-        body: JSON.stringify(formAnggota)
+        body: JSON.stringify(payload)
       }
     );
 
@@ -657,7 +744,7 @@ console.log("TOKEN:", token);
     }
 
     // ==============================
-    // REFRESH DATA ANGGOTA
+    // REFRESH DATA
     // ==============================
     await fetchAnggota(selectedNoKK);
 
@@ -676,7 +763,6 @@ console.log("TOKEN:", token);
       jenis_kelamin: "",
       tanggal_lahir: "",
       status_keadaan: ""
-      
     });
 
     showSuccess();

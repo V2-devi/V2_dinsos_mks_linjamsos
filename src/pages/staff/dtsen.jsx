@@ -337,7 +337,7 @@ function Dtsen({
                       <th>Tanggal Lahir</th>
                       <th>Hub. Keluarga</th>
                       <th>Jenis Kelamin</th>
-                      {/* <th>Kondisi Khusus</th> */}
+                      <th>Kondisi Khusus</th>
                       <th>Status Keadaan</th>
                       <th style={{ textAlign: "center" }}>Aksi Detail</th>
                     </tr>

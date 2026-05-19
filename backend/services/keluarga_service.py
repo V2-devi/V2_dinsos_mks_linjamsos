@@ -1,5 +1,6 @@
 from config.database import supabase
 from schemas.keluarga_schema import Keluarga
+from schemas.anggota_schema import Anggota
 
 # buat/simpan data keluarga saja
 # def create_keluarga(id: str, data:Keluarga):
@@ -149,9 +150,8 @@ def create_keluarga(data: Keluarga):
 # GET SEMUA KELUARGA
 # =========================================
 def get_keluarga():
-
     result = supabase.table("keluarga") \
-        .select("*") \
+        .select("*, anggota_keluarga(*)") \
         .execute()
 
     return result.data
@@ -170,45 +170,50 @@ def get_anggota_keluarga(no_kk: str):
     return result.data
 
 
-# =========================================
-# CREATE ANGGOTA KELUARGA
-# =========================================
-def create_anggota_keluarga(no_kk: str, data):
+# # =========================================
+# # CREATE ANGGOTA KELUARGA
+# # =========================================
+# def create_anggota_keluarga(no_kk: str, data: Anggota):
 
-    data_dict = data.model_dump(mode="json")
+#     data_dict = data.model_dump(mode="json")
 
-    payload = {
+#     payload = {
 
-        "nik":
-            data_dict.get("nik"),
+#         # pastikan numeric/string valid
+#         "nik":
+#             str(data_dict.get("nik"))
+#             if data_dict.get("nik")
+#             else None,
 
-        "no_kk":
-            no_kk,
+#         "no_kk":
+#             str(no_kk),
 
-        "nama_anggota_keluarga":
-            data_dict.get("nama_anggota_keluarga"),
+#         "nama_anggota_keluarga":
+#             data_dict.get("nama_anggota_keluarga"),
 
-        "hubungan_keluarga":
-            data_dict.get("hubungan_keluarga"),
+#         "hubungan_keluarga":
+#             data_dict.get("hubungan_keluarga"),
 
-        "jenis_kelamin":
-            data_dict.get("jenis_kelamin"),
+#         "jenis_kelamin":
+#             data_dict.get("jenis_kelamin"),
 
-        "tanggal_lahir":
-            data_dict.get("tanggal_lahir"),
+#         "tanggal_lahir":
+#             data_dict.get("tanggal_lahir"),
 
-        "status_keadaan":
-            data_dict.get("status_keadaan"),
+#         "status_keadaan":
+#             data_dict.get("status_keadaan"),
 
-        "kondisi_khusus":
-            data_dict.get("kondisi_khusus")
-    }
+#         "kondisi_khusus":
+#             data_dict.get("kondisi_khusus")
+#     }
 
-    result = supabase.table("anggota_keluarga") \
-        .insert(payload) \
-        .execute()
+#     print("PAYLOAD ANGGOTA:", payload)
 
-    return result.data
+#     result = supabase.table("anggota_keluarga") \
+#         .insert(payload) \
+#         .execute()
+
+#     return result.data
 
 
 # =========================================
