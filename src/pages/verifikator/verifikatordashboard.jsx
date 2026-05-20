@@ -34,12 +34,12 @@ function VerifikatorDashboard() {
   const usulanMenunggu = usulanData.filter(i => i.status_pengusulan === "Belum").length;
   const ppksMenunggu = dummyPPKS.filter(i => i.status_penanganan === "Menunggu Kelayakan" || i.status_penanganan === "Menunggu Kelayakan").length;
   const totalDtsen = dtsenData.length;
-  const desil1 = dtsenData.filter(i => i.desil === "1").length;
-  const desil2 = dtsenData.filter(i => i.desil === "2").length;
-  const desil3 = dtsenData.filter(i => i.desil === "3").length;
-  const desil4 = dtsenData.filter(i => i.desil === "4").length;
-  const desil5 = dtsenData.filter(i => i.desil === "5").length;
-  const desil6_10 = dtsenData.filter(i => i.desil === "6-10").length;
+  const desil1 = dtsenData.filter(i => i.hasil_desil === "1").length;
+  const desil2 = dtsenData.filter(i => i.hasil_desil === "2").length;
+  const desil3 = dtsenData.filter(i => i.hasil_desil === "3").length;
+  const desil4 = dtsenData.filter(i => i.hasil_desil === "4").length;
+  const desil5 = dtsenData.filter(i => i.hasil_desil === "5").length;
+  const desil6_10 = dtsenData.filter(i => i.hasil_desil === "6-10").length;
   const navigate = useNavigate();
 
   const [activeMenu, setActiveMenu] = useState("dashboard"); 
@@ -130,8 +130,8 @@ function VerifikatorDashboard() {
     setCatatanValidasi("");
     setAsetKeluarga(null); 
     try {
-      const { data: dataKeluarga, error } = await supabase.from('keluarga').select('aset, desil').or(`no_kk.eq.${data.no_kk},nik_kepala.eq.${data.nik}`).single();
-      if (!error && dataKeluarga) setAsetKeluarga({ desil: dataKeluarga.desil, detail: dataKeluarga.aset });
+      const { data: dataKeluarga, error } = await supabase.from('keluarga').select('aset, hasil_desil').or(`no_kk.eq.${data.no_kk},nik_kepala.eq.${data.nik}`).single();
+      if (!error && dataKeluarga) setAsetKeluarga({ hasil_desil: dataKeluarga.hasil_desil, detail: dataKeluarga.aset });
     } catch (error) { console.log("Keluarga belum memiliki data aset 39 Variabel di DTSEN."); }
     setIsValidateModalOpen(true);
   };
@@ -323,7 +323,7 @@ function VerifikatorDashboard() {
                   <div className="form-group-modal"><label>Nama Kepala Keluarga</label><input type="text" value={selectedData.nama_lengkap} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Kecamatan</label><input type="text" value={selectedData.kecamatan} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Kelurahan</label><input type="text" value={selectedData.kelurahan} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Tingkat Desil Saat Ini</label><input type="text" value={asetKeluarga ? asetKeluarga.desil : "Belum Dihitung"} readOnly className="input-readonly" style={{ fontWeight: 'bold', color: '#b45309', backgroundColor: '#fffbeb' }} /></div>
+                  <div className="form-group-modal"><label>Tingkat Desil Saat Ini</label><input type="text" value={asetKeluarga ? asetKeluarga.hasil_desil : "Belum Dihitung"} readOnly className="input-readonly" style={{ fontWeight: 'bold', color: '#b45309', backgroundColor: '#fffbeb' }} /></div>
                   <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Alamat Lengkap</label><input type="text" value={selectedData.alamat} readOnly className="input-readonly" /></div>
                 </div>
               </div>

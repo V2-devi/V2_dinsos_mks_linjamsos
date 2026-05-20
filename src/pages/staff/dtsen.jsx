@@ -157,32 +157,32 @@ function Dtsen({
             <div className="decile-card d1">
               <div className="dec-head"><span className="dec-badge d1-bg">Desil 1</span></div>
               <div className="dec-title">Sangat Rentan / Ekstrem</div>
-              <div className="dec-val">{dtsenData.filter(item => item.desil === "1").length}</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "1").length}</div>
             </div>
             <div className="decile-card d2">
               <div className="dec-head"><span className="dec-badge d2-bg">Desil 2</span></div>
               <div className="dec-title">Keluarga Rentan</div>
-              <div className="dec-val">{dtsenData.filter(item => item.desil === "2").length}</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "2").length}</div>
             </div>
             <div className="decile-card d3">
               <div className="dec-head"><span className="dec-badge d3-bg">Desil 3</span></div>
               <div className="dec-title">Hampir Rentan</div>
-              <div className="dec-val">{dtsenData.filter(item => item.desil === "3").length}</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "3").length}</div>
             </div>
             <div className="decile-card d4">
               <div className="dec-head"><span className="dec-badge d4-bg">Desil 4</span></div>
               <div className="dec-title">Rentan Sedang</div>
-              <div className="dec-val">{dtsenData.filter(item => item.desil === "4").length}</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "4").length}</div>
             </div>
             <div className="decile-card d5">
               <div className="dec-head"><span className="dec-badge d5-bg">Desil 5</span></div>
               <div className="dec-title">Menuju Aman</div>
-              <div className="dec-val">{dtsenData.filter(item => item.desil === "5").length}</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "5").length}</div>
             </div>
             <div className="decile-card d6">
               <div className="dec-head"><span className="dec-badge d6-bg">Desil 6-10</span></div>
               <div className="dec-title">Keluarga Mampu / Aman</div>
-              <div className="dec-val">{dtsenData.filter(item => item.desil === "6-10").length}</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "6-10").length}</div>
             </div>
           </div>
         </div>
@@ -257,10 +257,10 @@ function Dtsen({
                       <td>{item.kelurahan}</td>
                       <td>{item.alamat}</td>
                       <td style={{ textAlign: "center" }}>
-                        {item.desil === 'Belum Dihitung' ? (
+                        {item.hasil_desil === 'Belum Dihitung' ? (
                           <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum Dihitung</span>
                         ) : (
-                          <span className="desil-badge-table">{item.desil}</span>
+                          <span className="desil-badge-table">{item.hasil_desil}</span>
                         )}
                       </td>
                       <td style={{ textAlign: "center" }}>
@@ -299,9 +299,9 @@ function Dtsen({
               <div className="summary-item"><span className="sum-label">Kecamatan / Kelurahan</span><span className="sum-val">{selectedDtsenData.kecamatan} / {selectedDtsenData.kelurahan}</span></div>
             </div>
             <div className="desil-col">
-              <div className="desil-box-red" style={{ backgroundColor: selectedDtsenData.desil === 'Belum Dihitung' ? '#f1f5f9' : '#fca5a5', color: selectedDtsenData.desil === 'Belum Dihitung' ? '#475569' : '#dc2626' }}>
+              <div className="desil-box-red" style={{ backgroundColor: selectedDtsenData.hasil_desil === 'Belum Dihitung' ? '#f1f5f9' : '#fca5a5', color: selectedDtsenData.hasil_desil === 'Belum Dihitung' ? '#475569' : '#dc2626' }}>
                 <span className="desil-text">TINGKAT DESIL</span>
-                <span className="desil-number" style={{ fontSize: selectedDtsenData.desil === 'Belum Dihitung' ? '18px' : '32px' }}>{selectedDtsenData.desil}</span>
+                <span className="desil-number" style={{ fontSize: selectedDtsenData.hasil_desil === 'Belum Dihitung' ? '18px' : '32px' }}>{selectedDtsenData.hasil_desil}</span>
               </div>
             </div>
           </div>
@@ -351,8 +351,8 @@ function Dtsen({
 
                       return (
                         <tr key={ang.id || index}>
-                          <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik_kepala || selectedDtsenData?.no_kk) : ang.nik}</td> 
-                          <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_lengkap || ang.nama_kepala_keluarga}</td>
+                          <td>{ang.nik === "Belum Diinput" && index === 0 ? (selectedDtsenData?.nik || selectedDtsenData?.no_kk) : ang.nik}</td> 
+                          <td style={{ fontWeight: index === 0 ? '600' : 'normal' }}>{ang.nama_anggota_keluarga || ang.nama_kepala_keluarga}</td>
                           <td>{ang.tanggal_lahir || "-"}</td>
                           <td>{ang.hubungan_keluarga}</td>
                           <td>{ang.jenis_kelamin && ang.jenis_kelamin !== "-" ? ang.jenis_kelamin : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>

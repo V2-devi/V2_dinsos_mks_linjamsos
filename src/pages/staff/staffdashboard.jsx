@@ -90,8 +90,11 @@ function StaffDashboard() {
     kelurahan: "",
     alamat: "",
     tanggal_lahir: "",
-    desil: "",
-    tanggal_hitung_desil: ""
+    hasil_desil: "",
+    tanggal_hitung_desil: "",
+    tanggal_terakhir_update: "",
+    kategori_desil: "",
+    skor_pmt: ""
   });
 
   // =========================================
@@ -115,33 +118,23 @@ function StaffDashboard() {
   // =========================================
   // FETCH DATA KELUARGA
   // =========================================
-  const fetchKeluarga = async () => {
-
+const fetchKeluarga = async () => {
   try {
-
     const token = localStorage.getItem("token");
-    console.log("TOKEN:", token);
-
-    const response = await fetch(
-      "http://127.0.0.1:8000/keluarga",
-      {
-        method: "GET",
-
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
+    const response = await fetch("http://127.0.0.1:8000/keluarga", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
       }
-    );
+    });
 
     const data = await response.json();
-
-    console.log("DATA KELUARGA:", data);
+    console.log("DATA KELUARGA RAW:", data);
 
     if (Array.isArray(data)) {
-
       setDtsenData(
-        (data || []).map(item => ({
+        data.map(item => ({
           id: item.id,
           no_kk: item.no_kk,
           nik: item.nik,
@@ -149,20 +142,22 @@ function StaffDashboard() {
           kecamatan: item.kecamatan,
           kelurahan: item.kelurahan,
           alamat: item.alamat,
-          desil: item.desil || "Belum Dihitung",
-
-          // 🔥 INI YANG FIX UTAMA
-          anggota: item.anggota_keluarga || []
+          
+          // ✅ STANDARISASI KEY: Gunakan 'desil' agar konsisten di seluruh aplikasi
+          hasil_desil: item.hasil_desil || "Belum Dihitung", 
+          
+          skor_pmt: item.skor_pmt || "-",
+          tanggal_hitung_desil: item.tanggal_hitung_desil || "",
+          kategori_desil: item.kategori_desil || "",
+          
+          // Pastikan anggota juga ter-load jika backend mengirimnya
+          anggota: item.anggota_keluarga || [] 
         }))
       );
-
     } else {
-
       setDtsenData([]);
     }
-
   } catch (error) {
-
     console.error("FETCH ERROR:", error);
   }
 };
@@ -243,8 +238,11 @@ function StaffDashboard() {
       kelurahan: "",
       alamat: "",
       tanggal_lahir: "",
-      desil: "",
-      tanggal_hitung_desil: ""
+      hasil_desil: "",
+      tanggal_hitung_desil: "",
+      tanggal_terakhir_update: "",
+      kategori_desil: "",
+      skor_pmt: ""
     });
 
   } catch (error) {
@@ -536,55 +534,37 @@ const fetchAnggota = async (no_kk) => {
   // 4. FUNGSI HANDLER UMUM
   // ==========================================
 
-  const handleAddDtsen = async (e) => {
-
+const handleAddDtsen = async (e) => {
   e.preventDefault();
-
   try {
-
-    // =====================================
-    // AMBIL TOKEN LOGIN
-    // =====================================
     const token = localStorage.getItem("token");
-
-console.log("TOKEN:", token);
-    // =====================================
-    // DATA YANG DIKIRIM KE BACKEND
-    // =====================================
+    
+    // ✅ PASTIKAN FIELD INI ADA DI PAYLOAD
     const payload = {
       no_kk: formDtsen.no_kk,
       nama_kepala_keluarga: formDtsen.nama_kepala_keluarga,
-      jenis_kelamin: formDtsen.jenis_kelamin,
+      jenis_kelamin: formDtsen.jenis_kelamin, // ✅ KIRIM INI
       nik: formDtsen.nik || null,
-      kecamatan: formDtsen.kecamatan ,
+      kecamatan: formDtsen.kecamatan,
       kelurahan: formDtsen.kelurahan,
       alamat: formDtsen.alamat,
-      tanggal_lahir: formDtsen.tanggal_lahir,  // format "YYYY-MM-DD" dari input date
-      desil: 0,                                 // ✅ int, bukan string
-      tanggal_hitung_desil: new Date().toISOString(), // ✅ wajib ada di schema
-      skor_pmt: 0,
-      user_id: null,
-      updated_at: null
+      tanggal_lahir: formDtsen.tanggal_lahir, // ✅ KIRIM INI (Format YYYY-MM-DD otomatis dari input type="date")
+      
+      // Field default untuk desil
+      hasil_desil: "Belum Dihitung",
+      skor_pmt: 0
     };
 
-    console.log("PAYLOAD:", payload);
+    console.log("PAYLOAD DIKIRIM:", payload); // CEK DI CONSOLE APAKAH ISI NYA ADA?
 
-    // =====================================
-    // POST KE BACKEND
-    // =====================================
-    const response = await fetch(
-      "http://127.0.0.1:8000/keluarga",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}`
-        },
-
-        body: JSON.stringify(payload)
-      }
-    );
+    const response = await fetch("http://127.0.0.1:8000/keluarga", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
 
     console.log("STATUS:", response.status);
 
@@ -662,7 +642,7 @@ console.log("TOKEN:", token);
 //   setActiveTab("detail_dtsen");
 // }
 
-
+0
 
 const handleOpenDetailDtsen = async (data) => {
   console.log("📂 Membuka Detail Keluarga:", data.no_kk);
@@ -1029,6 +1009,26 @@ const handleEditAnggotaSubmit = (e) => {
   // ==========================================
   // ASET
   // ==========================================
+
+// Di StaffDashboard.jsx atau Komponen PenentuanDesil
+
+// 1. DATA MENUNGGU PENENTUAN
+// Syarat: 
+// a. Aset sudah lengkap (asetLengkap === true ATAU punya data aset)
+// b. Desil MASIH kosong ATAU masih bernilai "Belum Dihitung"
+const dataMenunggu = dtsenData.filter(item => {
+  const sudahPunyaAset = item.asetLengkap === true || (item.aset && Object.keys(item.aset).length > 0);
+  const belumAdaDesil = !item.desil || item.desil === "" || item.desil === "Belum Dihitung";
+  
+  return sudahPunyaAset && belumAdaDesil;
+});
+
+// 2. DATA RIWAYAT (SUDAH DIHITUNG)
+// Syarat: Desil SUDAH ADA dan BUKAN "Belum Dihitung"
+const dataRiwayat = dtsenData.filter(item => {
+  return item.desil && item.desil !== "" && item.desil !== "Belum Dihitung";
+});
+
     const [formAset, setFormAset] = useState({
    no_kk: "",
 
@@ -1181,6 +1181,43 @@ const handleEditAsetSubmit = async (e) => {
 // useEffect(() => {
 //   fetchAset();
 // }, []);
+
+ // ==========================================
+  // PERHITUNGAN DESIL
+  // =========================================
+
+  const handleKalkulasiDesil = async (no_kk) => {
+  if (!window.confirm("Hitung desil sekarang?")) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://127.0.0.1:8000/kalkulasi/hitung/${no_kk}`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` 
+      }
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Gagal menghitung");
+    }
+
+    const result = await res.json();
+    console.log("✅ Backend Response:", result);
+
+    alert(`Berhasil! Desil: ${result.data.hasil_desil}`);
+    
+    // 🔥 PENTING: REFRESH DATA DARI SERVER AGAR UI TERUPDATE
+    await fetchKeluarga(); 
+
+  } catch (error) {
+    console.error(error);
+    alert("Error: " + error.message);
+  }
+};
+
 
   // ==========================================
   // RENDER TAMPILAN (MASTER LAYOUT)

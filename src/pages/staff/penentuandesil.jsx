@@ -8,7 +8,7 @@ function PenentuanDesil({
   showSuccess
 }) {
   const [filterDesil, setFilterDesil] = useState({ kecamatan: "", no_kk: "" });
-  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor: 0, desil: "-", kategori: "-" });
+  const [hasilKalkulasi, setHasilKalkulasi] = useState({ skor_pmt: "-", hasil_desil: "-", kategori_desil: "-" });
   const [isKalkulasiModalOpen, setIsKalkulasiModalOpen] = useState(false);
   const [selectedKalkulasi, setSelectedKalkulasi] = useState(null);
   const [isCalculated, setIsCalculated] = useState(false); 
@@ -54,7 +54,7 @@ function PenentuanDesil({
     else if (totalSkor >= 8.26) { hasilDesil = "2"; hasilKat = "Rentan"; }
     else { hasilDesil = "1"; hasilKat = "Sangat Rentan / Ekstrem"; }
 
-    setHasilKalkulasi({ skor: totalSkor.toFixed(2), desil: hasilDesil, kategori: hasilKat }); setIsCalculated(true);
+    setHasilKalkulasi({ skor_pmt: totalSkor.toFixed(2), hasil_desil: hasilDesil, kategori_desil: hasilKat }); setIsCalculated(true);
   };
 
   const simpanHasilDesilKeluarga = () => {
@@ -62,7 +62,7 @@ function PenentuanDesil({
     const tglHitungStr = `${today.getDate()} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][today.getMonth()]} ${today.getFullYear()}`;
     const updatedDtsenData = dtsenData.map(family => {
       if (family.no_kk === selectedKalkulasi.no_kk) {
-        return { ...family, desil: hasilKalkulasi.desil, skorPMT: hasilKalkulasi.skor, kategoriDesil: hasilKalkulasi.kategori, tglHitung: tglHitungStr };
+        return { ...family, hasil_desil: hasilKalkulasi.hasil_desil, skor_pmt: hasilKalkulasi.skor_pmt, kategoriDesil: hasilKalkulasi.kategori_desil, tglHitung: tanggal_hitung_desil };
       }
       return family;
     });
@@ -78,7 +78,7 @@ function PenentuanDesil({
 
   // Menyaring data untuk tab "Menunggu Penentuan"
   const menungguFiltered = dtsenData.filter(item => {
-    const isMenunggu = item.asetLengkap === true && item.desil === 'Belum Dihitung';
+    const isMenunggu = item.asetLengkap === true && item.hasil_desil === 'Belum Dihitung';
     const matchKecamatan = filterDesil.kecamatan === "" || item.kecamatan === filterDesil.kecamatan;
     const matchKk = filterDesil.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDesil.no_kk));
     return isMenunggu && matchKecamatan && matchKk;
@@ -86,7 +86,7 @@ function PenentuanDesil({
 
   // Menyaring data untuk tab "Riwayat Penentuan"
   const riwayatFiltered = dtsenData.filter(item => {
-    const isRiwayat = item.desil !== 'Belum Dihitung';
+    const isRiwayat = item.hasil_desil !== 'Belum Dihitung';
     const matchKecamatan = filterDesil.kecamatan === "" || item.kecamatan === filterDesil.kecamatan;
     const matchKk = filterDesil.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDesil.no_kk));
     return isRiwayat && matchKecamatan && matchKk;
@@ -130,7 +130,7 @@ function PenentuanDesil({
                   {menungguFiltered.length > 0 ? 
                     menungguFiltered.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kecamatan}</td><td>{item.tglUpdate}</td>
+                      <td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kecamatan}</td><td>{item.tanggal_terakhir_update}</td>
                       <td style={{ textAlign: "center" }}><button className="btn-hitung-desil" onClick={() => { setSelectedKalkulasi(item); setIsKalkulasiModalOpen(true); setIsCalculated(false); }}><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Hitung Desil</button></td>
                     </tr>
                   )) : (
@@ -169,7 +169,7 @@ function PenentuanDesil({
                   <tbody>
                     {riwayatFiltered.length > 0 ? 
                       riwayatFiltered.map((item, idx) => (
-                      <tr key={idx}><td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kecamatan}</td><td>{item.tglHitung}</td><td>{item.skorPMT}</td><td style={{ textAlign: "center" }}><span className="desil-badge-table">{item.desil}</span></td></tr>
+                      <tr key={idx}><td>{item.no_kk}</td><td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td><td>{item.kecamatan}</td><td>{item.tanggal_hitung_desil}</td><td>{item.skor_pmt}</td><td style={{ textAlign: "center" }}><span className="desil-badge-table">{item.hasil_desil}</span></td></tr>
                     )) : (
                       <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada riwayat yang cocok dengan pencarian Anda.</td></tr>
                     )}
@@ -195,10 +195,10 @@ function PenentuanDesil({
                 <div style={{backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '25px', marginTop: '15px', animation: 'fadeInModal 0.4s ease-out'}}>
                   <h4 style={{ color: '#10b981', margin: '0 0 15px 0' }}>✓ Kalkulasi Selesai</h4>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '20px' }}>
-                    <div><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SKOR TOTAL PMT</span><span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>{hasilKalkulasi.skor}</span></div>
-                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>MASUK KE DESIL</span><span style={{ backgroundColor: hasilKalkulasi.desil === "1" ? '#ef4444' : hasilKalkulasi.desil === "2" ? '#f97316' : '#f59e0b', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>{hasilKalkulasi.desil}</span></div>
+                    <div><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>SKOR TOTAL PMT</span><span style={{ fontSize: '32px', fontWeight: '900', color: '#1e293b' }}>{hasilKalkulasi.skor_pmt}</span></div>
+                    <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '30px' }}><span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>MASUK KE DESIL</span><span style={{ backgroundColor: hasilKalkulasi.hasil_desil === "1" ? '#ef4444' : hasilKalkulasi.hasil_desil === "2" ? '#f97316' : '#f59e0b', color: 'white', padding: '8px 24px', borderRadius: '8px', fontSize: '24px', fontWeight: '900', display: 'inline-block' }}>{hasilKalkulasi.hasil_desil}</span></div>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong style={{ color: '#1e293b' }}>{hasilKalkulasi.kategori}</strong>.</p>
+                  <p style={{ fontSize: '14px', color: '#64748b' }}>Berdasarkan skor, keluarga ini tergolong <strong style={{ color: '#1e293b' }}>{hasilKalkulasi.kategori_desil}</strong>.</p>
                   <div className="modal-actions" style={{ marginTop: '20px' }}><button type="button" className="btn-modal-submit" onClick={simpanHasilDesilKeluarga} style={{ width: '100%' }}>Simpan Hasil ke Database</button></div>
                 </div>
               )}
