@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./staffdashboard.css";
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+
+// ✅ IMPORT LOGO SICADAS VERSI DASHBOARD (LATAR PUTIH)
+import logoSicadasDashboard from "../../assets/logo_sicadas_col.png";
+
 import { supabase } from "../../config/supabase";
 
 // ✅ IMPORT KOMPONEN YANG RAPI
@@ -1225,9 +1228,13 @@ const handleEditAsetSubmit = async (e) => {
   return (
     <div className="staff-layout relative">
       <aside className="sidebar">
-        <div className="sidebar-brand">
-          <img src={logoLinjamsos} alt="Logo" className="sidebar-logo" />
-          <div className="sidebar-brand-text"><span>PERLINDUNGAN DAN</span><span>JAMINAN SOSIAL</span></div>
+       <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '15px 0' }}>
+          <img 
+            src={logoSicadasDashboard} 
+            alt="Logo SICADAS" 
+            className="sidebar-logo" 
+            style={{ width: "100%", maxWidth: "150px", height: "auto", margin: "0 auto" }} 
+          />
         </div>
         
         <div className="sidebar-profile" style={{ cursor: 'pointer' }} onClick={() => navigate("/staffprofile")} title="Lihat Profil">

@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
 // Pastikan path image Anda benar
 import bgImage from "../../assets/image.png"; 
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+// ✅ PASTIKAN INI MENGARAH KE LOGO SICADAS VERSI LOGIN (LATAR GELAP)
+import logoSicadas from "../../assets/logo_sicadas.png";
 
 import { login } from "../../services/AuthService";
 
@@ -240,11 +240,14 @@ function LoginPage() {
       <div className="auth-left" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="auth-overlay">
           <div className="auth-left-content">
-            
-            <img src={logoLinjamsos} alt="Logo Linjamsos" className="auth-logo" />
-            
-            <h1>SISTEM INFORMASI<br />PERLINDUNGAN DAN JAMINAN SOSIAL</h1>
-            <p>
+            <img 
+              src={logoSicadas} 
+              alt="Logo SICADAS" 
+              className="auth-logo" 
+              style={{ width: '100%', maxWidth: '320px', height: 'auto', marginBottom: '5px' }}
+            />
+                  
+            <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
               Melayani dengan hati, melindungi sepenuh jiwa. Akses Perlindungan
               dan Jaminan Sosial dengan lebih mudah dan transparan.
             </p>

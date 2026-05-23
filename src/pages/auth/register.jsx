@@ -1,7 +1,10 @@
 ﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./register.css";
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+
+// ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH)
+import logoSicadas from "../../assets/logo_sicadas.png";
+
 import { register } from "../../services/AuthService";
 
 function Register() {
@@ -116,21 +119,22 @@ function Register() {
     <div className="register-container">
       <div className="register-left">
         <div className="register-left-content">
-          <div className="branding-container">
-            <img src={logoLinjamsos} alt="Logo Linjamsos" className="branding-logo" />
-            <div className="branding-text-logo">
-              <b>PERLINDUNGAN DAN </b>
-              <b>JAMINAN SOSIAL</b>
-            </div>
+          
+          {/* ✅ LOGO DIPERBESAR SEDIKIT (240px) KARENA H1 SUDAH DIHAPUS */}
+          <div className="branding-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '20px' }}>
+            <img 
+              src={logoSicadas} 
+              alt="Logo SICADAS" 
+              className="branding-logo" 
+              style={{ width: "100%", maxWidth: "240px", height: "auto", marginBottom: "15px" }} 
+            />
           </div>
 
-          <h1>
-            Satu Data Untuk
-            <br />Perlindungan dan Jaminan Sosial
-          </h1>
-          <p>
+          {/* ✅ TAG H1 DIHAPUS SEPENUHNYA */}
+
+          <p style={{ fontSize: '15px', lineHeight: '1.6', opacity: '0.9', marginTop: '10px' }}>
             Pastikan data yang Anda masukkan sesuai dengan Kartu Tanda Penduduk (KTP) dan Kartu Keluarga (KK)
-            terbaru agar verifikasi bantuan berjalan lancar.
+            terbaru agar verifikasi akun dan tanggung jawab sistem berjalan lancar.
           </p>
         </div>
       </div>

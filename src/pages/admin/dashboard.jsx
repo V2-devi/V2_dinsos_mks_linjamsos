@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; //
 import "./dashboard.css"; 
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+
+// ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH) KARENA NAVBAR ADMIN BERWARNA BIRU GELAP
+import logoSicadas from "../../assets/logo_sicadas.png";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -96,13 +98,17 @@ const fetchUsers = async () => {
       {/* ================= NAVBAR ADMIN ================= */}
       <nav className="admin-navbar">
         <div className="navbar-left">
-          <div className="branding-container-small">
-            <img src={logoLinjamsos} alt="Logo" className="branding-logo-small" />
-            <div className="branding-text-block-small">
-              <span>PERLINDUNGAN DAN</span>
-              <span>JAMINAN SOSIAL</span>
-            </div>
+          
+          {/* ✅ MENGGUNAKAN LOGO SICADAS VERSI PUTIH DAN MENGHAPUS TEKS REDUNDAN */}
+          <div className="branding-container-small" style={{ display: 'flex', alignItems: 'center' }}>
+            <img 
+              src={logoSicadas} 
+              alt="Logo SICADAS" 
+              className="branding-logo-small" 
+              style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
+            />
           </div>
+          
         </div>
         
         <div className="navbar-right">
@@ -183,6 +189,7 @@ const fetchUsers = async () => {
                 <th>NIP</th>
                 <th>Role</th>
                 <th>Nama Lengkap</th>
+                <th>Wilayah Kerja</th>
                 <th>Email</th>
                 <th>Alamat</th>
                 <th style={{ textAlign: 'center' }}>Status Pegawai</th>
@@ -200,6 +207,7 @@ const fetchUsers = async () => {
                     </span>
                   </td>
                   <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
+                  <td>{user.wilayah_kerja || "-"}</td>
                   <td>{user.email || "-"}</td>
                   <td>{user.alamat || "-"}</td>
                  <td style={{ textAlign: 'center' }}>
