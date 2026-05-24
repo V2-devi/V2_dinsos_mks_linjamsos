@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from dependencies.auth_dependency import get_current_user
-from schemas.keluarga_schema import Keluarga
+from schemas.keluarga_schema import Keluarga, UpdateDesil
 from fastapi.security import HTTPBearer
 from services.keluarga_service import (
     create_keluarga,
     get_keluarga,
     update_keluarga,
+    update_desil
 )
 from services.anggota_service import (
     create_anggota_keluarga,
@@ -73,3 +74,11 @@ async def update_anggota_route(
         return {"message": "Berhasil diperbarui", "data": updated_data}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+
+@router.put("/desil/{no_kk}")
+async def update_desil_route(
+    no_kk: str,
+    data: UpdateDesil
+):
+    return update_desil(no_kk, data)

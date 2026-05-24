@@ -6,7 +6,6 @@ class Keluarga(BaseModel):
   # user_id: Optional[int] = None
   no_kk: str
   alamat: str
-  tanggal_hitung_desil: datetime
   nama_kepala_keluarga: str
   kelurahan: str
   kecamatan: str
@@ -22,6 +21,14 @@ class Keluarga(BaseModel):
 
   kategori_desil: Optional[str] = None
   tanggal_terakhir_update: Optional[datetime] = None
+
+
+class UpdateDesil(BaseModel):
+
+    skor_pmt: Optional[float] = None
+    hasil_desil: Optional[str] = None
+    kategori_desil: Optional[str] = None
+    tanggal_hitung_desil: Optional[str] = None
  
  
   # nik: int
