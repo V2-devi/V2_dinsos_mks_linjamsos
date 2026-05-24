@@ -64,6 +64,15 @@ function StaffDashboard() {
   const [isAddPPKSModalOpen, setIsAddPPKSModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
+  // === KAMUS DATA KECAMATAN & KELURAHAN ===
+  const daftarWilayah = {
+    "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
+    "Tamalanrea": ["Tamalanrea", "Tamalanrea Indah", "Tamalanrea Jaya", "Kapasa", "Kapasa Raya", "Bira", "Parang Loe", "Buntusu"],
+    "Biring Kanaya": ["Bakung", "Berua", "Bulurokeng", "Daya", "Katimbang", "Laikang", "Paccerakkang", "Pai", "Sudiang", "Sudiang raya", "Untia"],
+    "Panakkukang": ["Karampuang", "Masale", "Pampang", "Panaikang", "Pandang", "Paropo", "Sinrijala", "Tamamaung"],
+    "Tamalate": ["Balang Baru", "Barombong", "Bongaya", "Bonto Duri", "Jongaya", "Maccini Sombala", "Mangasa", "Mannuruki", "Pa'baeng-baeng", "Parang Tambung", "Tanjung Merdeka"]
+  };
+
   const [isAddDtsenModalOpen, setIsAddDtsenModalOpen] = useState(false);
   const [selectedDtsenData, setSelectedDtsenData] = useState(null);
   const [detailDtsenInnerTab, setDetailDtsenInnerTab] = useState("anggota"); 
@@ -423,8 +432,23 @@ const fetchAnggota = async (no_kk) => {
   // ==========================================
   // 2. LOGIKA FILTER (DIAMANKAN AGAR TIDAK CRASH)
   // ==========================================
-  const handleFilterDtsenChange = (e) => { setFilterDtsen({ ...filterDtsen, [e.target.name]: e.target.value }); };
-  const handleFilterPPKSChange = (e) => { setFilterTabelPPKS({ ...filterTabelPPKS, [e.target.name]: e.target.value }); };
+    const handleFilterDtsenChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "kecamatan") {
+      setFilterDtsen({ ...filterDtsen, kecamatan: value, kelurahan: "" });
+    } else {
+      setFilterDtsen({ ...filterDtsen, [name]: value });
+    }
+  };
+
+  const handleFilterPPKSChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "kecamatan") {
+      setFilterTabelPPKS({ ...filterTabelPPKS, kecamatan: value, kelurahan: "" });
+    } else {
+      setFilterTabelPPKS({ ...filterTabelPPKS, [name]: value });
+    }
+  };
 
   const getQuarter = (dateString) => {
     if (!dateString) return "q1";
@@ -1358,10 +1382,34 @@ const handleEditAsetSubmit = async (e) => {
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select required value={formDtsen.jenis_kelamin} onChange={(e) => setFormDtsen({...formDtsen, jenis_kelamin: e.target.value})}><option value="" disabled hidden>Pilih Jenis Kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div></div>
-                  <div className="form-group-modal"><label>Kecamatan*</label><div className="select-container-custom"><select required value={formDtsen.kecamatan} onChange={(e) => setFormDtsen({...formDtsen, kecamatan: e.target.value})}><option value="" disabled hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option></select></div></div>
+                  
+                  {/* DROPDOWN KECAMATAN DTSEN DINAMIS */}
+                  <div className="form-group-modal">
+                    <label>Kecamatan*</label>
+                    <div className="select-container-custom">
+                      <select required name="kecamatan" value={formDtsen.kecamatan} onChange={(e) => setFormDtsen({...formDtsen, kecamatan: e.target.value, kelurahan: ""})}>
+                        <option value="" disabled hidden>Pilih Kecamatan</option>
+                        {Object.keys(daftarWilayah).map((kec) => (
+                          <option key={kec} value={kec}>{kec}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
+                
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>Kelurahan*</label><div className="select-container-custom"><select required value={formDtsen.kelurahan} onChange={(e) => setFormDtsen({...formDtsen, kelurahan: e.target.value})}><option value="" disabled hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option></select></div></div>
+                  {/* DROPDOWN KELURAHAN DTSEN DINAMIS */}
+                  <div className="form-group-modal">
+                    <label>Kelurahan*</label>
+                    <div className="select-container-custom">
+                      <select required name="kelurahan" value={formDtsen.kelurahan} onChange={(e) => setFormDtsen({...formDtsen, kelurahan: e.target.value})} disabled={!formDtsen.kecamatan}>
+                        <option value="" disabled hidden>{formDtsen.kecamatan ? "Pilih Kelurahan" : "Pilih Kecamatan Dulu"}</option>
+                        {formDtsen.kecamatan && daftarWilayah[formDtsen.kecamatan].map((kel) => (
+                          <option key={kel} value={kel}>{kel}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                   <div></div>
                 </div>
                 <div className="form-grid-1" style={{ marginBottom: '20px' }}><div className="form-group-modal"><label>Alamat Lengkap / RT RW*</label><textarea value={formDtsen.alamat} onChange={(e) => setFormDtsen({...formDtsen, alamat: e.target.value})} required placeholder="Masukkan nama jalan, RT/RW" style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #94a3b8', resize: 'vertical', minHeight: '60px'}}></textarea></div></div>
@@ -1579,10 +1627,31 @@ const handleEditAsetSubmit = async (e) => {
                   <div className="form-group-modal"><label>NIK (Bila Diketahui)</label><input type="text" name="nik" value={formPPKS.nik} onChange={(e) => setFormPPKS({...formPPKS, nik: e.target.value})} maxLength="16" placeholder="Kosongkan jika tidak ada" /></div>
                   <div className="form-group-modal"><label>Nama/Alias (Bila Diketahui)</label><input type="text" name="nama" value={formPPKS.nama_lengkap} onChange={(e) => setFormPPKS({...formPPKS, nama_lengkap: e.target.value})} placeholder="Contoh: Bapak Fulan" /></div>
                 </div>
-                {/* ✅ INPUT KECAMATAN DAN KELURAHAN */}
+                {/* ✅ INPUT KECAMATAN DAN KELURAHAN DINAMIS */}
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>Kecamatan Penemuan*</label><div className="select-container-custom"><select name="kecamatan" value={formPPKS.kecamatan} onChange={(e) => setFormPPKS({...formPPKS, kecamatan: e.target.value})} required><option value="" hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option><option value="Panakkukang">Panakkukang</option></select></div></div>
-                  <div className="form-group-modal"><label>Kelurahan Penemuan*</label><div className="select-container-custom"><select name="kelurahan" value={formPPKS.kelurahan} onChange={(e) => setFormPPKS({...formPPKS, kelurahan: e.target.value})} required><option value="" hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option><option value="Pannampu">Pannampu</option></select></div></div>
+                  <div className="form-group-modal">
+                    <label>Kecamatan Penemuan*</label>
+                    <div className="select-container-custom">
+                      <select name="kecamatan" value={formPPKS.kecamatan} onChange={(e) => setFormPPKS({...formPPKS, kecamatan: e.target.value, kelurahan: ""})} required>
+                        <option value="" hidden>Pilih Kecamatan</option>
+                        {Object.keys(daftarWilayah).map((kec) => (
+                          <option key={kec} value={kec}>{kec}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="form-group-modal">
+                    <label>Kelurahan Penemuan*</label>
+                    <div className="select-container-custom">
+                      <select name="kelurahan" value={formPPKS.kelurahan} onChange={(e) => setFormPPKS({...formPPKS, kelurahan: e.target.value})} required disabled={!formPPKS.kecamatan}>
+                        <option value="" hidden>{formPPKS.kecamatan ? "Pilih Kelurahan" : "Pilih Kecamatan Dulu"}</option>
+                        {formPPKS.kecamatan && daftarWilayah[formPPKS.kecamatan].map((kel) => (
+                          <option key={kel} value={kel}>{kel}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
                 <div className="form-grid-1" style={{ marginBottom: '20px' }}>
                   <div className="form-group-modal"><label>Lokasi Penemuan Spesifik*</label><input type="text" name="lokasi_penemuan" value={formPPKS.lokasi_penemuan} onChange={(e) => setFormPPKS({...formPPKS, lokasi_penemuan: e.target.value})} required placeholder="Contoh: Pasar MT Haryono, depan Toko A" /></div>
