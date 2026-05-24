@@ -22,6 +22,7 @@ function Register() {
     no_hp: "",
     alamat: "",
     agreed: false,
+    wilayah_kerja: "", // ✅ DITAMBAHKAN: State untuk Wilayah Kerja
   });
 
   useEffect(() => {
@@ -60,8 +61,9 @@ function Register() {
       return;
     }
 
-    if (!formData.nama_lengkap || !formData.nik || !formData.role || !formData.alamat) {
-      alert("Mohon lengkapi data identitas terlebih dahulu.");
+    // ✅ DITAMBAHKAN: Validasi wilayah_kerja harus diisi
+    if (!formData.nama_lengkap || !formData.nik || !formData.role || !formData.alamat || !formData.wilayah_kerja) {
+      alert("Mohon lengkapi data identitas dan penugasan wilayah terlebih dahulu.");
       setStep(2);
       return;
     }
@@ -89,6 +91,7 @@ function Register() {
         role: formData.role,
         no_hp: formData.no_hp,
         alamat: formData.alamat,
+        wilayah_kerja: formData.wilayah_kerja, // ✅ DITAMBAHKAN: Dikirim ke backend
       });
       
 
@@ -280,6 +283,32 @@ function Register() {
                   </div>
                 </div>
 
+                {/* ✅ DITAMBAHKAN: Dropdown Wilayah Kerja di Register */}
+                <div className="form-group-modal" style={{marginTop: '15px'}}>
+                  <label
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: "#234a66",
+                      marginBottom: "6px",
+                      display: "block",
+                    }}
+                  >
+                    Wilayah Kerja (Kecamatan Penugasan)*
+                  </label>
+                  <div className="select-container-custom">
+                    <select name="wilayah_kerja" value={formData.wilayah_kerja} onChange={handleChange} required style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none'}}>
+                      <option value="" disabled hidden>Pilih Kecamatan Penugasan</option>
+                      <option value="Tallo">Tallo</option>
+                      <option value="Tamalanrea">Tamalanrea</option>
+                      <option value="Biring Kanaya">Biring Kanaya</option>
+                      <option value="Panakkukang">Panakkukang</option>
+                      <option value="Tamalate">Tamalate</option>
+                      <option value="Bontoala">Bontoala</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="form-group" style={{marginTop: '15px'}}>
                   <label>No.Hp</label>
                   <input
@@ -292,7 +321,7 @@ function Register() {
                 </div>
 
                 <div className="form-group">
-                  <label>Alamat*</label>
+                  <label>Alamat Domisili*</label>
                   <input
                     type="text"
                     name="alamat"
@@ -318,7 +347,6 @@ function Register() {
               <div className="form-content">
                 <div className="confirmation-card">
                   <div className="icon-wrapper">
-                    <span>📋</span>
                   </div>
                   <h3>Konfirmasi Pendaftaran</h3>
                   <p>Pastikan data Anda benar. Data palsu dapat menyebabkan sanksi hukum.</p>

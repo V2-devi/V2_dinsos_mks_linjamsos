@@ -27,7 +27,8 @@ function AdminProfile() {
     instansi: "",
     alamat_instansi: "",
     nama_kepala_dinas: "",
-    nip_kepala_dinas: ""
+    nip_kepala_dinas: "",
+    wilayah_kerja: "" // ✅ DITAMBAHKAN: State Wilayah Kerja
   });
 
 
@@ -226,6 +227,8 @@ const handleOpenEdit = () => {
               <span className="grid-label">No.HP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.no_hp}</span>
               <span className="grid-label">Alamat</span><span className="grid-colon">:</span><span className="grid-value">{profileData.alamat}</span>
               <span className="grid-label">Role</span><span className="grid-colon">:</span><span className="grid-value">{profileData.role}</span>
+              {/* ✅ DITAMBAHKAN: Tampilan Wilayah Kerja */}
+              <span className="grid-label">Wilayah Kerja</span><span className="grid-colon">:</span><span className="grid-value">{profileData.wilayah_kerja || "Belum Ditentukan"}</span>
             </div>
 
             <h2 className="profile-section-title" style={{ marginTop: '40px' }}>Instansi</h2>
@@ -283,6 +286,21 @@ const handleOpenEdit = () => {
                     <div className="form-group-modal"><label>Email Aktif</label><input type="email" name="email" value={profileData.email} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>No. HP</label><input type="text" name="no_hp" value={profileData.no_hp} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat</label><input type="text" name="alamat" value={profileData.alamat} onChange={handleInputChange} required /></div>
+                    
+                    {/* ✅ DITAMBAHKAN: Dropdown Edit Wilayah Kerja */}
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
+                      <label>Wilayah Kerja (Kecamatan)</label>
+                      <select name="wilayah_kerja" value={profileData.wilayah_kerja || ""} onChange={handleInputChange} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+                        <option value="" disabled hidden>Pilih Kecamatan Penugasan</option>
+                        <option value="Tallo">Tallo</option>
+                        <option value="Tamalanrea">Tamalanrea</option>
+                        <option value="Biring Kanaya">Biring Kanaya</option>
+                        <option value="Panakkukang">Panakkukang</option>
+                        <option value="Tamalate">Tamalate</option>
+                        <option value="Bontoala">Bontoala</option>
+                      </select>
+                    </div>
+
                   </div>
                 </div>
 

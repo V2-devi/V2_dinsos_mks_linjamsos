@@ -373,3 +373,30 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
   .decile-grid { grid-template-columns: 1fr; }
   .pengusulan-filter-grid { grid-template-columns: 1fr; } 
 }
+
+/* Kelas baru untuk tombol aksi data */
+.btn-action-data {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+.btn-action-data:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-export { color: #059669; border-color: #059669; }
+.btn-export:hover { background: #ecfdf5; }
+
+.btn-import { color: #2563eb; border-color: #2563eb; }
+.btn-import:hover { background: #eff6ff; }
