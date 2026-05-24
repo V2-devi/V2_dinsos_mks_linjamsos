@@ -91,7 +91,7 @@ function StaffDashboard() {
     alamat: "",
     tanggal_lahir: "",
     hasil_desil: "",
-    tanggal_hitung_desil: "",
+    // tanggal_hitung_desil: "",
     tanggal_terakhir_update: "",
     kategori_desil: "",
     skor_pmt: ""
@@ -147,7 +147,7 @@ const fetchKeluarga = async () => {
           hasil_desil: item.hasil_desil || "Belum Dihitung", 
           
           skor_pmt: item.skor_pmt || "-",
-          tanggal_hitung_desil: item.tanggal_hitung_desil || "",
+          // tanggal_hitung_desil: item.tanggal_hitung_desil || "",
           kategori_desil: item.kategori_desil || "",
           
           // Pastikan anggota juga ter-load jika backend mengirimnya
@@ -239,7 +239,7 @@ const fetchKeluarga = async () => {
       alamat: "",
       tanggal_lahir: "",
       hasil_desil: "",
-      tanggal_hitung_desil: "",
+      // tanggal_hitung_desil: "",
       tanggal_terakhir_update: "",
       kategori_desil: "",
       skor_pmt: ""
@@ -487,7 +487,6 @@ const fetchAnggota = async (no_kk) => {
             nik: item.nik,
             no_kk: item.no_kk,
             nama_lengkap: item.nama_lengkap,
-            penginput: item.penginput,
             kecamatan: item.kecamatan,
             kelurahan: item.kelurahan,
             tanggal_usulan: item.tanggal_usulan,
@@ -1018,7 +1017,7 @@ const handleEditAnggotaSubmit = (e) => {
 // b. Desil MASIH kosong ATAU masih bernilai "Belum Dihitung"
 const dataMenunggu = dtsenData.filter(item => {
   const sudahPunyaAset = item.asetLengkap === true || (item.aset && Object.keys(item.aset).length > 0);
-  const belumAdaDesil = !item.desil || item.desil === "" || item.desil === "Belum Dihitung";
+  const belumAdaDesil = !item.hasil_desil || item.hasil_desil === "" || item.hasil_desil === "Belum Dihitung";
   
   return sudahPunyaAset && belumAdaDesil;
 });
@@ -1026,7 +1025,7 @@ const dataMenunggu = dtsenData.filter(item => {
 // 2. DATA RIWAYAT (SUDAH DIHITUNG)
 // Syarat: Desil SUDAH ADA dan BUKAN "Belum Dihitung"
 const dataRiwayat = dtsenData.filter(item => {
-  return item.desil && item.desil !== "" && item.desil !== "Belum Dihitung";
+  return item.hasil_desil && item.hasil_desil !== "" && item.hasil_desil !== "Belum Dihitung";
 });
 
     const [formAset, setFormAset] = useState({
@@ -1182,41 +1181,7 @@ const handleEditAsetSubmit = async (e) => {
 //   fetchAset();
 // }, []);
 
- // ==========================================
-  // PERHITUNGAN DESIL
-  // =========================================
 
-  const handleKalkulasiDesil = async (no_kk) => {
-  if (!window.confirm("Hitung desil sekarang?")) return;
-
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`http://127.0.0.1:8000/kalkulasi/hitung/${no_kk}`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}` 
-      }
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Gagal menghitung");
-    }
-
-    const result = await res.json();
-    console.log("✅ Backend Response:", result);
-
-    alert(`Berhasil! Desil: ${result.data.hasil_desil}`);
-    
-    // 🔥 PENTING: REFRESH DATA DARI SERVER AGAR UI TERUPDATE
-    await fetchKeluarga(); 
-
-  } catch (error) {
-    console.error(error);
-    alert("Error: " + error.message);
-  }
-};
 
 
   // ==========================================

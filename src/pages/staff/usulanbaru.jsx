@@ -17,14 +17,14 @@ function UsulanBaru({
   const [selectedDetailData, setSelectedDetailData] = useState(null);
 
   const initialFormState = { 
-    nik: "", no_kk: "", nama_lengkap: "", penginput: "",
-    kecamatan: "", kelurahan: "", tanggal: "", alamat: "", desil: "", 
+    nik: "", no_kk: "", nama_lengkap: "", 
+    kecamatan: "", kelurahan: "", tanggal: "", alamat: "", hasil_desil: "", 
     jenis_bansos: "", status_pengusulan: "Belum" 
   };
   const [formData, setFormData] = useState(initialFormState);
   const [form, setForm] = useState({
     nama_lengkap: "", nik: "", no_kk: "",
-    kecamatan: "", kelurahan: "", alamat: "", penginput: "", jenis_bansos: ""
+    kecamatan: "", kelurahan: "", alamat: "", jenis_bansos: ""
   });
 
   const handleFilterChange = (e) => { setFilterTable({ ...filterTable, [e.target.name]: e.target.value }); };
@@ -65,7 +65,7 @@ function UsulanBaru({
     try {
       const { data, error } = await supabase.from('pengusulan_bansos').insert([{
         nama_lengkap: formData.nama_lengkap, nik: formData.nik || null, no_kk: formData.no_kk || null,
-        kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, alamat: formData.alamat, penginput: currentStaff.nama || "Staff", 
+        kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, alamat: formData.alamat, 
         status_pengusulan: "Belum", jenis_bansos: formData.jenis_bansos
       }]).select(); 
       if (error) throw error;

@@ -2,17 +2,16 @@ from config.database import supabase
 from datetime import datetime
 
 # =========================================
-# BOBOT NILAI PMT (SAMA PERSIS DENGAN FE ANDA)
+# BOBOT NILAI PMT (V01 - V39)
 # =========================================
 BOBOT_PMT = {
     "v01": {"Laki-laki": 1.0, "Perempuan": 0.0},
     "v02": {"< 25 tahun": 0.2, "25 - 40 tahun": 1.0, "41 - 55 tahun": 0.8, "56 - 65 tahun": 0.5, "> 65 tahun": 0.1},
     "v03": {"Tidak pernah sekolah": 0.0, "Tidak tamat SD": 0.5, "Tamat SD/sederajat": 1.0, "Tamat SMP/sederajat": 1.8, "Tamat SMA/sederajat": 2.5, "Tamat D1/D2/D3": 3.2, "Tamat S1 ke atas": 4.0},
-    "v04": {"Tidak bekerja": 0.0, "Serabutan": 0.5, "Buruh": 1.0, "Usaha sendiri": 1.5, "Karyawan tetap": 2.5}, 
-    # Note: Di FE Anda "Serabutan/tidak tetap", di bobot "Serabutan". Pastikan string match atau gunakan logic 'in'
+    "v04": {"Tidak bekerja": 0.0, "Serabutan": 0.5, "Buruh": 1.0, "Usaha sendiri": 1.5, "Karyawan tetap": 2.5},
     "v05": {"Cerai mati": 0.0, "Cerai hidup": 0.2, "Belum kawin": 0.5, "Kawin": 1.0},
     "v06": {"≥ 8 jiwa": -2.0, "6 - 7 jiwa": -1.2, "4 - 5 jiwa": -0.5, "3 jiwa": 0.0, "1 - 2 jiwa": 0.5},
-    "v07": {"Menumpang": 0.0, "Sewa": 0.5, "Milik sendiri": 1.5}, # Match "Sewa/kontrak" dengan "Sewa"
+    "v07": {"Menumpang": 0.0, "Sewa": 0.5, "Milik sendiri": 1.5},
     "v08": {"< 4 m²": 0.0, "4 - 7 m²": 0.5, "8 - 15 m²": 1.5, "> 15 m²": 2.5},
     "v09": {"Tanah": 0.0, "Bambu": 0.5, "Semen": 1.5, "Keramik": 3.0},
     "v10": {"Bambu": 0.0, "Kayu": 0.5, "Tembok tidak diplester": 1.0, "Tembok diplester": 2.0},
@@ -47,85 +46,98 @@ BOBOT_PMT = {
     "v39": {"Tidak ada": 0.0, "< Rp 500.000": 0.5, "Rp 500rb - 5jt": 1.5, "> Rp 5 juta": 3.0},
 }
 
-def hitung_skor_pmt(aset_data: dict) -> float:
+def proses_kalkulasi_desil(no_kk: str):
     """
-    Menghitung total skor berdasarkan data aset dan bobot yang ditentukan.
-    Menggunakan fuzzy matching sederhana (lowercase & contains) agar robust.
+    1. Ambil data aset dari tabel 'aset_keluarga'
+    2. Hitung skor menggunakan bobot v01-v39
+    3. Tentukan desil
+    4. Simpan hasil ke tabel 'keluarga'
+    5. Return hasil
     """
-    total_skor = 0.0
     
-    for kunci, opsi_bobot in BOBOT_PMT.items():
-        jawaban_user = aset_data.get(kunci, "")
-        if not jawaban_user:
-            continue
-            
-        jawaban_lower = jawaban_user.lower()
-        
-        # Cari opsi yang cocok
-        nilai_ditemukan = False
-        for opsi_kunci, nilai in opsi_bobot.items():
-            if opsi_kunci.lower() in jawaban_lower or jawaban_lower in opsi_kunci.lower():
-                total_skor += nilai
-                nilai_ditemukan = True
-                break # Ambil match pertama
-        
-        # Debugging jika tidak match (opsional)
-        if not nilai_ditemukan:
-            print(f"⚠️ Warning: Tidak ada match bobot untuk {kunci}: '{jawaban_user}'")
-
-    return total_skor
-
-def tentukan_desil(skor: float) -> dict:
-    """
-    Menentukan Desil dan Kategori berdasarkan Skor PMT.
-    """
-    if skor >= 41.26:
-        return {"desil": "6-10", "kategori": "Aman / Mampu"}
-    elif skor >= 33.01:
-        return {"desil": "5", "kategori": "Menuju Aman"}
-    elif skor >= 24.76:
-        return {"desil": "4", "kategori": "Rentan Sedang"}
-    elif skor >= 16.51:
-        return {"desil": "3", "kategori": "Hampir Rentan"}
-    elif skor >= 8.26:
-        return {"desil": "2", "kategori": "Keluarga Rentan"}
-    else:
-        return {"desil": "1", "kategori": "Sangat Rentan / Ekstrem"}
-
-def proses_kalkulasi_desil(no_kk: str) -> dict:
-    # 1. Ambil Data Aset
+    # --- 1. AMBIL DATA ASET ---
+    print(f"🔍 [SERVICE] Mencari aset untuk No KK: {no_kk}")
     aset_res = supabase.table("aset_keluarga").select("*").eq("no_kk", no_kk).execute()
     
-    if not aset_res.data:
-        raise Exception("Data aset belum lengkap.")
+    if not aset_res.data or len(aset_res.data) == 0:
+        raise Exception("Data aset 39 variabel belum diisi untuk keluarga ini.")
     
     aset_data = aset_res.data[0]
+    print(f"✅ [SERVICE] Data aset ditemukan.")
+
+    # --- 2. HITUNG SKOR ---
+    total_skor = 0.0
+    for kunci, opsi_bobot in BOBOT_PMT.items():
+        # Ambil jawaban user, handle jika None
+        jawaban_raw = aset_data.get(kunci)
+        if jawaban_raw is None:
+            continue
+            
+        jawaban_user = str(jawaban_raw).lower()
+        
+        # Cari match (fuzzy logic sederhana: cek apakah kata kunci ada di jawaban)
+        nilai_ditemukan = False
+        for opsi_kunci, nilai in opsi_bobot.items():
+            # Contoh: jika opsi "Sewa" dan jawaban "Sewa/kontrak", maka match
+            if opsi_kunci.lower() in jawaban_user or jawaban_user in opsi_kunci.lower():
+                total_skor += nilai
+                nilai_ditemukan = True
+                break
+        
+        if not nilai_ditemukan and jawaban_user != "":
+            # Opsional: Print warning jika ada jawaban yang tidak terdeteksi bobotnya
+            pass 
+
+    print(f"💯 [SERVICE] Total Skor PMT: {total_skor}")
+
+    # --- 3. TENTUKAN DESIL ---
+    hasil_desil = "1"
+    kategori = "Sangat Rentan / Ekstrem"
     
-    # 2. Hitung Skor (Logika Bobot)
-    skor_pmt = hitung_skor_pmt(aset_data) # Pastikan fungsi ini ada
-    
-    # 3. Tentukan Desil
-    hasil = tentukan_desil(skor_pmt) # Pastikan fungsi ini ada
-    
-    # 4. ✅ SIMPAN KE DATABASE (PERHATIKAN NAMA KOLOM)
-    from datetime import datetime
+    if total_skor >= 41.26:
+        hasil_desil = "6-10"
+        kategori = "Aman / Mampu"
+    elif total_skor >= 33.01:
+        hasil_desil = "5"
+        kategori = "Menuju Aman"
+    elif total_skor >= 24.76:
+        hasil_desil = "4"
+        kategori = "Rentan Sedang"
+    elif total_skor >= 16.51:
+        hasil_desil = "3"
+        kategori = "Hampir Rentan"
+    elif total_skor >= 8.26:
+        hasil_desil = "2"
+        kategori = "Keluarga Rentan"
+    else:
+        hasil_desil = "1"
+        kategori = "Sangat Rentan / Ekstrem"
+
+    print(f"🏷️ [SERVICE] Hasil Desil: {hasil_desil} ({kategori})")
+
+    # --- 4. SIMPAN KE TABEL KELUARGA ---
     payload_update = {
-        "skor_pmt": round(skor_pmt, 2),
-        "hasil_desil": str(hasil["desil"]), # Ubah ke string
-        "tanggal_hitung_desil": datetime.now().isoformat()
+        "skor_pmt": round(total_skor, 2),
+        "hasil_desil": hasil_desil,  # Pastikan kolom ini tipe TEXT di DB
+        "tanggal_hitung_desil": datetime.now().isoformat(),
+        "kategori_desil": kategori   
     }
     
-    print(f"📝 Updating DB for KK {no_kk} with: {payload_update}")
-
+    print(f"💾 [SERVICE] Menyimpan ke DB: {payload_update}")
+    
     update_res = supabase.table("keluarga").update(payload_update).eq("no_kk", no_kk).execute()
     
     if not update_res.data:
-        # Seringkali Supabase tidak return error tapi data kosong jika RLS blokir atau ID salah
-        raise Exception("Gagal menyimpan ke DB. Cek RLS atau No KK.")
+        if hasattr(update_res, 'error') and update_res.error:
+            raise Exception(f"Supabase Error: {update_res.error.message}")
+        raise Exception("Gagal menyimpan hasil ke database. Pastikan No KK cocok dan RLS allow update.")
     
+    print("✅ [SERVICE] Berhasil disimpan!")
+    
+    # --- 5. RETURN HASIL ---
     return {
-        "no_kk": no_kk,
-        "skor_pmt": payload_update["skor_pmt"],
-        "hasil_desil": payload_update["hasil_desil"],
-        "kategori_desil": hasil["kategori_desil"]
+        "skor_pmt": round(total_skor, 2),
+        "hasil_desil": hasil_desil,
+        "kategori_desil": kategori,
+        "tanggal_hitung_desil": payload_update["tanggal_hitung_desil"]
     }

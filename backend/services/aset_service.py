@@ -57,6 +57,17 @@ def update_aset_service(no_kk: str, data: dict):
                 raise Exception(f"Supabase Error: {result.error.message}")
             raise Exception("Gagal menyimpan: Tidak ada data return dari Supabase.")
 
+        # 4. ✅ RESET HASIL DESIL KE MENUNGGU PENENTUAN
+        print(f"[BE] Mereset hasil_desil untuk No KK: {no_kk}")
+        reset_desil = supabase.table("keluarga") \
+            .update({
+                "hasil_desil": "Belum Dihitung"
+            }) \
+            .eq("no_kk", no_kk) \
+            .execute()
+        
+        print(f"[BE] Reset Desil Result: {reset_desil}")
+
         return result.data[0]
 
     except Exception as e:

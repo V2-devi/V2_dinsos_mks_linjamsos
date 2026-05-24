@@ -68,6 +68,9 @@ from schemas.anggota_schema import Anggota
 # =========================================
 # CREATE KELUARGA
 # =========================================
+from datetime import datetime
+
+
 def create_keluarga(data: Keluarga):
 
     # convert pydantic -> dict
@@ -80,6 +83,25 @@ def create_keluarga(data: Keluarga):
         k: v for k, v in data_dict.items()
         if v is not None and k != "id"
     }
+
+    # =====================================
+    # FIX DEFAULT VALUE
+    # =====================================
+
+    # tanggal hitung wajib ada
+    payload["tanggal_hitung_desil"] = datetime.now().isoformat()
+
+    # default skor PMT
+    payload["skor_pmt"] = 0
+
+    # default desil
+    payload["hasil_desil"] = "Belum Dihitung"
+
+    # =====================================
+    # DEBUG
+    # =====================================
+    print("PAYLOAD KELUARGA:")
+    print(payload)
 
     # =====================================
     # 1. INSERT KE TABEL KELUARGA
@@ -105,7 +127,6 @@ def create_keluarga(data: Keluarga):
 
     # =====================================
     # 2. AUTO INSERT KEPALA KELUARGA
-    # KE TABEL anggota_keluarga
     # =====================================
     supabase.table("anggota_keluarga").insert({
 
@@ -144,7 +165,6 @@ def create_keluarga(data: Keluarga):
         "message": "Keluarga dan anggota berhasil dibuat",
         "data": created
     }
-
 
 # =========================================
 # GET SEMUA KELUARGA
@@ -253,7 +273,19 @@ def delete_anggota_keluarga(id: str):
 
 
 
+def update_desil(no_kk: str, data):
 
+    payload = data.model_dump(exclude_none=True)
+
+    print("UPDATE DESIL:")
+    print(payload)
+
+    result = supabase.table("keluarga") \
+        .update(payload) \
+        .eq("no_kk", no_kk) \
+        .execute()
+
+    return result.data
 
 
 
