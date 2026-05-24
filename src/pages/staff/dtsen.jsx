@@ -32,8 +32,16 @@ function Dtsen({
   catatanAssessment,
   setCatatanAssessment,
   handleUpdateStatusPPKS
-  
 }) {
+
+  // ✅ KAMUS DATA UNTUK FILTER DINAMIS
+  const daftarWilayah = {
+    "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
+    "Tamalanrea": ["Tamalanrea", "Tamalanrea Indah", "Tamalanrea Jaya", "Kapasa", "Kapasa Raya", "Bira", "Parang Loe", "Buntusu"],
+    "Biring Kanaya": ["Bakung", "Berua", "Bulurokeng", "Daya", "Katimbang", "Laikang", "Paccerakkang", "Pai", "Sudiang", "Sudiang raya", "Untia"],
+    "Panakkukang": ["Karampuang", "Masale", "Pampang", "Panaikang", "Pandang", "Paropo", "Sinrijala", "Tamamaung"],
+    "Tamalate": ["Balang Baru", "Barombong", "Bongaya", "Bonto Duri", "Jongaya", "Maccini Sombala", "Mangasa", "Mannuruki", "Pa'baeng-baeng", "Parang Tambung", "Tanjung Merdeka"]
+  };
   
   return (
     <>
@@ -199,18 +207,18 @@ function Dtsen({
               <div className="select-container-custom">
                 <select name="kecamatan" value={filterDtsen.kecamatan} onChange={handleFilterDtsenChange}>
                   <option value="">Semua Kecamatan</option>
-                  <option value="Tallo">Tallo</option>
-                  <option value="Bontoala">Bontoala</option>
+                  {Object.keys(daftarWilayah).map((kec) => (<option key={kec} value={kec}>{kec}</option>))}
                 </select>
               </div>
             </div>
             <div className="filter-group-top">
               <label>Kelurahan/Desa</label>
               <div className="select-container-custom">
-                <select name="kelurahan" value={filterDtsen.kelurahan} onChange={handleFilterDtsenChange}>
-                  <option value="">Semua Kelurahan</option>
-                  <option value="Wala-walaya">Wala-walaya</option>
-                  <option value="Baraya">Baraya</option>
+                <select name="kelurahan" value={filterDtsen.kelurahan} onChange={handleFilterDtsenChange} disabled={!filterDtsen.kecamatan}>
+                  <option value="">{filterDtsen.kecamatan ? "Semua Kelurahan" : "Pilih Kecamatan Dulu"}</option>
+                  {filterDtsen.kecamatan && daftarWilayah[filterDtsen.kecamatan].map((kel) => (
+                    <option key={kel} value={kel}>{kel}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -223,7 +231,6 @@ function Dtsen({
               <input type="text" name="nama_kepala_keluarga" value={filterDtsen.nama_kepala_keluarga} onChange={handleFilterDtsenChange} className="input-custom" placeholder="Ketik Nama..." />
             </div>
           </div>
-
           <div className="action-row-right">
             <button className="btn-add-staff" onClick={() => setIsAddDtsenModalOpen(true)}>
               <span className="plus-icon">+</span> Tambah Data DTSEN
@@ -537,19 +544,18 @@ function Dtsen({
               <div className="select-container-custom">
                 <select name="kecamatan" value={filterTabelPPKS.kecamatan} onChange={handleFilterPPKSChange}>
                   <option value="">Semua Kecamatan</option>
-                  <option value="Tallo">Tallo</option>
-                  <option value="Bontoala">Bontoala</option>
+                  {Object.keys(daftarWilayah).map((kec) => (<option key={kec} value={kec}>{kec}</option>))}
                 </select>
               </div>
             </div>
-            {/* ✅ DITAMBAHKAN: FILTER KELURAHAN */}
             <div className="filter-group-top">
               <label>Kelurahan</label>
               <div className="select-container-custom">
-                <select name="kelurahan" value={filterTabelPPKS.kelurahan} onChange={handleFilterPPKSChange}>
-                  <option value="">Semua Kelurahan</option>
-                  <option value="Wala-walaya">Wala-walaya</option>
-                  <option value="Baraya">Baraya</option>
+                <select name="kelurahan" value={filterTabelPPKS.kelurahan} onChange={handleFilterPPKSChange} disabled={!filterTabelPPKS.kecamatan}>
+                  <option value="">{filterTabelPPKS.kecamatan ? "Semua Kelurahan" : "Pilih Kecamatan Dulu"}</option>
+                  {filterTabelPPKS.kecamatan && daftarWilayah[filterTabelPPKS.kecamatan].map((kel) => (
+                    <option key={kel} value={kel}>{kel}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -557,7 +563,6 @@ function Dtsen({
               <label>Nama/Identitas</label>
               <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
             </div>
-            {/* ✅ DIHAPUS: Tombol Cari Data */}
           </div>
           
           <div className="action-row-right">

@@ -27,7 +27,24 @@ function UsulanBaru({
     kecamatan: "", kelurahan: "", alamat: "", jenis_bansos: ""
   });
 
-  const handleFilterChange = (e) => { setFilterTable({ ...filterTable, [e.target.name]: e.target.value }); };
+  // === KAMUS DATA KECAMATAN & KELURAHAN ===
+  const daftarWilayah = {
+    "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
+    "Tamalanrea": ["Tamalanrea", "Tamalanrea Indah", "Tamalanrea Jaya", "Kapasa", "Kapasa Raya", "Bira", "Parang Loe", "Buntusu"],
+    "Biring Kanaya": ["Bakung", "Berua", "Bulurokeng", "Daya", "Katimbang", "Laikang", "Paccerakkang", "Pai", "Sudiang", "Sudiang raya", "Untia"],
+    "Panakkukang": ["Karampuang", "Masale", "Pampang", "Panaikang", "Pandang", "Paropo", "Sinrijala", "Tamamaung"],
+    "Tamalate": ["Balang Baru", "Barombong", "Bongaya", "Bonto Duri", "Jongaya", "Maccini Sombala", "Mangasa", "Mannuruki", "Pa'baeng-baeng", "Parang Tambung", "Tanjung Merdeka"]
+  };
+
+  const handleFilterChange = (e) => { 
+    const { name, value } = e.target;
+    if (name === "kecamatan") {
+      // Jika kecamatan diganti, reset kelurahan agar tidak nyangkut
+      setFilterTable({ ...filterTable, kecamatan: value, kelurahan: "" });
+    } else {
+      setFilterTable({ ...filterTable, [name]: value }); 
+    }
+  };
 
   const dashboardDataFiltered = usulanData.filter(item => getQuarter(item.tanggal_usulan || item.tanggal) === filterPeriodeDashboard);
   const tableDataFiltered = usulanData.filter(item => {
@@ -141,8 +158,28 @@ function UsulanBaru({
       {activeTab === "pengusulan" && (
         <div className="tab-content-wrapper outline-box">
           <div className="pengusulan-filter-grid">
-            <div className="filter-group-top"><label>Kecamatan</label><div className="select-container-custom"><select name="kecamatan" value={filterTable.kecamatan} onChange={handleFilterChange}><option value="">Semua Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option></select></div></div>
-            <div className="filter-group-top"><label>Kelurahan/Desa</label><div className="select-container-custom"><select name="kelurahan" value={filterTable.kelurahan} onChange={handleFilterChange}><option value="">Semua Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option></select></div></div>
+            <div className="filter-group-top">
+  <label>Kecamatan</label>
+  <div className="select-container-custom">
+    <select name="kecamatan" value={filterTable.kecamatan} onChange={handleFilterChange}>
+      <option value="">Semua Kecamatan</option>
+      {Object.keys(daftarWilayah).map((kec) => (
+        <option key={kec} value={kec}>{kec}</option>
+      ))}
+    </select>
+  </div>
+</div>
+<div className="filter-group-top">
+  <label>Kelurahan/Desa</label>
+  <div className="select-container-custom">
+    <select name="kelurahan" value={filterTable.kelurahan} onChange={handleFilterChange} disabled={!filterTable.kecamatan}>
+      <option value="">Semua Kelurahan</option>
+      {filterTable.kecamatan && daftarWilayah[filterTable.kecamatan].map((kel) => (
+        <option key={kel} value={kel}>{kel}</option>
+      ))}
+    </select>
+  </div>
+</div>
             <div className="filter-group-top"><label>NIK (0-16)</label><input type="text" name="nik" className="input-custom" placeholder="Cari NIK..." value={filterTable.nik} onChange={handleFilterChange} /></div>
             <div className="filter-group-top"><label>Nama</label><input type="text" name="nama_lengkap" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama_lengkap} onChange={handleFilterChange} /></div>
           </div>
@@ -277,15 +314,29 @@ function UsulanBaru({
                   <div className="form-group-modal"><label>Tanggal Pengusulan*</label><input type="date" name="tanggal" value={formData.tanggal_usulan || formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value, tanggal_usulan: e.target.value})} required /></div>
                 </div>
                 <div className="form-grid-2">
-                  <div className="form-group-modal">
-                    <label>Kecamatan*</label>
-                    <div className="select-container-custom"><select name="kecamatan" value={formData.kecamatan} onChange={(e) => setFormData({...formData, kecamatan: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kecamatan</option><option value="Tallo">Tallo</option><option value="Bontoala">Bontoala</option><option value="Panakkukang">Panakkukang</option></select></div>
-                  </div>
-                  <div className="form-group-modal">
-                    <label>Kelurahan/Desa*</label>
-                    <div className="select-container-custom"><select name="kelurahan" value={formData.kelurahan} onChange={(e) => setFormData({...formData, kelurahan: e.target.value})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}><option value="" disabled hidden>Pilih Kelurahan</option><option value="Wala-walaya">Wala-walaya</option><option value="Baraya">Baraya</option><option value="Pannampu">Pannampu</option></select></div>
-                  </div>
-                </div>
+  <div className="form-group-modal">
+    <label>Kecamatan*</label>
+    <div className="select-container-custom">
+      <select name="kecamatan" value={formData.kecamatan} onChange={(e) => setFormData({...formData, kecamatan: e.target.value, kelurahan: ""})} required style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+        <option value="" disabled hidden>Pilih Kecamatan</option>
+        {Object.keys(daftarWilayah).map((kec) => (
+          <option key={kec} value={kec}>{kec}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+  <div className="form-group-modal">
+    <label>Kelurahan/Desa*</label>
+    <div className="select-container-custom">
+      <select name="kelurahan" value={formData.kelurahan} onChange={(e) => setFormData({...formData, kelurahan: e.target.value})} required disabled={!formData.kecamatan} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>
+        <option value="" disabled hidden>{formData.kecamatan ? "Pilih Kelurahan" : "Pilih Kecamatan Dulu"}</option>
+        {formData.kecamatan && daftarWilayah[formData.kecamatan].map((kel) => (
+          <option key={kel} value={kel}>{kel}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+</div>
                 <div className="form-grid-1" style={{ marginBottom: '20px' }}>
                   <div className="form-group-modal">
                     <label>Jenis Bantuan Sosial yang Diusulkan*</label>

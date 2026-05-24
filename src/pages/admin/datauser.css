@@ -128,11 +128,23 @@ body {
 .modal-header-title h2 { font-size: 18px; font-weight: 700; margin: 0; }
 
 .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
-.modal-section { margin-bottom: 20px; }
+.modal-section { 
+  margin-bottom: 0px; /* Dinolkan agar spasi antar grup tidak bertumpuk/dobel */
+}
 
-.section-subtitle {
-  font-size: 14px; color: #3b82f6; font-weight: 600; margin-bottom: 12px;
-  padding-bottom: 6px; border-bottom: 1px solid #cbd5e1;
+.section-subtitle { 
+  font-size: 14px; 
+  color: #3b82f6; 
+  font-weight: 700; 
+  margin-top: 30px; /* ✅ INI KUNCINYA: Memberikan spasi atas yang seragam dan lega */
+  margin-bottom: 15px; 
+  padding-bottom: 8px; 
+  border-bottom: 1px solid #cbd5e1; 
+}
+
+/* Memastikan judul bagian paling atas tidak ikut terdorong turun */
+.modal-section:first-child .section-subtitle {
+  margin-top: 0;
 }
 
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./datauser.css"; 
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+
+// ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH) AGAR SERAGAM DENGAN ADMIN DASHBOARD
+import logoSicadas from "../../assets/logo_sicadas.png";
+
 import axios from "axios";
 
 // TESTING
@@ -174,7 +177,7 @@ const initialFormState = {
   nama_lengkap: "",
   email: "",
   alamat: "",
-  // ini yang penting untuk radio button
+  wilayah_kerja:"", 
   status: "menunggu"
 };
 
@@ -451,12 +454,19 @@ const handleApprove = async (id) => {
     <div className="admin-layout relative">
       
       {/* ================= NAVBAR ADMIN ================= */}
-      <nav className="admin-navbar-dark">
+      <nav className="admin-navbar">
         <div className="navbar-left">
-          <div className="branding-container-small">
-            <img src={logoLinjamsos} alt="Logo" className="branding-logo-small" />
-            <div className="branding-text-block-small"><span>PERLINDUNGAN DAN</span><span>JAMINAN SOSIAL</span></div>
-          </div>
+          
+          {/* ✅ MENGGUNAKAN LOGO SICADAS VERSI PUTIH SEPERTI DI ADMIN DASHBOARD */}
+          <div className="branding-container-small" style={{ display: 'flex', alignItems: 'center' }}>
+                      <img 
+                        src={logoSicadas} 
+                        alt="Logo SICADAS" 
+                        className="branding-logo-small" 
+                        style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
+                      />
+                    </div>
+          
         </div>
         <div className="navbar-right">
           <button className="nav-link-btn" onClick={() => navigate("/admin")}>Kembali Ke Halaman Utama</button>
@@ -523,6 +533,7 @@ const handleApprove = async (id) => {
                   <th>NIP</th>
                   <th>Role</th>
                   <th>Nama Lengkap</th>
+                  <th>Wilayah Kerja</th>
                   <th>Email</th>
                   <th>Alamat</th>
                   <th style={{ textAlign: 'center' }}>Status Pegawai</th>
@@ -540,6 +551,7 @@ const handleApprove = async (id) => {
                         </span>
                       </td>
                       <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
+                      <td>{user.wilayah_kerja || "-"}</td>
                       <td>{user.email || "-"}</td>
                       <td>{user.alamat || "-"}</td>
                       <td style={{ textAlign: 'center' }}>
@@ -629,6 +641,11 @@ const handleApprove = async (id) => {
                     <div className="form-group-modal"><label>Email*</label><input type="email" name="email" value={formData.email || ""} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat || ""} onChange={handleInputChange} required /></div>
                   </div>
+                </div>
+                {/* Field Baru */}
+                <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
+                  <label>Wilayah Kerja (Kecamatan)*</label>
+                  <input type="text" name="wilayah_kerja" value={formData.wilayah_kerja || ""} onChange={handleInputChange} required placeholder="Contoh: Kecamatan Tallo" />
                 </div>
 
                 <div className="modal-section">

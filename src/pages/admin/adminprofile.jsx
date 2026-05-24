@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./adminprofile.css"; 
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+import logoLinjamsos from "../../assets/logo_sicadas.png";
 
 function AdminProfile() {
   const navigate = useNavigate();
@@ -185,12 +185,17 @@ const handleOpenEdit = () => {
     <div className="profile-page-container">
       
       {/* NAVBAR */}
+      {/* ✅ MENGGUNAKAN CLASS profile-navbar-dark DARI CSS ANDA AGAR WARNANYA BIRU GELAP */}
       <nav className="profile-navbar-dark">
         <div className="navbar-left" style={{ cursor: 'pointer' }} onClick={() => navigate("/admin")}>
-          <img src={logoLinjamsos} alt="Logo" className="branding-logo-small" />
-          <div className="branding-text-block-small">
-            <span>PERLINDUNGAN DAN</span>
-            <span>JAMINAN SOSIAL</span>
+          {/* ✅ LOGO DISAMAKAN UKURANNYA DENGAN DASHBOARD ADMIN (55px) DAN TEKS REDUNDAN DIHAPUS */}
+          <div className="branding-container-small" style={{ display: 'flex', alignItems: 'center' }}>
+            <img 
+              src={logoLinjamsos} 
+              alt="Logo" 
+              className="branding-logo-small" 
+              style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
+            />
           </div>
         </div>
         <div className="navbar-right">
@@ -305,7 +310,7 @@ const handleOpenEdit = () => {
       {isPassModalOpen && (
         <div className="modal-overlay" onClick={() => setIsPassModalOpen(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px' }}>🔑</span><h2>Ganti Kata Sandi</h2></div></div>
+            <div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px' }}></span><h2>Ganti Kata Sandi</h2></div></div>
             <div className="modal-body">
               <form onSubmit={(e) => handleSubmit(e, "pass")}>
                 <div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Kata Sandi Lama</label><input type="password" required /></div>
