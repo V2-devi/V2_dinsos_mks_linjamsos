@@ -231,11 +231,22 @@ function Dtsen({
               <input type="text" name="nama_kepala_keluarga" value={filterDtsen.nama_kepala_keluarga} onChange={handleFilterDtsenChange} className="input-custom" placeholder="Ketik Nama..." />
             </div>
           </div>
-          <div className="action-row-right">
-            <button className="btn-add-staff" onClick={() => setIsAddDtsenModalOpen(true)}>
-              <span className="plus-icon">+</span> Tambah Data DTSEN
-            </button>
-          </div>
+          {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
+<div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
+  <button className="btn-action-data btn-export" onClick={() => {/* Tambahkan fungsi export Anda */}}>
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+    Export
+  </button>
+  
+  <button className="btn-action-data btn-import" onClick={() => {/* Tambahkan fungsi import Anda */}}>
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+    Import
+  </button>
+
+  <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
+    <span className="plus-icon">+</span> Tambah Usulan
+  </button>
+</div>
 
           <div className="table-wrapper">
             <div className="table-responsive">
@@ -565,11 +576,22 @@ function Dtsen({
             </div>
           </div>
           
-          <div className="action-row-right">
-            <button className="btn-add-staff" onClick={() => setIsAddPPKSModalOpen(true)}>
-              <span className="plus-icon">+</span> Tambah Laporan PPKS
-            </button>
-          </div>
+          {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
+<div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
+  <button className="btn-action-data btn-export" onClick={() => {/* Tambahkan fungsi export Anda */}}>
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+    Export
+  </button>
+  
+  <button className="btn-action-data btn-import" onClick={() => {/* Tambahkan fungsi import Anda */}}>
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+    Import
+  </button>
+
+  <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
+    <span className="plus-icon">+</span> Tambah Usulan
+  </button>
+</div>
           
           <div className="table-wrapper">
             <div className="table-responsive">

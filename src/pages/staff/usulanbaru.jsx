@@ -183,7 +183,22 @@ function UsulanBaru({
             <div className="filter-group-top"><label>NIK (0-16)</label><input type="text" name="nik" className="input-custom" placeholder="Cari NIK..." value={filterTable.nik} onChange={handleFilterChange} /></div>
             <div className="filter-group-top"><label>Nama</label><input type="text" name="nama_lengkap" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama_lengkap} onChange={handleFilterChange} /></div>
           </div>
-          <div className="action-row-right"><button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}><span className="plus-icon">+</span> Tambah Usulan</button></div>
+          {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
+<div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
+  <button className="btn-action-data btn-export" onClick={() => {/* Tambahkan fungsi export Anda */}}>
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+    Export
+  </button>
+  
+  <button className="btn-action-data btn-import" onClick={() => {/* Tambahkan fungsi import Anda */}}>
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+    Import
+  </button>
+
+  <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
+    <span className="plus-icon">+</span> Tambah Usulan
+  </button>
+</div>
           <div className="table-wrapper">
             <div className="table-responsive">
               <table className="staff-table">
@@ -256,7 +271,6 @@ function UsulanBaru({
                   <tr>
                     <th>Jenis Bantuan Sosial</th>
                     <th>Periode</th>
-                    <th>Nominal</th>
                     <th>Tanggal Penerimaan</th>
                     <th style={{ textAlign: "center" }}>Status Penyaluran</th>
                   </tr>
@@ -271,10 +285,7 @@ function UsulanBaru({
                     {/* ✅ PERBAIKAN: Periode ditarik otomatis dari tanggal pengusulan */}
                     <td style={{ color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#475569', fontWeight: '500' }}>
                       {getPeriodeOtomatis(selectedDetailData.tanggal || selectedDetailData.tanggal_usulan)}
-                    </td>
-                    
-                    <td style={{ color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#475569' }}>-</td>
-                    
+                    </td>                    
                     <td style={{ color: selectedDetailData.status_pengusulan === "Belum" ? '#b45309' : '#475569' }}>
                       {formatDateIndo(selectedDetailData.tanggal || selectedDetailData.tanggal_usulan)}
                     </td>

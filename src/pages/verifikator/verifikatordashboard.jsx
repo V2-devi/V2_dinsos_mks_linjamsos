@@ -15,6 +15,9 @@ function VerifikatorDashboard() {
   const [usulanData, setUsulanData] = useState([]);
   const [dtsenData, setDtsenData] = useState([]);
   const [dummyPPKS, setDummyPPKS] = useState([]);
+  
+  // ✅ DITAMBAHKAN: State untuk menyimpan daftar staff
+  const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,6 +124,14 @@ function VerifikatorDashboard() {
       const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status_penanganan', 'Menunggu Kelayakan');
       if (errRiwayatPPKS) throw errRiwayatPPKS;
       setRiwayatPpksList(dataRiwayatPPKS);
+      
+      // ✅ DITAMBAHKAN: Mengambil data user yang memiliki role staff
+      // Pastikan tabel di supabase Anda bernama 'users' atau sesuaikan namanya
+      const { data: staffData, error: errStaff } = await supabase.from('users').select('*').eq('role', 'staff');
+      if (!errStaff && staffData) {
+        setStaffList(staffData);
+      }
+      
     } catch (error) {
       console.error("Gagal mengambil data:", error);
     }
@@ -208,6 +219,14 @@ function VerifikatorDashboard() {
               <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> Validasi PPKS
             </button>
           </div>
+
+          {/* ✅ DITAMBAHKAN: Menu Baru Monitoring Wilayah */}
+          <div className="menu-group">
+            <button className={`menu-item ${activeMenu === "monitoring" ? "active-group" : ""}`} onClick={() => { setActiveMenu("monitoring"); }}>
+              <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Monitoring Wilayah
+            </button>
+          </div>
+
           <button className="menu-item" style={{ marginTop: '40px', color: '#ef4444' }} onClick={() => navigate("/login")}>
              <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Keluar
           </button>
@@ -220,6 +239,7 @@ function VerifikatorDashboard() {
             {activeMenu === "dashboard" && "Dashboard Verifikator"}
             {activeMenu === "validasi_bansos" && "Validasi Usulan Bansos"}
             {activeMenu === "validasi_ppks" && "Validasi Laporan PPKS"}
+            {activeMenu === "monitoring" && "Monitoring Tanggung Jawab Wilayah"}
           </h1>
           <div className="notif-wrapper">
             <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
@@ -306,6 +326,44 @@ function VerifikatorDashboard() {
             />
           )}
 
+          {/* ✅ DITAMBAHKAN: TABEL MONITORING WILAYAH */}
+          {activeMenu === "monitoring" && (
+            <div className="dashboard-verifikator-wrapper">
+              <div className="table-wrapper outline-box">
+                <table className="staff-table">
+                  <thead>
+                    <tr>
+                      <th>Kecamatan Wilayah Kerja</th>
+                      <th>Staff Penanggung Jawab</th>
+                      <th>NIP Staff</th>
+                      <th style={{ textAlign: "center" }}>Total Usulan Masuk</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {staffList.length > 0 ? staffList.map((staff, idx) => {
+                      // Menghitung jumlah laporan bansos per staff berdasarkan wilayah kerjanya
+                      const totalUsulanStaff = usulanData.filter(u => u.kecamatan === staff.wilayah_kerja).length;
+                      return (
+                        <tr key={staff.id || idx}>
+                          <td style={{ fontWeight: 'bold', color: '#234a66' }}>{staff.wilayah_kerja || "Belum Ditentukan"}</td>
+                          <td>{staff.nama_lengkap || "-"}</td>
+                          <td>{staff.nip || "-"}</td>
+                          <td style={{ textAlign: "center" }}>
+                            <span className="status-badge" style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', fontWeight: 'bold' }}>
+                              {totalUsulanStaff} Laporan
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }) : (
+                      <tr><td colSpan="4" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Belum ada data staff lapangan yang terdaftar.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
 
@@ -370,7 +428,9 @@ function VerifikatorDashboard() {
             </div>
           </div>
         </div>
+        
       )}
+      
 
       {/* ================= MODAL VALIDASI / REVIEW Laporan PPKS (BARU) ================= */}
       {isReviewPPKSModalOpen && selectedPPKSReview && (
