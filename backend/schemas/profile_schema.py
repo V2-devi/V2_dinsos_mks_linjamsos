@@ -26,5 +26,7 @@ class ProfileSchema(BaseModel):
         nama_kepala_dinas: Optional[str] = None
 
         nip_kepala_dinas: Optional[str] = None
+
+        wilayah_kerja: Optional[str] = None
                 
                 

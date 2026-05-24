@@ -66,7 +66,9 @@ def register_user(data):
 
             "no_hp": data.no_hp,
 
-            "alamat": data.alamat
+            "alamat": data.alamat,
+            
+            "wilayah_kerja": data.wilayah_kerja
 
         })
 
@@ -146,6 +148,8 @@ def login_user(data):
                 "alamat": auth_user.user_metadata.get("alamat"),
 
                 "no_hp": auth_user.user_metadata.get("no_hp"),
+
+                "wilayah_kerja": auth_user.user_metadata.get("wilayah_kerja"),
 
                 "status": "menunggu",
 

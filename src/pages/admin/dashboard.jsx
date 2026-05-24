@@ -207,7 +207,7 @@ const fetchUsers = async () => {
                     </span>
                   </td>
                   <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
-                  <td>{user.wilayah_kerja || "-"}</td>
+                  <td>{user.wilayah_kerja}</td>
                   <td>{user.email || "-"}</td>
                   <td>{user.alamat || "-"}</td>
                  <td style={{ textAlign: 'center' }}>

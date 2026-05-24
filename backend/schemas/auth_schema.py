@@ -10,6 +10,7 @@ class RegisterSchema(BaseModel):
     role: str
     no_hp: str
     alamat: str
+    wilayah_kerja: str
 
 class LoginSchema(BaseModel):
     email: EmailStr

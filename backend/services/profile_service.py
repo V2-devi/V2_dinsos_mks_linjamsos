@@ -45,6 +45,7 @@ def get_profile_service(user_id: UUID):
                 role,
                 status,
                 instansi,
+                wilayah_kerja,
                 alamat_instansi,
                 nama_kepala_dinas,
                 nip_kepala_dinas,
@@ -81,6 +82,7 @@ def insert_user_profile(data):
             "alamat_instansi": data.get("alamat_instansi"),
             "nama_kepala_dinas": data.get("nama_kepala_dinas"),
             "nip_kepala_dinas": data.get("nip_kepala_dinas"),
+            "wilayah_kerja": data.get("wilayah_kerja"),
             "status": data.get("status", "menunggu"),
             "is_active": data.get("is_active", False)
         }
@@ -291,6 +293,7 @@ def create_staff(data):
             "role": data.role,
             "alamat": data.alamat,
             "no_hp": data.no_hp,
+            "wilayah_kerja": data.wilayah_kerja,
             "status": "disetujui",
             "is_active": True
         }).execute()

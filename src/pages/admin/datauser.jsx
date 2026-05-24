@@ -275,7 +275,8 @@ const handleApprove = async (id) => {
       email: formData.email,
       no_hp: formData.no_hp,
       alamat: formData.alamat,
-      status: formData.status
+      status: formData.status,
+      wilayah_kerja: formData.wilayah_kerja
     };
 
     try {
@@ -310,6 +311,7 @@ const handleApprove = async (id) => {
       alamat: user.alamat || "",
       role: user.role || "",
       status: user.status ||  "menunggu",
+      wilayah_kerja: user.wilayah_kerja || "",
 
     }); // Isi form dengan data user yang diklik
 
@@ -340,6 +342,7 @@ const handleApprove = async (id) => {
         status: formData.status,
         nip: formData.nip || null,
         nik: formData.nik || null,
+        wilayah_kerja: formData.wilayah_kerja,
       };
 
       console.log("Payload dikirim:", payload);

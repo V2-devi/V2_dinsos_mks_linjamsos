@@ -16,6 +16,7 @@ class StaffSchema(BaseModel):
     nama_kepala_dinas: Optional[str] = None
     nip_kepala_dinas: Optional[str] = None
     status: str
+    wilayah_kerja: str
 
 class StaffUpdateSchema(BaseModel):
     status: str
