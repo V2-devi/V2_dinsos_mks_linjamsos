@@ -33,8 +33,8 @@ function Dtsen({
   setCatatanAssessment,
   handleUpdateStatusPPKS
 }) {
-
-  // ✅ KAMUS DATA UNTUK FILTER DINAMIS
+  
+  // === KAMUS DATA KECAMATAN & KELURAHAN (FILTER DINAMIS) ===
   const daftarWilayah = {
     "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
     "Tamalanrea": ["Tamalanrea", "Tamalanrea Indah", "Tamalanrea Jaya", "Kapasa", "Kapasa Raya", "Bira", "Parang Loe", "Buntusu"],
@@ -42,7 +42,7 @@ function Dtsen({
     "Panakkukang": ["Karampuang", "Masale", "Pampang", "Panaikang", "Pandang", "Paropo", "Sinrijala", "Tamamaung"],
     "Tamalate": ["Balang Baru", "Barombong", "Bongaya", "Bonto Duri", "Jongaya", "Maccini Sombala", "Mangasa", "Mannuruki", "Pa'baeng-baeng", "Parang Tambung", "Tanjung Merdeka"]
   };
-  
+
   return (
     <>
       {/* =======================================================
@@ -76,7 +76,6 @@ function Dtsen({
             <button className="btn-search-outline" onClick={() => setActiveTab("data_ppks")} style={{ height: '36px' }}>&larr; Kembali ke Daftar PPKS</button>
           </div>
 
-          {/* ✅ PERBAIKAN: Status dan Tanggal Laporan akurat dari tabel depan */}
           <div className="info-alert-box" style={{ 
               backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
               borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
@@ -87,7 +86,6 @@ function Dtsen({
             <span style={{ fontSize: '12px', fontWeight: '500' }}>Tgl Laporan: {formatDateIndo(selectedPPKSData.tanggal_penemuan || selectedPPKSData.tanggal_penemuan)}</span>
           </div>
 
-          {/* ✅ PERBAIKAN: Seluruh data ditarik dari inputan form */}
           <div className="detail-summary-grid">
             <div className="summary-col">
               <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap || "Tanpa Identitas"}</span></div>
@@ -118,8 +116,6 @@ function Dtsen({
             </div>
 
             <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end', alignItems: 'center' }}>
-              
-              {/* ✅ DITAMBAHKAN: Tombol Simpan Catatan tanpa mengubah status kasus */}
               <button 
                 className="btn-search-outline" 
                 style={{ height: '40px', borderColor: '#3b82f6', color: '#3b82f6' }} 
@@ -197,7 +193,7 @@ function Dtsen({
       )}
 
       {/* =======================================================
-          3. DTSEN (TAB LIHAT DATA TABLE & FILTER UTAMA)
+          3. DTSEN (TAB LIHAT DATA TABLE & FILTER DINAMIS)
       ======================================================= */}
       {activeMenu === "lihat_dtsen" && activeTab === "data_dtsen" && (
         <div className="tab-content-wrapper outline-box">
@@ -207,7 +203,9 @@ function Dtsen({
               <div className="select-container-custom">
                 <select name="kecamatan" value={filterDtsen.kecamatan} onChange={handleFilterDtsenChange}>
                   <option value="">Semua Kecamatan</option>
-                  {Object.keys(daftarWilayah).map((kec) => (<option key={kec} value={kec}>{kec}</option>))}
+                  {Object.keys(daftarWilayah).map((kec) => (
+                    <option key={kec} value={kec}>{kec}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -231,22 +229,21 @@ function Dtsen({
               <input type="text" name="nama_kepala_keluarga" value={filterDtsen.nama_kepala_keluarga} onChange={handleFilterDtsenChange} className="input-custom" placeholder="Ketik Nama..." />
             </div>
           </div>
-          {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
-<div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
-  <button className="btn-action-data btn-export" onClick={() => {/* Tambahkan fungsi export Anda */}}>
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-    Export
-  </button>
-  
-  <button className="btn-action-data btn-import" onClick={() => {/* Tambahkan fungsi import Anda */}}>
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-    Import
-  </button>
 
-  <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
-    <span className="plus-icon">+</span> Tambah Usulan
-  </button>
-</div>
+          {/* ✅ SUSUNAN BARU: EXPORT | IMPORT | TAMBAH */}
+          <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
+            <button className="btn-action-data btn-export" onClick={() => alert("Fitur Export Excel akan segera tersedia...")}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              Export
+            </button>
+            <button className="btn-action-data btn-import" onClick={() => alert("Fitur Import Data akan segera tersedia...")}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              Import
+            </button>
+            <button className="btn-add-staff" onClick={() => setIsAddDtsenModalOpen(true)}>
+              <span className="plus-icon">+</span> Tambah Data DTSEN
+            </button>
+          </div>
 
           <div className="table-wrapper">
             <div className="table-responsive">
@@ -266,7 +263,7 @@ function Dtsen({
                 </thead>
                 <tbody>
                   {tableDtsenFiltered.length > 0 ? tableDtsenFiltered.map((item) => (
-                    <tr key={item.user_id}>
+                    <tr key={item.user_id || item.id}>
                       <td>{item.no_kk}</td>
                       <td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td>
                       <td>{item.tanggal_lahir || "-"}</td>
@@ -339,7 +336,6 @@ function Dtsen({
 
           {detailDtsenInnerTab === "anggota" && (
             <div>
-              {/* ✅ INI BAGIAN YANG DITAMBAHKAN (Tombol dipindah ke atas tabel) */}
               <div className="action-row-right" style={{ marginBottom: '15px' }}>
                 <button className="btn-add-staff" onClick={() => setIsAddAnggotaModalOpen(true)}>
                   <span className="plus-icon">+</span> Tambah Anggota
@@ -399,7 +395,6 @@ function Dtsen({
                     })}
                   </tbody>
                 </table>
-                {/* ✅ TOMBOL YANG SEBELUMNYA DI SINI SUDAH DIHAPUS */}
               </div>
             </div>
           )}
@@ -511,7 +506,7 @@ function Dtsen({
       )}
 
       {/* =======================================================
-          6. PPKS (TAB DAFTAR DATA TABLE & FILTER PPKS)
+          6. PPKS (TAB DAFTAR DATA TABLE & FILTER DINAMIS)
       ======================================================= */}
       {activeMenu === "ppks" && activeTab === "data_ppks" && (
         <div className="tab-content-wrapper outline-box">
@@ -555,7 +550,9 @@ function Dtsen({
               <div className="select-container-custom">
                 <select name="kecamatan" value={filterTabelPPKS.kecamatan} onChange={handleFilterPPKSChange}>
                   <option value="">Semua Kecamatan</option>
-                  {Object.keys(daftarWilayah).map((kec) => (<option key={kec} value={kec}>{kec}</option>))}
+                  {Object.keys(daftarWilayah).map((kec) => (
+                    <option key={kec} value={kec}>{kec}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -576,34 +573,30 @@ function Dtsen({
             </div>
           </div>
           
-          {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
-<div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
-  <button className="btn-action-data btn-export" onClick={() => {/* Tambahkan fungsi export Anda */}}>
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-    Export
-  </button>
-  
-  <button className="btn-action-data btn-import" onClick={() => {/* Tambahkan fungsi import Anda */}}>
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-    Import
-  </button>
-
-  <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
-    <span className="plus-icon">+</span> Tambah Usulan
-  </button>
-</div>
+          {/* ✅ SUSUNAN BARU: EXPORT | IMPORT | TAMBAH */}
+          <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
+            <button className="btn-action-data btn-export" onClick={() => alert("Fitur Export Excel akan segera tersedia...")}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              Export
+            </button>
+            <button className="btn-action-data btn-import" onClick={() => alert("Fitur Import Data akan segera tersedia...")}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              Import
+            </button>
+            <button className="btn-add-staff" onClick={() => setIsAddPPKSModalOpen(true)}>
+              <span className="plus-icon">+</span> Tambah Laporan PPKS
+            </button>
+          </div>
           
           <div className="table-wrapper">
             <div className="table-responsive">
               <table className="staff-table">
                 <thead>
-                  {/* ✅ DIUBAH: Header Tabel Disusun Ulang */}
                   <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
                 </thead>
                 <tbody>
                   {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
                     <tr key={item.id}>
-                      {/* ✅ DIUBAH: Isi Data Tabel Disusun Ulang */}
                       <td>{item.nik || "-"}</td>
                       <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap || "Tanpa Identitas"}</span></td>
                       <td>{item.kategori}</td>

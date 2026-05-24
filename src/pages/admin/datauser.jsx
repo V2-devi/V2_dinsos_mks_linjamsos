@@ -626,11 +626,6 @@ const handleApprove = async (id) => {
                         <option value="admin">admin</option>
                       </select>
                     </div>
-                    
-                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
-                      <label>Kata Sandi Sementara*</label>
-                      <input type="text" name="password" value={formData.password || ""} onChange={handleInputChange} required placeholder="Ketik kata sandi..." />
-                    </div>
                   </div>
                 </div>
 
@@ -643,9 +638,26 @@ const handleApprove = async (id) => {
                   </div>
                 </div>
                 {/* Field Baru */}
-                <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
+                {/* GANTI MENJADI SEPERTI INI */}
+                <div className="form-group-modal">
                   <label>Wilayah Kerja (Kecamatan)*</label>
-                  <input type="text" name="wilayah_kerja" value={formData.wilayah_kerja || ""} onChange={handleInputChange} required placeholder="Contoh: Kecamatan Tallo" />
+                  <div className="select-container-custom">
+                    <select 
+                      name="wilayah_kerja" 
+                      value={formData.wilayah_kerja || ""} 
+                      onChange={handleInputChange} 
+                      required 
+                      style={{width:'100%', height:'42px', border:'1px solid #cbd5e1', borderRadius:'6px', padding:'0 10px', backgroundColor: 'white', outline: 'none'}}
+                    >
+                      <option value="" disabled hidden>Pilih Kecamatan Penugasan</option>
+                      <option value="Tallo">Tallo</option>
+                      <option value="Tamalanrea">Tamalanrea</option>
+                      <option value="Biring Kanaya">Biring Kanaya</option>
+                      <option value="Panakkukang">Panakkukang</option>
+                      <option value="Tamalate">Tamalate</option>
+                      <option value="Bontoala">Bontoala</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="modal-section">
