@@ -19,5 +19,4 @@ class StaffSchema(BaseModel):
     wilayah_kerja: str
 
 class StaffUpdateSchema(BaseModel):
-    status: str
-  
+    status: Optional[str] = None

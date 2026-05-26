@@ -20,79 +20,6 @@ def generate_password(length=8):
     )
 
 
-# def create_staff(data):
-
-#     try:
-
-#         # =====================================
-#         # PASSWORD OTOMATIS
-#         # =====================================
-#         temp_password = generate_password()
-
-#         # =====================================
-#         # CREATE AUTH USER
-#         # =====================================
-#         auth_user = supabase.auth.admin.create_user({
-
-#             "email": data.email,
-
-#             "password": temp_password,
-
-#             "email_confirm": True
-#         })
-
-#         user = auth_user.user
-
-#         # =====================================
-#         # INSERT KE TABEL PENGGUNA
-#         # =====================================
-#         supabase.table("pengguna").insert({
-
-#             "id": str(user.id),
-
-#             "email": data.email,
-
-#             "nama_lengkap": data.nama_lengkap,
-
-#             "nik": data.nik,
-
-#             "nip": data.nip,
-
-#             "no_hp": data.no_hp,
-
-#             "alamat": data.alamat,
-
-#             "role": data.role,
-
-#             "status": "disetujui",
-
-#             "is_active": True,
-
-#             # PROFILE DEFAULT
-#             "instansi": "",
-
-#             "alamat_instansi": "",
-
-#             "nama_kepala_dinas": "",
-
-#             "nip_kepala_dinas": ""
-
-#         }).execute()
-
-#         return {
-
-#             "message": "Akun berhasil dibuat",
-
-#             "password": temp_password
-#         }
-
-#     except Exception as e:
-
-#         return {
-#             "error": str(e)
-#         }
-
-
 def create_staff(data):
 
     try:
@@ -133,6 +60,7 @@ def create_staff(data):
             "role": data.role,
             "alamat": data.alamat,
             "no_hp": data.no_hp,
+            "wilayah_kerja": data.wilayah_kerja,
             "status": "disetujui",
             "is_active": True
         })

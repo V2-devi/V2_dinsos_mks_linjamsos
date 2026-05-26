@@ -732,6 +732,21 @@ const handleApprove = async (id) => {
                     <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Email Disetujui*</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat} onChange={handleInputChange} required /></div>
+                   
+                   {/* Jawaban kenapa wilayah kerja tidak */}
+                    <div className="form-group-modal">
+                      <label>Wilayah Kerja*</label>
+                      <select name="wilayah_kerja" value={formData.wilayah_kerja} onChange={handleInputChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}} required>
+                        <option value="">Pilih Wilayah Kerja</option>
+                        <option value="Tallo">Tallo</option>
+                        <option value="Tamalanrea">Tamalanrea</option>
+                        <option value="Biring Kanaya">Biring Kanaya</option>
+                        <option value="Panakkukang">Panakkukang</option>
+                        <option value="Tamalate">Tamalate</option>
+                      </select>
+                    </div>
+
+
                   </div>
                 </div>
 
