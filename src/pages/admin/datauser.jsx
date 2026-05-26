@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./datauser.css"; 
-import { Pencil, Trash2 } from "lucide-react";
 
 // ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH) AGAR SERAGAM DENGAN ADMIN DASHBOARD
 import logoSicadas from "../../assets/logo_sicadas.png";
