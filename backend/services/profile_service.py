@@ -139,9 +139,6 @@ def get_user_by_email(email):
 # =========================================================
 # UPDATE USER PROFILE
 # =========================================================
-
-
-# def update_user_profile(user_id: UUID, data:dict):
 def update_user_profile(user_id: UUID, data):
 
     try:
@@ -187,86 +184,6 @@ def update_user_profile(user_id: UUID, data):
         print("ERROR:", str(e))
 
         return {"error": str(e)}
-
-# def update_user_profile(
-#     user_id: UUID,
-#     data
-# ):
-
-#     try:
-
-#         # =====================================
-#         # CLEAN USER ID
-#         # =====================================
-#         clean_user_id = str(user_id).strip()
-
-#         print("USER ID:", clean_user_id)
-
-#         # =====================================
-#         # CEK USER DULU
-#         # =====================================
-#         check_user = supabase.table("pengguna") \
-#             .select("*") \
-#             .eq("id", clean_user_id) \
-#             .execute()
-
-#         print("CHECK USER:", check_user.data)
-
-#         # =====================================
-#         # USER TIDAK ADA
-#         # =====================================
-#         if not check_user.data:
-#             return {
-#                 "error": "User tidak ditemukan"
-#             }
-
-#         # =====================================
-#         # CONVERT SCHEMA → DICT
-#         # =====================================
-#         if hasattr(data, "dict"):
-#             payload = data.dict(exclude_unset=True)
-#         elif isinstance(data, dict):
-#             payload = {k: v for k, v in data.items() if v is not None}
-#         else:
-#             payload = dict(data)
-
-#         # Remove id from payload to avoid primary key update
-#         payload.pop("id", None)
-
-#         # Remove empty strings for fields that should not be updated unintentionally
-#         payload = {k: v for k, v in payload.items() if v is not None}
-
-#         print("PAYLOAD:", payload)
-
-#         if not payload:
-#             return {
-#                 "error": "Tidak ada data profile yang diupdate"
-#             }
-
-#         # =====================================
-#         # UPDATE
-#         # =====================================
-#         result = supabase.table("pengguna") \
-#             .update(payload) \
-#             .eq("id", clean_user_id) \
-#             .select("*") \
-#             .execute()
-
-#         print("UPDATE RESULT:", result.data)
-
-#         if not result.data:
-#             return {
-#                 "error": "Update profile gagal"
-#             }
-
-#         return result.data
-
-#     except Exception as e:
-#         print("UPDATE ERROR:", str(e))
-#         return {
-#             "error": str(e)
-#         }
-
 
 
 def create_staff(data):

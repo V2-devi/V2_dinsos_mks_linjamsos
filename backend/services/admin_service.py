@@ -10,6 +10,28 @@ import random
 import string
 
 
+def get_users_service():
+
+    try:
+
+        result = (
+            supabase
+            .table("pengguna")
+            .select("*")
+            .execute()
+        )
+
+        return result.data
+
+    except Exception as e:
+
+        print("GET USERS ERROR:", str(e))
+
+        return {
+            "error": str(e)
+        }
+
+
 def generate_password(length=8):
 
     chars = string.ascii_letters + string.digits
@@ -86,9 +108,6 @@ def create_staff(data):
 
 
 
-
-
-
 def update_user_service(user_id, data):
 
     try:
@@ -102,14 +121,13 @@ def update_user_service(user_id, data):
         # =====================================
         if hasattr(data, "dict"):
 
-            payload = data.dict(exclude_unset=True)
+            # ✅ FIX
+            payload = data.dict()
 
         elif isinstance(data, dict):
 
             payload = {
-
                 k: v for k, v in data.items()
-
                 if v is not None
             }
 
@@ -129,15 +147,12 @@ def update_user_service(user_id, data):
             if raw_status in ["disetujui", "approved"]:
 
                 payload["status"] = "disetujui"
-
                 payload["is_active"] = True
-
                 approved = True
 
             else:
 
                 payload["status"] = "menunggu"
-
                 payload["is_active"] = False
 
         print("DEBUG FINAL PAYLOAD:", payload)
@@ -145,10 +160,13 @@ def update_user_service(user_id, data):
         # =====================================
         # UPDATE DATABASE
         # =====================================
-        result = supabase.table("pengguna") \
-            .update(payload) \
-            .eq("id", str(user_id)) \
+        result = (
+            supabase
+            .table("pengguna")
+            .update(payload)
+            .eq("id", str(user_id))
             .execute()
+        )
 
         print("DEBUG UPDATE RESULT:", result)
 
@@ -158,31 +176,37 @@ def update_user_service(user_id, data):
         if not result.data:
 
             return {
-
                 "error": "Update gagal"
             }
 
         # =====================================
-        # KIRIM EMAIL SETELAH UPDATE
+        # EMAIL APPROVAL
         # =====================================
         if approved:
 
-            user_result = supabase.table("pengguna") \
-                .select("*") \
-                .eq("id", str(user_id)) \
-                .single() \
+            user_result = (
+                supabase
+                .table("pengguna")
+                .select("*")
+                .eq("id", str(user_id))
+                .single()
                 .execute()
+            )
 
             user_data = user_result.data
 
             print("DEBUG USER DATA:", user_data)
 
-            send_approval_email(
+            try:
 
-                user_data["email"],
+                send_approval_email(
+                    user_data["email"],
+                    user_data["nama_lengkap"]
+                )
 
-                user_data["nama_lengkap"]
-            )
+            except Exception as email_error:
+
+                print("EMAIL ERROR:", str(email_error))
 
         return result.data
 
@@ -191,80 +215,146 @@ def update_user_service(user_id, data):
         print("DEBUG ERROR:", str(e))
 
         return {
-
             "error": str(e)
         }
-    
 
+
+
+def delete_user_service(user_id: str):
+
+    try:
+
+        print("DELETE USER:", user_id)
+
+        result = (
+            supabase
+            .table("pengguna")
+            .delete()
+            .eq("id", str(user_id))
+            .execute()
+        )
+
+        print("DELETE RESULT:", result.data)
+
+        return {
+            "success": True,
+            "data": result.data
+        }
+
+    except Exception as e:
+
+        print("DELETE ERROR:", str(e))
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 # def update_user_service(user_id, data):
+
 #     try:
+
 #         print(f"DEBUG: Updating user {user_id} with data: {data}")
 
 #         payload = {}
 
-#         # Handle Pydantic model
+#         # =====================================
+#         # HANDLE PYDANTIC / DICT
+#         # =====================================
 #         if hasattr(data, "dict"):
-#             payload = data.dict(exclude_unset=True)
-#             print(f"DEBUG: Pydantic payload: {payload}")
-#         elif isinstance(data, dict):
-#             payload = {k: v for k, v in data.items() if v is not None}
-#             print(f"DEBUG: Dict payload: {payload}")
 
-#         # Ensure status is processed
-#         if "status" in payload and payload["status"] is not None:
-#             raw_status = str(payload["status"]).strip().lower()
+#             payload = data.dict(exclude_unset=True)
+
+#         elif isinstance(data, dict):
+
+#             payload = {
+
+#                 k: v for k, v in data.items()
+
+#                 if v is not None
+#             }
+
+#         print("DEBUG PAYLOAD:", payload)
+
+#         # =====================================
+#         # HANDLE STATUS
+#         # =====================================
+#         approved = False
+
+#         if "status" in payload:
+
+#             raw_status = str(
+#                 payload["status"]
+#             ).strip().lower()
+
 #             if raw_status in ["disetujui", "approved"]:
+
 #                 payload["status"] = "disetujui"
+
 #                 payload["is_active"] = True
+
+#                 approved = True
+
 #             else:
+
 #                 payload["status"] = "menunggu"
+
 #                 payload["is_active"] = False
 
-#         print(f"DEBUG: Final payload: {payload}")
+#         print("DEBUG FINAL PAYLOAD:", payload)
 
-#         if not payload:
-#             return {"error": "Tidak ada data untuk diupdate"}
-
-#         # Ensure user_id is string
-#         user_id_str = str(user_id).strip()
-#         print(f"DEBUG: Using user_id: {user_id_str}")
-
+#         # =====================================
+#         # UPDATE DATABASE
+#         # =====================================
 #         result = supabase.table("pengguna") \
 #             .update(payload) \
-#             .eq("id", user_id_str) \
+#             .eq("id", str(user_id)) \
 #             .execute()
 
-#         print(f"DEBUG: Update result: {result}")
+#         print("DEBUG UPDATE RESULT:", result)
 
+#         # =====================================
+#         # CEK RESULT
+#         # =====================================
 #         if not result.data:
-#             return {"error": "User tidak ditemukan atau tidak ada perubahan"}
+
+#             return {
+
+#                 "error": "Update gagal"
+#             }
+
+#         # =====================================
+#         # KIRIM EMAIL SETELAH UPDATE
+#         # =====================================
+#         if approved:
+
+#             user_result = supabase.table("pengguna") \
+#                 .select("*") \
+#                 .eq("id", str(user_id)) \
+#                 .single() \
+#                 .execute()
+
+#             user_data = user_result.data
+
+#             print("DEBUG USER DATA:", user_data)
+
+#             send_approval_email(
+
+#                 user_data["email"],
+
+#                 user_data["nama_lengkap"]
+#             )
 
 #         return result.data
+
 #     except Exception as e:
-#         print(f"DEBUG: Exception in update_user_service: {str(e)}")
-#         return {"error": str(e)}
 
+#         print("DEBUG ERROR:", str(e))
 
+#         return {
 
+#             "error": str(e)
+#         }
+    
 
-
-
-
-# def update_user_service(user_id, data):
-
-#     try:
-
-#         result = supabase.table("pengguna") \
-#             .update({
-#                 "status": data.get("status") or "menunggu",
-#                 "is_active": True if data.get("status") == "disetujui" else False
-#             }) \
-#             .eq("id", user_id) \
-#             .execute()
-
-#         return result.data
-
-#     except APIError as e:
-#         return {"error": str(e)}
 

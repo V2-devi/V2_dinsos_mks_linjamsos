@@ -401,27 +401,41 @@ const handleApprove = async (id) => {
   };
 
 // === HANDLER HAPUS DATA (PERMANEN) ===
-  const confirmDelete = async () => {
-    setIsLoading(true);
-    try {
-      // ✅ Memanggil API Backend untuk menghapus data (Beri tahu teman backend Anda untuk menyiapkan endpoint DELETE ini)
-      await axios.delete(`http://localhost:8000/admin/delete/${userToDelete.id}`);
-    } catch (err) {
-      console.warn("Backend mati atau endpoint berbeda. Menghapus data dari tampilan lokal...");
-    } finally {
-      // ✅ PERBAIKAN: Gunakan .filter() untuk membuang data secara permanen dari tabel
-      // Kita mengecek berdasarkan ID dan NIP agar anti-error
-      const updatedList = users.filter(u => u.id !== userToDelete.id && u.nip !== userToDelete.nip);
-      
-      setUsers(updatedList);
-      localStorage.setItem("localUsers", JSON.stringify(updatedList));
+const confirmDelete = async () => {
 
-      setIsDeleteModalOpen(false);
-      setUserToDelete(null);
-      showSuccess();
-      setIsLoading(false);
-    }
-  };
+  setIsLoading(true);
+
+  try {
+
+    console.log("DELETE USER:", userToDelete);
+
+    const response = await axios.delete(
+      `http://localhost:8000/admin/delete/${userToDelete.id}`
+    );
+
+    console.log("DELETE RESPONSE:", response.data);
+
+    // refresh data dari backend
+    await fetchUsers();
+
+    // tutup modal
+    setIsDeleteModalOpen(false);
+
+    setUserToDelete(null);
+
+    showSuccess();
+
+  } catch (err) {
+
+    console.error("DELETE ERROR:", err);
+
+    alert("Gagal menghapus user");
+
+  } finally {
+
+    setIsLoading(false);
+  }
+};
 
   // Tampilkan Notifikasi Sukses
   const showSuccess = () => {
