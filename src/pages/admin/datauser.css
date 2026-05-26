@@ -136,7 +136,7 @@ body {
   font-size: 14px; 
   color: #3b82f6; 
   font-weight: 700; 
-  margin-top: 30px; /* ✅ INI KUNCINYA: Memberikan spasi atas yang seragam dan lega */
+  margin-top: 30px; 
   margin-bottom: 15px; 
   padding-bottom: 8px; 
   border-bottom: 1px solid #cbd5e1; 
@@ -204,3 +204,4 @@ body {
   .custom-select-box, .custom-search-box { width: 100% !important; }
   .form-grid-2 { grid-template-columns: 1fr; }
 }
+

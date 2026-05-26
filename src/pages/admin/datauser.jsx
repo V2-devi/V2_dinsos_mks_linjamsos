@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./datauser.css"; 
+import { Pencil, Trash2 } from "lucide-react";
 
 // ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH) AGAR SERAGAM DENGAN ADMIN DASHBOARD
 import logoSicadas from "../../assets/logo_sicadas.png";
@@ -24,8 +25,6 @@ function DataUser() {
 
 // === STATE DATA PENGGUNA ===
   const [users, setUsers] = useState([]);
-
-  
 
 // Update status akun
 const handleUpdateStatus = async () => {
@@ -403,27 +402,41 @@ const handleApprove = async (id) => {
   };
 
 // === HANDLER HAPUS DATA (PERMANEN) ===
-  const confirmDelete = async () => {
-    setIsLoading(true);
-    try {
-      // ✅ Memanggil API Backend untuk menghapus data (Beri tahu teman backend Anda untuk menyiapkan endpoint DELETE ini)
-      await axios.delete(`http://localhost:8000/admin/delete/${userToDelete.id}`);
-    } catch (err) {
-      console.warn("Backend mati atau endpoint berbeda. Menghapus data dari tampilan lokal...");
-    } finally {
-      // ✅ PERBAIKAN: Gunakan .filter() untuk membuang data secara permanen dari tabel
-      // Kita mengecek berdasarkan ID dan NIP agar anti-error
-      const updatedList = users.filter(u => u.id !== userToDelete.id && u.nip !== userToDelete.nip);
-      
-      setUsers(updatedList);
-      localStorage.setItem("localUsers", JSON.stringify(updatedList));
+const confirmDelete = async () => {
 
-      setIsDeleteModalOpen(false);
-      setUserToDelete(null);
-      showSuccess();
-      setIsLoading(false);
-    }
-  };
+  setIsLoading(true);
+
+  try {
+
+    console.log("DELETE USER:", userToDelete);
+
+    const response = await axios.delete(
+      `http://localhost:8000/admin/delete/${userToDelete.id}`
+    );
+
+    console.log("DELETE RESPONSE:", response.data);
+
+    // refresh data dari backend
+    await fetchUsers();
+
+    // tutup modal
+    setIsDeleteModalOpen(false);
+
+    setUserToDelete(null);
+
+    showSuccess();
+
+  } catch (err) {
+
+    console.error("DELETE ERROR:", err);
+
+    alert("Gagal menghapus user");
+
+  } finally {
+
+    setIsLoading(false);
+  }
+};
 
   // Tampilkan Notifikasi Sukses
   const showSuccess = () => {
@@ -592,7 +605,7 @@ const handleApprove = async (id) => {
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg><h2>Tambah Staff Baru</h2></div>
+              <div className="modal-header-title"><h2>Tambah Staff Baru</h2></div>
             </div>
             <div className="modal-body">
               {/* ✅ MENAMPILKAN KOTAK ERROR JIKA SERVER MENOLAK */}
@@ -691,7 +704,7 @@ const handleApprove = async (id) => {
         <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-header-title"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><h2>Edit Profil Staff</h2></div>
+              <div className="modal-header-title"><h2>Edit Profil Staff</h2></div>
             </div>
             <div className="modal-body">
               {errorMessage && (
@@ -713,8 +726,17 @@ const handleApprove = async (id) => {
                 <div className="modal-section">
                   <h3 className="section-subtitle">Informasi Akun</h3>
                   <div className="form-grid-2">
-                    <div className="form-group-modal"><label>NIP Pegawai</label><input type="text" name="nip" value={formData.nip} onChange={handleInputChange} 
-                    /></div>
+                    <div className="form-group-modal">
+                      <label>NIP Pegawai</label>
+                      <input 
+                        type="text" 
+                        name="nip" 
+                        value={formData.nip} 
+                        onChange={handleInputChange} 
+                        readOnly 
+                        style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} // Opsional: Beri warna abu-abu agar user tahu itu tidak bisa diedit
+                      />
+                    </div>
                     <div className="form-group-modal">
                       <label>Role / Posisi*</label>
                       <select name="role" value={formData.role} onChange={handleInputChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}}>

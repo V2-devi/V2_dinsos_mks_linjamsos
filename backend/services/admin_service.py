@@ -10,6 +10,28 @@ import random
 import string
 
 
+def get_users_service():
+
+    try:
+
+        result = (
+            supabase
+            .table("pengguna")
+            .select("*")
+            .execute()
+        )
+
+        return result.data
+
+    except Exception as e:
+
+        print("GET USERS ERROR:", str(e))
+
+        return {
+            "error": str(e)
+        }
+
+
 def generate_password(length=8):
 
     chars = string.ascii_letters + string.digits
@@ -202,7 +224,7 @@ def delete_user_service(user_id: str):
 
     try:
 
-        print("DELETE USER ID:", user_id)
+        print("DELETE USER:", user_id)
 
         result = (
             supabase
@@ -214,16 +236,8 @@ def delete_user_service(user_id: str):
 
         print("DELETE RESULT:", result.data)
 
-        if not result.data:
-
-            return {
-                "success": False,
-                "message": "User tidak ditemukan"
-            }
-
         return {
             "success": True,
-            "message": "User berhasil dihapus",
             "data": result.data
         }
 
@@ -235,7 +249,6 @@ def delete_user_service(user_id: str):
             "success": False,
             "error": str(e)
         }
-
 
 # def update_user_service(user_id, data):
 
