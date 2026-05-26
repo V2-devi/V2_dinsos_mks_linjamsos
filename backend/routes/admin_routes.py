@@ -4,7 +4,7 @@ from dependencies.auth_dependency import get_current_user
 from config.database import supabase
 # from services.profile_service import get_all_users
 from services.auth_service import approve_user
-from services.admin_service import create_staff, update_user_service
+from services.admin_service import create_staff, update_user_service, delete_user_service
 from schemas.staff_schema import StaffSchema, StaffUpdateSchema
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -27,6 +27,20 @@ def update_user(user_id: str, data: StaffUpdateSchema):
 @router.post("/users")
 def create_staff_route(data: StaffSchema):
     return create_staff(data)
+
+
+@router.delete("/delete/{user_id}")
+async def delete_user(user_id: str):
+
+    return delete_user_service(user_id)
+
+# @router.put("/admin/update/{user_id}")
+# async def update_user(
+#     user_id: str,
+#     data: StaffSchema
+# ):
+
+#     return update_user_service(user_id, data)
 
 
 # @router.get("/users/pending")

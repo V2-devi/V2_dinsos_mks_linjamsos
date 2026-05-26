@@ -20,3 +20,7 @@ class StaffSchema(BaseModel):
 
 class StaffUpdateSchema(BaseModel):
     status: Optional[str] = None
+    nama_lengkap: Optional[str] = None
+    alamat:Optional[str] = None
+    wilayah_kerja: Optional[str] = None
+    role: Optional[str] = None
