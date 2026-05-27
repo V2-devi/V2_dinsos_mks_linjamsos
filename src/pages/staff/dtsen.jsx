@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "../../config/supabase";
 
 function Dtsen({
   activeMenu,
@@ -63,11 +64,11 @@ function Dtsen({
     hubungan_keluarga: "",
     jenis_kelamin: "",
     tanggal_lahir: "",
-    status_keadaan: "Hidup",
-    kondisi_khusus: ""
+    status_khusus: "",
+    status_keadaan: ""
   });
 
-  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "" }; 
+  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
 
   const [fotoBuktiPPKS, setFotoBuktiPPKS] = useState([]); // ✅ STATE BARU UNTUK FOTO
@@ -292,8 +293,7 @@ function Dtsen({
         jenis_kelamin: formAnggota.jenis_kelamin,
         tanggal_lahir: formAnggota.tanggal_lahir,
         status_keadaan: formAnggota.status_keadaan,
-        hamil: formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil"),
-        kondisi_khusus: formAnggota.kondisi_khusus || "Tidak ada"
+        kondisi_khusus: formAnggota.kondisi_khusus || "-"
       };
 
       const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
@@ -408,48 +408,141 @@ function Dtsen({
     }
   };
 
-  const handleAddPPKSSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const namaFoto = fotoBuktiPPKS.map(f => f.name).join(",");
-      const { data, error } = await supabase.from('ppks').insert([{
-        kategori_ppks: formPPKS.kategori_ppks, 
-        tanggal_penemuan: formPPKS.tanggal_penemuan, 
-        nik: formPPKS.nik || null, 
-        nama_lengkap: formPPKS.nama_lengkap || null,
-        kecamatan: formPPKS.kecamatan, 
-        kelurahan: formPPKS.kelurahan, 
-        lokasi_penemuan: formPPKS.lokasi_penemuan, 
-        status_penanganan: "Menunggu Kelayakan", 
-        foto_bukti: namaFoto
-      }]);
-      if (error) throw error;
-      const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
-      setDummyPPKS([newPPKS, ...dummyPPKS]);
-      setIsAddPPKSModalOpen(false);
-      setFormPPKS(initialFormPPKS);
-      setFotoBuktiPPKS([]);
-      showSuccess();
-    } catch (error) {
-      alert('Gagal menambah laporan PPKS: ' + error.message);
+  // const handleAddPPKSSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const { data, error } = await supabase.from('ppks').insert([{
+  //       kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
+  //       kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" 
+  //     }]);
+  //     if (error) throw error;
+  //     const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
+  //     setDummyPPKS([newPPKS, ...dummyPPKS]);
+  //     setIsAddPPKSModalOpen(false);
+  //     setFormPPKS(initialFormPPKS);
+  //     setFotoBuktiPPKS([]);
+  //     showSuccess();
+  //   } catch (error) {
+  //     alert('Gagal menambah laporan PPKS: ' + error.message);
+  //   }
+  // };
+
+    const handleAddPPKSSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+
+    // =====================================
+    // UPLOAD FOTO KE STORAGE
+    // =====================================
+
+    let fotoUrls = [];
+
+    if (fotoBuktiPPKS.length > 0) {
+
+      for (const file of fotoBuktiPPKS) {
+
+        const fileName =
+          `${Date.now()}-${file.name}`;
+
+        const { data: uploadData, error: uploadError } =
+          await supabase.storage
+            .from("bukti-foto-ppks")
+            .upload(fileName, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // ambil public url
+        const {
+          data: { publicUrl }
+        } = supabase.storage
+          .from("foto-ppks")
+          .getPublicUrl(fileName);
+
+        fotoUrls.push(publicUrl);
+      }
     }
-  };
+
+    // =====================================
+    // INSERT DATABASE
+    // =====================================
+
+    const { data, error } =
+      await supabase
+        .from("ppks")
+        .insert([{
+          kategori_ppks: formPPKS.kategori_ppks,
+          tanggal_penemuan: formPPKS.tanggal_penemuan,
+          nik: formPPKS.nik || null,
+          nama_lengkap: formPPKS.nama_lengkap || null,
+          kecamatan: formPPKS.kecamatan,
+          kelurahan: formPPKS.kelurahan,
+          lokasi_penemuan: formPPKS.lokasi_penemuan,
+          status_penanganan: "Menunggu Kelayakan",
+          bukti_foto_ppks: fotoUrls.length > 0 ? fotoUrls : null,
+
+          // ✅ SIMPAN FOTO
+          foto_bukti: fotoUrls
+        }])
+        .select();
+
+    if (error) throw error;
+
+    // =====================================
+    // UPDATE STATE
+    // =====================================
+
+    const newPPKS = {
+      ...data[0]
+    };
+
+    setDummyPPKS([
+      newPPKS,
+      ...dummyPPKS
+    ]);
+
+    setIsAddPPKSModalOpen(false);
+
+    setFormPPKS(initialFormPPKS);
+
+    setFotoBuktiPPKS([]);
+
+    showSuccess();
+
+  } catch (error) {
+
+    alert(
+      "Gagal menambah laporan PPKS: " +
+      error.message
+    );
+  }
+};
+
+
+  
 
   const handleOpenDetailPPKS = (data) => { setSelectedPPKSData(data); setCatatanAssessment(data.deskripsiAwal || ""); setActiveTab("detail_ppks"); };
 
-  const handleUpdateStatusPPKS = async (e, statusBaru) => {
-    e.preventDefault();
-    try {
-      const { error } = await supabase.from('ppks').update({ status_penanganan: statusBaru }).eq('id', selectedPPKSData.id);
-      if (error) throw error;
-      const updatedPPKS = dummyPPKS.map(item => item.id === selectedPPKSData.id ? { ...item, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment } : item);
-      setDummyPPKS(updatedPPKS);
-      setSelectedPPKSData({ ...selectedPPKSData, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment });
-      showSuccess();
-    } catch (error) {
-      alert('Gagal update status PPKS: ' + error.message);
-    }
-  };
+ const handleUpdateStatusPPKS = async (e, statusBaru) => {
+  e.preventDefault();
+  try {
+    const { error } = await supabase.from('ppks').update({ status_penanganan: statusBaru }).eq('id', selectedPPKSData.id);
+    if (error) throw error;
+
+    showSuccess();
+
+    // ✅ FIX UTAMA: Panggil ulang fungsi fetch data Anda
+    // Ini akan otomatis memisahkan ulang data ke ppksList & riwayatPpksList berdasarkan status baru
+    await fetchPPKS(); // <--- Ganti dengan nama fungsi fetch PPKS Anda yang sebenarnya
+
+    // Tutup modal jika ada
+    setIsValidationModalOpen(false);
+  } catch (error) {
+    alert('Gagal update status PPKS: ' + error.message);
+  }
+};
 
   const formatDateIndo = (dateStr) => { if(!dateStr || dateStr === "-") return "-"; const date = new Date(dateStr); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; };
   
@@ -1022,7 +1115,7 @@ function Dtsen({
             <div className="filter-group-top">
               <label>Kategori PPKS</label>
               <div className="select-container-custom">
-                <select name="kategori" value={filterTabelPPKS.kategori} onChange={handleFilterPPKSChange}>
+                <select name="kategori_ppks" value={filterTabelPPKS.kategori_ppks} onChange={handleFilterPPKSChange}>
                   <option value="">Semua Kategori</option>
                   <option>Anak Balita Terlantar</option>
                   <option>Anak Terlantar</option>
@@ -1076,8 +1169,8 @@ function Dtsen({
               </div>
             </div>
             <div className="filter-group-top">
-              <label>Nama</label>
-              <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama..." />
+              <label>Nama/Identitas</label>
+              <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
             </div>
           </div>
           
@@ -1099,7 +1192,7 @@ function Dtsen({
             <div className="table-responsive">
               <table className="staff-table">
                 <thead>
-                  <tr><th>NIK</th><th>Nama</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tanggal Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
+                  <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th><th>Keterangan</th></tr>
                 </thead>
                 <tbody>
                   {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
@@ -1114,11 +1207,61 @@ function Dtsen({
                       <td style={{ textAlign: "center" }}>
                         <span className={`badge-ppks ${item.status_penanganan === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status_penanganan}</span>
                       </td>
+
+{/* 
+                      <span
+                        className={`badge-ppks ${
+                          item.status_penanganan === 'Kasus Aktif'
+                            ? 'badge-aktif'
+                            : item.status_penanganan === 'Selesai'
+                            ? 'badge-selesai'
+                            : 'badge-menunggu'
+                        }`}
+                      >
+                        {item.status_penanganan}
+                      </span> */}
+
+
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Detail & Penanganan" onClick={() => handleOpenDetailPPKS(item)}>
                           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         </button>
                       </td>
+                      <td>
+                      {item.bukti_foto_ppks &&
+                      item.bukti_foto_ppks.length > 0 ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "5px",
+                            justifyContent: "center",
+                            flexWrap: "wrap"
+                          }}
+                        >
+                          {item.bukti_foto_ppks
+                            .slice(0, 3)
+                            .map((foto, index) => (
+                              <img
+                                key={index}
+                                src={foto}
+                                alt={`foto-${index}`}
+                                style={{
+                                  width: "50px",
+                                  height: "50px",
+                                  objectFit: "cover",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1"
+                                }}
+                              />
+                          ))}
+                        </div>
+
+                      ) : (
+                        <span style={{ color: "#94a3b8" }}>
+                          Tidak Ada
+                        </span>
+                      )}
+                    </td>
                     </tr>
                   )) : (
                     <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data PPKS yang cocok.</td></tr>
@@ -1199,44 +1342,6 @@ function Dtsen({
                   <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
                   <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
                   <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
-                  <div className="form-group-modal">
-                    {/* FIELD 1: STATUS KEHAMILAN (Khusus Perempuan) */}
-                    <label>Status Kehamilan</label>
-                    <div className="select-container-custom">
-                      <select 
-                        name="hamil" 
-                        value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil")}
-                        onChange={(e) => setFormAnggota({...formAnggota, hamil: e.target.value})}
-                        disabled={formAnggota.jenis_kelamin === "Laki-laki"}
-                        style={formAnggota.jenis_kelamin === "Laki-laki" ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
-                      >
-                        <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
-                        <option value="Sedang Hamil">Sedang Hamil</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* FIELD 2: DISABILITAS / PENYAKIT (Bisa untuk siapa saja) */}
-                  <div className="form-group-modal">
-                    <label>Kondisi Khusus (Disabilitas/Penyakit)</label>
-                    <div className="select-container-custom">
-                      <select 
-                        name="kondisi_khusus" 
-                        value={formAnggota.kondisi_khusus || "Tidak ada"}
-                        onChange={(e) => setFormAnggota({...formAnggota, kondisi_khusus: e.target.value})}
-                      >
-                        <option value="Tidak ada">Tidak ada</option>
-                        <option value="Disabilitas Fisik">Disabilitas Fisik</option>
-                        <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
-                        <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
-                        <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
-                        <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
-                        <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
-                        <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
-                        <option value="Penyakit Kronis">Penyakit Kronis</option>
-                      </select>
-                    </div>
-                  </div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
               </form>
