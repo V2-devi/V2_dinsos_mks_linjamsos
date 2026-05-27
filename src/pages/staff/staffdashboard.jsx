@@ -62,66 +62,22 @@ function StaffDashboard() {
   
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  // =========================================
-  // FETCH DATA KELUARGA
-  // =========================================
   const fetchKeluarga = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8000/keluarga", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // ✅ PERBAIKAN: Gunakan backtick (`) agar ${token} terbaca sebagai variabel
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("DATA KELUARGA RAW:", data);
-
-      if (Array.isArray(data)) {
-        setDtsenData(
-          data.map(item => ({
-            id: item.id,
-            no_kk: item.no_kk,
-            nik: item.nik,
-            nama_kepala_keluarga: item.nama_kepala_keluarga,
-            kecamatan: item.kecamatan,
-            kelurahan: item.kelurahan,
-            alamat: item.alamat,
-            jenis_kelamin: item.jenis_kelamin,
-            tanggal_lahir: item.tanggal_lahir,
-
-
-            // kondisi_khusus: item.kondisi_khusus,
-            
-            // ✅ STANDARISASI KEY: Gunakan 'desil' agar konsisten di seluruh aplikasi
-            hasil_desil: item.hasil_desil || "Belum Dihitung", 
-            
-            skor_pmt: item.skor_pmt || "-",
-            kategori_desil: item.kategori_desil || "",
-            
-            // Pastikan anggota juga ter-load jika backend mengirimnya
-            anggota: item.anggota_keluarga || [],
-            
-            // Tambahkan field aset agar detail aset tetap jalan
-            aset: item.aset || {},
-            asetLengkap: item.aset ? Object.keys(item.aset).length > 0 : false
-          }))
-        );
-      } else {
-        setDtsenData([]);
-      }
-    } catch (error) {
-      console.error("FETCH ERROR:", error);
-      setDtsenData([]); // Pastikan state kosong jika terjadi error agar tidak crash
+  try {
+    const response = await fetch("http://127.0.0.1:8000/keluarga");
+    if (!response.ok) throw new Error("Gagal");
+    const data = await response.json();
+    setDtsenData(data);
+  } catch (error) {
+    console.error("FETCH ERROR:", error);
+    // Cek apakah fungsi getDummyDtsen ada sebelum memanggilnya
+    if (typeof getDummyDtsen === 'function') {
+      setDtsenData(getDummyDtsen());
+    } else {
+      setDtsenData([]); // Jika fungsi tidak ada, set array kosong saja agar tidak crash
     }
-  };
+  }
+};
 
   // =========================================
   // LOAD DATA AWAL

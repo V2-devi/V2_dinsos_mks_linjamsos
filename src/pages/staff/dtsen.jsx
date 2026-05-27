@@ -63,8 +63,8 @@ function Dtsen({
     hubungan_keluarga: "",
     jenis_kelamin: "",
     tanggal_lahir: "",
-    status_khusus: "",
-    status_keadaan: ""
+    status_keadaan: "Hidup",
+    kondisi_khusus: ""
   });
 
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "" }; 
@@ -292,7 +292,8 @@ function Dtsen({
         jenis_kelamin: formAnggota.jenis_kelamin,
         tanggal_lahir: formAnggota.tanggal_lahir,
         status_keadaan: formAnggota.status_keadaan,
-        kondisi_khusus: formAnggota.kondisi_khusus || "-"
+        hamil: formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil"),
+        kondisi_khusus: formAnggota.kondisi_khusus || "Tidak ada"
       };
 
       const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
@@ -1165,6 +1166,44 @@ function Dtsen({
                   <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
                   <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
                   <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
+                  <div className="form-group-modal">
+                    {/* FIELD 1: STATUS KEHAMILAN (Khusus Perempuan) */}
+                    <label>Status Kehamilan</label>
+                    <div className="select-container-custom">
+                      <select 
+                        name="hamil" 
+                        value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil")}
+                        onChange={(e) => setFormAnggota({...formAnggota, hamil: e.target.value})}
+                        disabled={formAnggota.jenis_kelamin === "Laki-laki"}
+                        style={formAnggota.jenis_kelamin === "Laki-laki" ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                      >
+                        <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
+                        <option value="Sedang Hamil">Sedang Hamil</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* FIELD 2: DISABILITAS / PENYAKIT (Bisa untuk siapa saja) */}
+                  <div className="form-group-modal">
+                    <label>Kondisi Khusus (Disabilitas/Penyakit)</label>
+                    <div className="select-container-custom">
+                      <select 
+                        name="kondisi_khusus" 
+                        value={formAnggota.kondisi_khusus || "Tidak ada"}
+                        onChange={(e) => setFormAnggota({...formAnggota, kondisi_khusus: e.target.value})}
+                      >
+                        <option value="Tidak ada">Tidak ada</option>
+                        <option value="Disabilitas Fisik">Disabilitas Fisik</option>
+                        <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
+                        <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
+                        <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
+                        <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
+                        <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
+                        <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
+                        <option value="Penyakit Kronis">Penyakit Kronis</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
               </form>
