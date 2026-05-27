@@ -33,8 +33,9 @@ class UpdateKondisiKhusus(BaseModel):
     jenis_kelamin: Optional[str] = None
     tanggal_lahir: Optional[str] = None
     status_keadaan: Optional[str] = None
+    kondisi_khusus: Optional[str] = None
     
     # ✅ Field flat dari frontend form
-    hamil: Optional[str] = Field(default="Tidak Sedang Hamil")
-    disabilitas: Optional[str] = Field(default="Tidak Ada Disabilitas")
-    penyakit: Optional[str] = Field(default="")
+    # hamil: Optional[str] = Field(default="Tidak Sedang Hamil")
+    # disabilitas: Optional[str] = Field(default="Tidak Ada Disabilitas")
+    # penyakit: Optional[str] = Field(default="")

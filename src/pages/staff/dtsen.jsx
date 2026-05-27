@@ -63,6 +63,7 @@ function Dtsen({
     hubungan_keluarga: "",
     jenis_kelamin: "",
     tanggal_lahir: "",
+    status_khusus: "",
     status_keadaan: ""
   });
 
@@ -263,7 +264,19 @@ function Dtsen({
     }
   };
 
-  const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
+  // const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
+  const handleOpenDetailAnggota = (anggota) => {
+
+    setSelectedAnggotaData({
+      ...anggota,
+
+      kondisi_khusus:
+        anggota.kondisi_khusus || ""
+    });
+
+    setIsDetailAnggotaModalOpen(true);
+  };
+
 
   const handleAddAnggotaSubmit = async (e) => {
     e.preventDefault();
@@ -278,7 +291,8 @@ function Dtsen({
         hubungan_keluarga: formAnggota.hubungan_keluarga,
         jenis_kelamin: formAnggota.jenis_kelamin,
         tanggal_lahir: formAnggota.tanggal_lahir,
-        status_keadaan: formAnggota.status_keadaan
+        status_keadaan: formAnggota.status_keadaan,
+        kondisi_khusus: formAnggota.kondisi_khusus || "-"
       };
 
       const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
@@ -295,7 +309,7 @@ function Dtsen({
 
       await fetchAnggota(selectedNoKK);
       setIsAddAnggotaModalOpen(false);
-      setFormAnggota({ nik: "", nama_anggota_keluarga: "", hubungan_keluarga: "", jenis_kelamin: "", tanggal_lahir: "", status_keadaan: "" });
+      setFormAnggota({ nik: "", nama_anggota_keluarga: "", hubungan_keluarga: "", jenis_kelamin: "", tanggal_lahir: "", status_keadaan: "", kondisi_khusus: "" });
       showSuccess();
     } catch (error) {
       alert(error.message);
@@ -768,10 +782,25 @@ function Dtsen({
                   </thead>
                   <tbody>
                     {selectedDtsenData?.anggota?.map((ang, index) => {
-                      const kondisi_khusus = [];
-                      if (ang.hamil && ang.hamil === "Sedang Hamil") kondisi_khusus.push("Hamil");
-                      if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") kondisi_khusus.push(ang.disabilitas);
-                      if (ang.penyakit && ang.penyakit.trim() !== "") kondisi_khusus.push(ang.penyakit);
+
+                      const kondisiList = [];
+
+                      if (ang.hamil && ang.hamil !== "Tidak Sedang Hamil") {
+                        kondisiList.push("Hamil");
+                      }
+
+                      if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") {
+                        kondisiList.push(ang.disabilitas);
+                      }
+
+                      if (ang.penyakit && ang.penyakit.trim() !== "") {
+                        kondisiList.push(ang.penyakit);
+                      }
+
+                      const kondisi_khusus =
+                        kondisiList.length > 0
+                          ? kondisiList.join(", ")
+                          : "-";
 
                       return (
                         <tr key={ang.id || index}>
@@ -781,6 +810,41 @@ function Dtsen({
                           <td>{ang.hubungan_keluarga}</td>
                           <td>{ang.jenis_kelamin && ang.jenis_kelamin !== "-" ? ang.jenis_kelamin : (index === 0 ? selectedDtsenData?.jenis_kelamin : "-")}</td>
                           <td>
+                            {kondisi_khusus !== "-" ? (
+                              <span
+                                style={{
+                                  color: '#e11d48',
+                                  fontWeight: '600',
+                                  fontSize: '12px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                  ></path>
+                                </svg>
+
+                                {kondisi_khusus}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>-</span>
+                            )}
+                          </td>
+
+
+                          {/* <td>
                             {kondisi_khusus.length > 0 ? (
                               <span style={{ color: '#e11d48', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -789,7 +853,7 @@ function Dtsen({
                             ) : (
                               <span style={{ color: '#94a3b8' }}>-</span>
                             )}
-                          </td>
+                          </td> */}
                           <td>
                             <span style={{ backgroundColor: ang.status_keadaan === 'Hidup' ? '#22c55e' : '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>
                               {ang.status_keadaan}
