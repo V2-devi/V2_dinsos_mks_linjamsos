@@ -178,6 +178,7 @@ function StaffDashboard() {
             nama_lengkap: item.nama_lengkap,
             kategori_ppks: item.kategori_ppks,
             kecamatan: item.kecamatan,
+            kelurahan: item.kelurahan,
             lokasi_penemuan: item.lokasi_penemuan,
             tanggal_penemuan: item.tanggal_penemuan,
             status_penanganan: item.status_penanganan

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class PPKS(BaseModel):
     nama_lengkap: str
@@ -11,3 +11,6 @@ class PPKS(BaseModel):
     # detail_lokasi: str
     kecamatan: Optional[str] = None
     kelurahan: Optional[str] = None
+
+
+    bukti_foto_ppks: Optional[List[str]] = []

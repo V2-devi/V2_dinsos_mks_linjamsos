@@ -5,7 +5,8 @@ from services.ppks_service import (
     get_ppks_by_id_service,
     create_ppks_service,
     update_ppks_service,
-    delete_ppks_service
+    delete_ppks_service,
+    upload_foto_ppks,
 )
 # Jika Anda punya auth dependency, import di sini
 # from dependencies.auth_dependency import get_current_user 
@@ -77,7 +78,24 @@ def delete_ppks(id: str):
 
 
 
+from fastapi import UploadFile, File
 
+@router.post("/upload")
+async def upload_ppks_photo(
+    files: list[UploadFile] = File(...)
+):
+
+    urls = []
+
+    for file in files:
+
+        url = upload_foto_ppks(file)
+
+        urls.append(url)
+
+    return {
+        "foto_bukti": urls
+    }
 
 
 

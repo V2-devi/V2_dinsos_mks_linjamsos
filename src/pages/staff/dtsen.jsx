@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "../../config/supabase";
 
 function Dtsen({
   activeMenu,
@@ -67,7 +68,7 @@ function Dtsen({
     status_keadaan: ""
   });
 
-  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "" }; 
+  const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
 
   const [fotoBuktiPPKS, setFotoBuktiPPKS] = useState([]); // ✅ STATE BARU UNTUK FOTO
@@ -407,24 +408,120 @@ function Dtsen({
     }
   };
 
-  const handleAddPPKSSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data, error } = await supabase.from('ppks').insert([{
-        kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
-        kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" 
-      }]);
-      if (error) throw error;
-      const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
-      setDummyPPKS([newPPKS, ...dummyPPKS]);
-      setIsAddPPKSModalOpen(false);
-      setFormPPKS(initialFormPPKS);
-      setFotoBuktiPPKS([]);
-      showSuccess();
-    } catch (error) {
-      alert('Gagal menambah laporan PPKS: ' + error.message);
+  // const handleAddPPKSSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const { data, error } = await supabase.from('ppks').insert([{
+  //       kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
+  //       kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" 
+  //     }]);
+  //     if (error) throw error;
+  //     const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
+  //     setDummyPPKS([newPPKS, ...dummyPPKS]);
+  //     setIsAddPPKSModalOpen(false);
+  //     setFormPPKS(initialFormPPKS);
+  //     setFotoBuktiPPKS([]);
+  //     showSuccess();
+  //   } catch (error) {
+  //     alert('Gagal menambah laporan PPKS: ' + error.message);
+  //   }
+  // };
+
+    const handleAddPPKSSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+
+    // =====================================
+    // UPLOAD FOTO KE STORAGE
+    // =====================================
+
+    let fotoUrls = [];
+
+    if (fotoBuktiPPKS.length > 0) {
+
+      for (const file of fotoBuktiPPKS) {
+
+        const fileName =
+          `${Date.now()}-${file.name}`;
+
+        const { data: uploadData, error: uploadError } =
+          await supabase.storage
+            .from("bukti-foto-ppks")
+            .upload(fileName, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // ambil public url
+        const {
+          data: { publicUrl }
+        } = supabase.storage
+          .from("foto-ppks")
+          .getPublicUrl(fileName);
+
+        fotoUrls.push(publicUrl);
+      }
     }
-  };
+
+    // =====================================
+    // INSERT DATABASE
+    // =====================================
+
+    const { data, error } =
+      await supabase
+        .from("ppks")
+        .insert([{
+          kategori_ppks: formPPKS.kategori_ppks,
+          tanggal_penemuan: formPPKS.tanggal_penemuan,
+          nik: formPPKS.nik || null,
+          nama_lengkap: formPPKS.nama_lengkap || null,
+          kecamatan: formPPKS.kecamatan,
+          kelurahan: formPPKS.kelurahan,
+          lokasi_penemuan: formPPKS.lokasi_penemuan,
+          status_penanganan: "Menunggu Kelayakan",
+          bukti_foto_ppks: fotoUrls.length > 0 ? fotoUrls : null,
+
+          // ✅ SIMPAN FOTO
+          foto_bukti: fotoUrls
+        }])
+        .select();
+
+    if (error) throw error;
+
+    // =====================================
+    // UPDATE STATE
+    // =====================================
+
+    const newPPKS = {
+      ...data[0]
+    };
+
+    setDummyPPKS([
+      newPPKS,
+      ...dummyPPKS
+    ]);
+
+    setIsAddPPKSModalOpen(false);
+
+    setFormPPKS(initialFormPPKS);
+
+    setFotoBuktiPPKS([]);
+
+    showSuccess();
+
+  } catch (error) {
+
+    alert(
+      "Gagal menambah laporan PPKS: " +
+      error.message
+    );
+  }
+};
+
+
+  
 
   const handleOpenDetailPPKS = (data) => { setSelectedPPKSData(data); setCatatanAssessment(data.deskripsiAwal || ""); setActiveTab("detail_ppks"); };
 
@@ -1065,7 +1162,7 @@ function Dtsen({
             <div className="table-responsive">
               <table className="staff-table">
                 <thead>
-                  <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
+                  <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th><th>Keterangan</th></tr>
                 </thead>
                 <tbody>
                   {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
@@ -1085,6 +1182,41 @@ function Dtsen({
                           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         </button>
                       </td>
+                      <td>
+                      {item.bukti_foto_ppks &&
+                      item.bukti_foto_ppks.length > 0 ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "5px",
+                            justifyContent: "center",
+                            flexWrap: "wrap"
+                          }}
+                        >
+                          {item.bukti_foto_ppks
+                            .slice(0, 3)
+                            .map((foto, index) => (
+                              <img
+                                key={index}
+                                src={foto}
+                                alt={`foto-${index}`}
+                                style={{
+                                  width: "50px",
+                                  height: "50px",
+                                  objectFit: "cover",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1"
+                                }}
+                              />
+                          ))}
+                        </div>
+
+                      ) : (
+                        <span style={{ color: "#94a3b8" }}>
+                          Tidak Ada
+                        </span>
+                      )}
+                    </td>
                     </tr>
                   )) : (
                     <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data PPKS yang cocok.</td></tr>

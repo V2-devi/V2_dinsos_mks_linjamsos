@@ -1,6 +1,7 @@
 from config.database import supabase
 from schemas.ppks_schema import PPKS
 from typing import Optional
+from uuid import uuid4
 
 # ==============================
 # GET ALL PPKS
@@ -89,7 +90,27 @@ def delete_ppks_service(ppks_id: str):
 
 
 
+def upload_foto_ppks(file):
 
+    filename = f"{uuid4()}-{file.filename}"
+
+    path = f"ppks/{filename}"
+
+    supabase.storage \
+        .from_("bukti-foto-ppks") \
+        .upload(
+            path,
+            file.file.read(),
+            {
+                "content-type": file.content_type
+            }
+        )
+
+    url = supabase.storage \
+        .from_("bukti-foto-ppks") \
+        .get_public_url(path)
+
+    return url
 
 
 
