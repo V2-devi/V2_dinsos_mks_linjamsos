@@ -179,7 +179,7 @@ function ValidasiPPKS({
               <td>{item.kecamatan}</td>
               <td>{item.kelurahan || "-"}</td>
               <td>{item.lokasi_penemuan}</td>
-              <td>{formatDateIndo(item.tanggal_laporan)}</td>
+              <td>{formatDateIndo(item.tanggal_penemuan)}</td>
               <td style={{ textAlign: "center" }}>
                 <span className={`badge-status-v ${item.status_penanganan === 'Kasus Aktif' ? 'approved' : 'rejected'}`}>
                   {item.status_penanganan}
