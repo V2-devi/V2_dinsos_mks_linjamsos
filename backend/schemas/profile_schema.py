@@ -7,9 +7,9 @@ class ProfileSchema(BaseModel):
 
         nama_lengkap: Optional[str] = None
 
-        status: Optional[str] = None
+        # status: Optional[str] = None
 
-        nik: Optional[str] = None
+        # nik: Optional[str] = None
 
         nip: Optional[str] = None
 

@@ -19,7 +19,6 @@ function VerifikatorProfile() {
   const [profileData, setProfileData] = useState({
     nama_lengkap: "",
     nip: "",
-    nik: "",
     email: "",
     no_hp: "",
     alamat: "",
