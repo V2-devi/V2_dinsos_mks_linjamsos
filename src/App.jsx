@@ -14,7 +14,8 @@ import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
 import StaffDashboard from "./pages/staff/staffdashboard.jsx"; 
 import StaffProfile from "./pages/staff/StaffProfile";
-import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx";
+import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx"; 
+import VerifikatorProfile from "./pages/verifikator/verifikatorprofile.jsx";
 
 
 function AppRoutes() {
@@ -57,6 +58,8 @@ function AppRoutes() {
       <Route path="/verifikator" element={<VerifikatorDashboard />} />
       <Route path="/staffprofile" element={<StaffProfile />} />
 
+      <Route path="/verifikator" element={<VerifikatorDashboard />} />
+      <Route path="/verifikatorprofile" element={<VerifikatorProfile />} />
     </Routes>
   );
 }

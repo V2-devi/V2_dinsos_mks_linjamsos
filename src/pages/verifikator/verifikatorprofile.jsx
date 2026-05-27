@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./staffprofile.css"; 
+import "./verifikatorprofile.css"; 
 import logoLinjamsos from "../../assets/logo_sicadas.png";
 
-function StaffProfile() {
+function VerifikatorProfile() {
   const navigate = useNavigate();
 
  // =================================================
@@ -188,11 +188,10 @@ const handleOpenEdit = () => {
       {/* NAVBAR */}
       {/* ✅ MENGGUNAKAN CLASS profile-navbar-dark DARI CSS ANDA AGAR WARNANYA BIRU GELAP */}
       <nav className="profile-navbar-dark">
-        <div className="navbar-left" style={{ cursor: 'pointer' }} onClick={() => navigate("/staff")}>
+        <div className="navbar-left" style={{ cursor: 'pointer' }} onClick={() => navigate("/verifikator")}>
           {/* ✅ LOGO DISAMAKAN UKURANNYA DENGAN DASHBOARD ADMIN (55px) DAN TEKS REDUNDAN DIHAPUS */}
           <div className="branding-container-small" style={{ display: 'flex', alignItems: 'center' }}>
             <img 
-              src={logoLinjamsos} 
               alt="Logo" 
               className="branding-logo-small" 
               style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
@@ -244,7 +243,10 @@ const handleOpenEdit = () => {
 
         {/* ================= TOMBOL BAWAH (KEMBALI DITAMBAHKAN) ================= */}
         <div className="profile-actions-bottom">
-          <button className="btn-profile-back" onClick={() => navigate("/staff")}>
+          <button 
+            className="btn-profile-back" 
+            onClick={() => navigate("/verifikator")} // Mengarah kembali ke Dashboard Verifikator
+          >
             Kembali Ke Halaman Utama
           </button>
           <button className="btn-profile-exit" onClick={() => navigate("/login")}>
@@ -359,4 +361,4 @@ const handleOpenEdit = () => {
   );
 }
 
-export default StaffProfile;
+export default VerifikatorProfile;

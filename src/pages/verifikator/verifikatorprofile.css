@@ -1,0 +1,180 @@
+/* ================= PENGATURAN UMUM ================= */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+
+.profile-page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+}
+
+/* ================= NAVBAR KHUSUS PROFIL ================= */
+/* ✅ KELAS INI YANG KITA PANGGIL DI JSX AGAR NAVBAR BERWARNA BIRU GELAP */
+.profile-navbar-dark {
+  height: 70px;
+  background-color: #234a66;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.navbar-left { display: flex; align-items: center; gap: 12px; transition: opacity 0.2s; }
+.navbar-left:hover { opacity: 0.8; }
+
+/* KODE STANDAR LOGO NAVBAR (DIPERBAIKI) */
+.branding-container-small { 
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+}
+/* ✅ CLASS INI TETAP ADA, TETAPI KITA OVERRIDE (TIMPA) HEIGHT-NYA DI DALAM JSX MENJADI 55px AGAR PROPORSIONAL */
+.branding-logo-small { 
+  width: 45px; 
+  height: auto; 
+  object-fit: contain; 
+}
+.branding-text-block-small { 
+  display: flex; 
+  flex-direction: column; 
+  line-height: 1.2; 
+}
+.branding-text-block-small span { 
+  font-family: 'Inter', sans-serif;
+  font-weight: 800; 
+  font-size: 16px;  
+  color: white; 
+  letter-spacing: 0.5px; 
+}
+
+.navbar-right { display: flex; gap: 30px; align-items: center; }
+
+.nav-btn-plain {
+  background: none; border: none; color: white;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+}
+.nav-btn-plain:hover { opacity: 0.8; }
+.active-link { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+
+/* ================= LAYOUT KONTEN TENGAH ================= */
+.profile-main-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  padding: 60px 40px;
+}
+
+.profile-flex-wrapper {
+  display: flex;
+  gap: 80px;
+  width: 100%;
+  max-width: 900px;
+  align-items: flex-start;
+  margin-bottom: 50px; 
+}
+
+/* ================= AVATAR KIRI ================= */
+.profile-avatar-box {
+  width: 220px;
+  height: 220px;
+  background-color: #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #234a66;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.profile-avatar-box svg { width: 100px; height: 100px; }
+
+/* ================= DATA KANAN (GRID RAPI) ================= */
+.profile-details-box { flex: 1; }
+
+.profile-section-title {
+  color: #234a66;
+  font-size: 20px;
+  font-weight: 800;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  margin-top: 0;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: 140px 15px 1fr; 
+  row-gap: 15px;
+  font-size: 15px;
+  color: #334155;
+}
+
+.grid-label { font-weight: 600; color: #475569; }
+.grid-colon { font-weight: 700; color: #94a3b8; }
+.grid-value { font-weight: 700; color: #1e293b; }
+
+/* ================= TOMBOL BAWAH ================= */
+.profile-actions-bottom { 
+  display: flex; 
+  justify-content: center; 
+  gap: 30px; 
+  width: 100%; 
+  max-width: 900px; 
+}
+
+.btn-profile-back {
+  padding: 12px 30px; background-color: #eef2f6; border: 1px solid #94a3b8;
+  color: #234a66; font-weight: 700; font-size: 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.btn-profile-back:hover { background-color: #e2e8f0; }
+
+.btn-profile-exit {
+  display: flex; align-items: center; gap: 8px; padding: 12px 30px;
+  background-color: #fee2e2; border: 1px solid #ef4444; color: #dc2626;
+  font-weight: 700; font-size: 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.btn-profile-exit:hover { background-color: #fecdd3; }
+
+/* ================= MODAL & FORM ================= */
+.modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background-color: rgba(0, 0, 0, 0.6); display: flex !important; align-items: center !important; justify-content: center !important; z-index: 9999 !important; padding: 20px; animation: fadeInModal 0.2s ease-out; }
+@keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-content { background-color: #f8fafc; width: 100%; max-width: 650px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; margin: 0 auto; animation: slideUpModal 0.3s ease-out; }
+@keyframes slideUpModal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.modal-large { max-width: 700px; } .modal-small { max-width: 450px; }
+
+.modal-header { background-color: #234a66; color: white; padding: 18px 24px; }
+.modal-header-title { display: flex; align-items: center; gap: 12px; }
+.modal-header-title h2 { font-size: 18px; font-weight: 700; margin: 0; }
+.modal-body { padding: 30px 24px; overflow-y: auto; flex: 1; }
+
+.modal-section { margin-bottom: 25px; }
+.section-subtitle { font-size: 14px; color: #3b82f6; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #cbd5e1; }
+
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+.form-group-modal { display: flex; flex-direction: column; gap: 6px; }
+.form-group-modal label { font-size: 13px; font-weight: 700; color: #234a66; }
+.form-group-modal input { padding: 10px 14px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 13px; outline: none; background-color: white; height: 42px; transition: border-color 0.2s;}
+.form-group-modal input:focus { border-color: #234a66; }
+
+.modal-actions { display: flex; justify-content: center; gap: 16px; margin-top: 35px; }
+.btn-modal-submit, .btn-modal-cancel { padding: 12px 30px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; width: 160px;}
+.btn-modal-submit { background-color: #22c55e; color: white;}
+.btn-modal-submit:hover { background-color: #16a34a; }
+.btn-modal-cancel { background-color: white; color: #234a66; border: 1px solid #234a66; }
+.btn-modal-cancel:hover { background-color: #f1f5f9; }
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) { 
+  .profile-flex-wrapper { flex-direction: column; align-items: center; gap: 40px; }
+  .profile-avatar-box { width: 150px; height: 150px; }
+  .profile-info-grid { grid-template-columns: 120px 10px 1fr; font-size: 14px; }
+  .form-grid-2 { grid-template-columns: 1fr; gap: 15px; }
+  .profile-actions-bottom { flex-direction: column; gap: 15px; }
+  .btn-profile-back, .btn-profile-exit { width: 100%; justify-content: center; }
+}

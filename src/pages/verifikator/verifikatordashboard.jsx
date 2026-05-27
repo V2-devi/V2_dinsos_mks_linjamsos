@@ -16,11 +16,24 @@ function VerifikatorDashboard() {
   const [usulanData, setUsulanData] = useState([]);
   const [dtsenData, setDtsenData] = useState([]);
   const [dummyPPKS, setDummyPPKS] = useState([]);
-  
+  // Tambahkan ini di dekat state lainnya
+  const [currentVerifikator, setCurrentVerifikator] = useState({
+    nama: "Verifikator",
+    nip: "-"
+  });
+
   // ✅ DITAMBAHKAN: State untuk menyimpan daftar staff
   const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
+    const savedUserData = localStorage.getItem("currentStaffUser"); // atau key yang Anda gunakan
+  if (savedUserData) {
+    const parsedData = JSON.parse(savedUserData);
+    setCurrentVerifikator({
+      nama: parsedData.namaLengkap || "Verifikator",
+      nip: parsedData.nip || "-"
+    });
+  }
     const fetchData = async () => {
       try {
         const { data: pengusulanData } = await supabase.from('pengusulan_bansos').select('*');
@@ -200,12 +213,21 @@ function VerifikatorDashboard() {
           />
         </div>
 
-        <div className="sidebar-profile">
-          <div className="profile-avatar-small" style={{ backgroundColor: '#f59e0b' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          </div>
-          <div className="profile-info"><span className="profile-name">Nama Verifikator</span><span className="profile-nik">Role: Verifikator</span></div>
-        </div>
+        <div className="sidebar-profile" style={{ cursor: 'pointer' }} onClick={() => navigate("/verifikatorprofile")} title="Lihat Profil">
+  {/* Ikon Profil */}
+  <div className="profile-avatar-small">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="8" r="4"></circle>
+      <path d="M4 20c0-4 4-7 8-7s8 3 8 7"></path>
+    </svg>
+  </div>
+  
+  {/* Info Profil */}
+  <div className="profile-info">
+    <span className="profile-name">{currentVerifikator.nama}</span>
+    <span className="profile-nip">{currentVerifikator.nip}</span>
+  </div>
+</div>
         <nav className="sidebar-menu">
           <button className={`menu-item ${activeMenu === "dashboard" ? "active" : ""}`} onClick={() => setActiveMenu("dashboard")}>
             <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Dashboard Utama
