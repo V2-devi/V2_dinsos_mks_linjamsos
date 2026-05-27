@@ -15,7 +15,7 @@ class Anggota(BaseModel):
 
     jenis_kelamin: str
 
-    tanggal_lahir: datetime
+    tanggal_lahir: str
 
     status_keadaan: str
 

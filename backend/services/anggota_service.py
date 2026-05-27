@@ -1,67 +1,6 @@
 from config.database import supabase
 from schemas.anggota_schema import Anggota
 
-# def create_anggota_keluarga(data: Anggota):
-
-#     result = supabase.table("anggota_keluarga").insert({
-#         "nik": data.nik,
-#         "no_kk": data.no_kk,
-#         "nama_anggota_keluarga": data.nama_anggota_keluarga,
-#         "hubungan_keluarga": data.hubungan_keluarga,
-#         "jenis_kelamin": data.jenis_kelamin,
-#         "tanggal_lahir": data.tanggal_lahir,
-#         "status_keadaan": data.status_keadaan,
-#         "kondisi_khusus": data.kondisi_khusus
-#     }).execute()
-
-#     return result.data
-
-
-
-# =========================================
-# CREATE ANGGOTA KELUARGA
-# =========================================
-# def create_anggota_keluarga(no_kk: str, data: Anggota):
-
-#     data_dict = data.model_dump(mode="json")
-
-#     payload = {
-
-#         "nik":
-#             data_dict.get("nik"),
-
-#         "no_kk":
-#             no_kk,
-
-#         "nama_anggota_keluarga":
-#             data_dict.get("nama_anggota_keluarga"),
-
-#         "hubungan_keluarga":
-#             data_dict.get("hubungan_keluarga"),
-
-#         "jenis_kelamin":
-#             data_dict.get("jenis_kelamin"),
-
-#         "tanggal_lahir":
-#             data_dict.get("tanggal_lahir"),
-
-#         "status_keadaan":
-#             data_dict.get("status_keadaan"),
-
-#         "kondisi_khusus":
-#             data_dict.get("kondisi_khusus")
-#     }
-
-#     # DEBUG
-#     print("PAYLOAD ANGGOTA:")
-#     print(payload)
-
-#     result = supabase.table("anggota_keluarga") \
-#         .insert(payload) \
-#         .execute()
-
-#     return result.data
-
 
 
 
@@ -162,6 +101,14 @@ def update_kondisi_khusus(id: int, data):
         .execute()
 
     return result.data
+
+
+
+
+
+
+
+
 
 
 # def create_anggota_keluarga(no_kk: str, data:Anggota):
