@@ -411,9 +411,17 @@ function Dtsen({
   const handleAddPPKSSubmit = async (e) => {
     e.preventDefault();
     try {
+      const namaFoto = fotoBuktiPPKS.map(f => f.name).join(",");
       const { data, error } = await supabase.from('ppks').insert([{
-        kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
-        kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" 
+        kategori_ppks: formPPKS.kategori_ppks, 
+        tanggal_penemuan: formPPKS.tanggal_penemuan, 
+        nik: formPPKS.nik || null, 
+        nama_lengkap: formPPKS.nama_lengkap || null,
+        kecamatan: formPPKS.kecamatan, 
+        kelurahan: formPPKS.kelurahan, 
+        lokasi_penemuan: formPPKS.lokasi_penemuan, 
+        status_penanganan: "Menunggu Kelayakan", 
+        foto_bukti: namaFoto
       }]);
       if (error) throw error;
       const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
@@ -518,6 +526,31 @@ function Dtsen({
             </div>
           </div>
 
+          <div className="modal-section" style={{ marginTop: '20px' }}>
+          <h3 className="section-subtitle">Bukti Foto Penemuan</h3>
+          {selectedPPKSData.foto_bukti ? (
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+              {selectedPPKSData.foto_bukti.split(",").map((namaFile, idx) => (
+                <img 
+                  key={idx}
+                  // Ganti URL ini dengan URL dari bucket storage Supabase Anda
+                  src={`URL_STORAGE_SUPABASE_ANDA/${namaFile}`} 
+                  alt={`Bukti ${idx + 1}`}
+                  style={{ 
+                    width: '120px', 
+                    height: '120px', 
+                    objectFit: 'cover', 
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1'
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: '13px', color: '#94a3b8' }}>Tidak ada bukti foto yang dilampirkan.</p>
+          )}
+        </div>
+
           <div className="modal-section" style={{ marginTop: '30px', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <h3 className="section-subtitle">Tindak Lanjut & Assessment Lapangan</h3>
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>Catat hasil temuan lapangan dan perbarui status penanganan kasus ini.</p>
@@ -532,7 +565,7 @@ function Dtsen({
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '13px' }}
               ></textarea>
             </div>
-
+            
             {/* UBAH BAGIAN INI DI MODAL DETAIL PPKS */}
             <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end', alignItems: 'center' }}>
               
@@ -1043,8 +1076,8 @@ function Dtsen({
               </div>
             </div>
             <div className="filter-group-top">
-              <label>Nama/Identitas</label>
-              <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
+              <label>Nama</label>
+              <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama..." />
             </div>
           </div>
           
@@ -1066,7 +1099,7 @@ function Dtsen({
             <div className="table-responsive">
               <table className="staff-table">
                 <thead>
-                  <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
+                  <tr><th>NIK</th><th>Nama</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tanggal Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th></tr>
                 </thead>
                 <tbody>
                   {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
@@ -1383,7 +1416,7 @@ function Dtsen({
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK (Bila Diketahui)</label><input type="text" name="nik" value={formPPKS.nik} onChange={(e) => setFormPPKS({...formPPKS, nik: e.target.value})} maxLength="16" placeholder="Kosongkan jika tidak ada" /></div>
-                  <div className="form-group-modal"><label>Nama/Alias (Bila Diketahui)</label><input type="text" name="nama" value={formPPKS.nama_lengkap} onChange={(e) => setFormPPKS({...formPPKS, nama_lengkap: e.target.value})} placeholder="Contoh: Bapak Fulan" /></div>
+                  <div className="form-group-modal"><label>Nama (Bila Diketahui)</label><input type="text" name="nama" value={formPPKS.nama_lengkap} onChange={(e) => setFormPPKS({...formPPKS, nama_lengkap: e.target.value})} placeholder="Contoh: Bapak Fulan" /></div>
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group-modal">
