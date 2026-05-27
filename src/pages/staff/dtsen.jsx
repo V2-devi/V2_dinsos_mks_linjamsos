@@ -147,7 +147,7 @@ function Dtsen({
   });
 
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
-  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Menunggu Kelayakan").length;
+  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
   const kategoriCount = {};
   dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori_ppks] = (kategoriCount[item.kategori_ppks] || 0) + 1; });
   const top5PPKS = Object.entries(kategoriCount).map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 5); 
@@ -413,10 +413,10 @@ function Dtsen({
   //   try {
   //     const { data, error } = await supabase.from('ppks').insert([{
   //       kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
-  //       kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" 
+  //       kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Kasus Aktif" 
   //     }]);
   //     if (error) throw error;
-  //     const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
+  //     const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Kasus Aktif", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
   //     setDummyPPKS([newPPKS, ...dummyPPKS]);
   //     setIsAddPPKSModalOpen(false);
   //     setFormPPKS(initialFormPPKS);
@@ -480,7 +480,7 @@ function Dtsen({
           kecamatan: formPPKS.kecamatan,
           kelurahan: formPPKS.kelurahan,
           lokasi_penemuan: formPPKS.lokasi_penemuan,
-          status_penanganan: "Menunggu Kelayakan",
+          status_penanganan: "Kasus Aktif",
           bukti_foto_ppks: fotoUrls.length > 0 ? fotoUrls : null,
 
           // ✅ SIMPAN FOTO
@@ -596,9 +596,9 @@ function Dtsen({
           </div>
 
           <div className="info-alert-box" style={{ 
-              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
-              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
-              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
+              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#fffbeb' : '#dcfce7', 
+              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#fde047' : '#86efac',
+              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#b45309' : '#166534',
               marginBottom: '25px', display: 'flex', justifyContent: 'space-between'
             }}>
             <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan}</strong></span>
@@ -672,7 +672,7 @@ function Dtsen({
               </button>
 
               {/* 🔒 TOMBOL VALIDASI HANYA UNTUK VERIFIKATOR */}
-              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Menunggu Kelayakan") && (
+              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Kasus Aktif") && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
                   Terima & Ubah ke Kasus Aktif
                 </button>

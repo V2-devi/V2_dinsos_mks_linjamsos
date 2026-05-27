@@ -37,7 +37,7 @@ def create_ppks_service(data: PPKS):
     
     # Pastikan status default jika tidak dikirim
     if "status_penanganan" not in payload:
-        payload["status_penanganan"] = "Menunggu Kelayakan"
+        payload["status_penanganan"] = "Kasus Aktif"
 
     response = supabase.table("ppks") \
         .insert(payload) \

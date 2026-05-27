@@ -12,5 +12,6 @@ class PPKS(BaseModel):
     kecamatan: Optional[str] = None
     kelurahan: Optional[str] = None
 
+    catatan_verifikator: Optional[str] = None
 
     bukti_foto_ppks: Optional[List[str]] = []

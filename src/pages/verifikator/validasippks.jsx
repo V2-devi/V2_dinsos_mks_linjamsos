@@ -8,7 +8,9 @@ function ValidasiPPKS({
   filteredPpksList,
   riwayatPpksList,
   formatDateIndo,
-  openValidationPPKSModal
+  openValidationPPKSModal,
+  onSelesaikanKasus
+  
 }) {
 
    // === KAMUS DATA KECAMATAN & KELURAHAN (FILTER DINAMIS) ===
@@ -23,7 +25,7 @@ function ValidasiPPKS({
   return (
     <>
       <div className="tabs-container">
-        <button className={`tab-btn ${activeTab === "menunggu" ? "active" : ""}`} onClick={() => setActiveTab("menunggu")}>Menunggu Validasi PPKS</button>
+        <button className={`tab-btn ${activeTab === "aktif" ? "active" : ""}`} onClick={() => setActiveTab("aktif")}>Menunggu Validasi PPKS</button>
         <button className={`tab-btn ${activeTab === "riwayat" ? "active" : ""}`} onClick={() => setActiveTab("riwayat")}>Riwayat Validasi</button>
       </div>
 

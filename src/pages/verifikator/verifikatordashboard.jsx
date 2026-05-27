@@ -52,7 +52,7 @@ function VerifikatorDashboard() {
   }, []);
 
   const usulanMenunggu = usulanData.filter(i => i.status_pengusulan === "Belum").length;
-  const ppksMenunggu = dummyPPKS.filter(i => i.status_penanganan === "Menunggu Kelayakan" || i.status_penanganan === "Menunggu Kelayakan").length;
+  const ppksMenunggu = dummyPPKS.filter(i => i.status_penanganan === "Kasus Aktif" || i.status_penanganan === "Kasus Aktif").length;
   const totalDtsen = dtsenData.length;
   const desil1 = dtsenData.filter(i => i.hasil_desil === "1").length;
   const desil2 = dtsenData.filter(i => i.hasil_desil === "2").length;
@@ -131,17 +131,17 @@ function VerifikatorDashboard() {
       if (errRiwayat) throw errRiwayat;
       setRiwayatList(dataRiwayat);
 
-      const { data: dataPPKS, error: errPPKS } = await supabase.from('ppks').select('*').eq('status_penanganan', 'Menunggu Kelayakan');
+      const { data: dataPPKS, error: errPPKS } = await supabase.from('ppks').select('*').eq('status_penanganan', 'Kasus Aktif');
       if (errPPKS) throw errPPKS;
       setPpksList(dataPPKS);
 
       // ✅ BENAR: Ambil data yang statusnya "Kasus Aktif" ATAU "Selesai Ditangani"
-      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase
-        .from('ppks')
-        .select('*')
-        .or('status_penanganan.eq.Kasus Aktif,status_penanganan.eq.Selesai Ditangani');
-
+      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').eq('status_penanganan', 'Selesai Ditangani');
       if (errRiwayatPPKS) throw errRiwayatPPKS;
+
+      console.log("📦 Riwayat Found:", dataRiwayatPPKS?.length, "items");
+      console.log("🔍 Contoh Status Riwayat:", dataRiwayatPPKS?.[0]?.status_penanganan);
+
       setRiwayatPpksList(dataRiwayatPPKS);
 
       // const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status_penanganan', 'Selesai Ditangani', 'Kasus Aktif');
@@ -185,21 +185,92 @@ function VerifikatorDashboard() {
       setIsValidateModalOpen(false); setSelectedData(null); setCatatanValidasi("");
       setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 3000);
       setActiveTab("riwayat"); 
+      alert("✅ Data berhasil dipindah ke Riwayat!");
     } catch (error) { console.error("Gagal update status:", error); alert("Gagal melakukan validasi."); }
   };
 
+
+
+
+
   const handleValidationPPKSAction = async (e, statusKeputusan) => {
-    e.preventDefault();
-    if (!selectedPPKSReview) return;
-    try {
-      const { error } = await supabase.from('ppks').update({ status_penanganan: statusKeputusan, catatan_verifikator: catatanValidasi }).eq('id', selectedPPKSReview.id);
-      if (error) throw error;
-      await fetchDataVerifikator(); 
-      setIsReviewPPKSModalOpen(false); setSelectedPPKSReview(null); setCatatanValidasi(""); 
-      setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 3000);
-      setActiveTab("riwayat"); 
-    } catch (error) { console.error("Gagal update status PPKS:", error); alert("Gagal melakukan validasi PPKS."); }
-  };
+  e.preventDefault();
+  if (!selectedPPKSReview) return;
+
+  const statusFinal = statusKeputusan.trim(); // Hapus spasi
+
+  try {
+    console.log("🔄 Updating ID:", selectedPPKSReview.id, "to:", statusFinal);
+    
+    const { error, data } = await supabase
+      .from('ppks')
+      .update({
+        status_penanganan: statusFinal,
+        catatan_verifikator: catatanValidasi
+      })
+      .eq('id', selectedPPKSReview.id)
+      .select(); // Penting: return data setelah update
+
+    if (error) {
+      console.error("❌ Supabase Error:", error);
+      throw error;
+    }
+
+    console.log("✅ Update Success, returned data:", data);
+
+    // Refresh data dari server
+    await fetchDataVerifikator();
+
+    // Bersihkan modal
+    setIsReviewPPKSModalOpen(false);
+    setSelectedPPKSReview(null);
+    setCatatanValidasi("");
+
+    // Pindah tab sesuai status
+    const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "aktif";
+    setActiveTab(targetTab);
+    
+    alert(`✅ Berhasil! Masuk ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
+
+  } catch (error) {
+    console.error("💥 Action Failed:", error);
+    alert("Gagal: " + error.message);
+  }
+};
+
+
+
+  const handleSelesaikanKasusPPKS = async (id) => {
+  if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
+  
+  try {
+    const { error } = await supabase
+      .from('ppks')
+      .update({ status_penanganan: "Selesai Ditangani" })
+      .eq('id', id);
+      
+    if (error) throw error;
+    
+    // Refresh data agar otomatis pindah ke status Selesai & tab Riwayat tetap sinkron
+    await fetchDataVerifikator(); 
+    alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
+  } catch (err) {
+    alert("Gagal update status: " + err.message);
+  }
+      if (statusKeputusan === "Selesai Ditangani") {
+      setActiveTab("riwayat"); // Jika dipilih Selesai, pindah ke Riwayat
+      alert("✅ Kasus selesai! Data dipindah ke Riwayat.");
+    } else {
+      // Jika dipilih Aktif (atau status lain), tetap di Menunggu/Aktif
+      setActiveTab("aktif"); 
+      alert("✅ Status diperbarui menjadi Kasus Aktif.");
+    }
+
+    // Tutup modal
+    setIsReviewPPKSModalOpen(false);
+    setSelectedPPKSReview(null);
+    };
+
 
   const formatDateIndo = (dateStr) => { 
     if(!dateStr || dateStr === "-") return "-"; 
@@ -207,6 +278,11 @@ function VerifikatorDashboard() {
     const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; 
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; 
   };
+
+
+
+
+
 
   return (
     <div className="verifikator-layout relative">
@@ -359,7 +435,8 @@ function VerifikatorDashboard() {
               filteredPpksList={filteredPpksList} 
               riwayatPpksList={riwayatPpksList} 
               formatDateIndo={formatDateIndo} 
-              openValidationPPKSModal={openValidationPPKSModal} 
+              openValidationPPKSModal={openValidationPPKSModal}
+              onSelesaikanKasus={handleSelesaikanKasusPPKS} 
             />
           )}
 
@@ -475,7 +552,7 @@ function VerifikatorDashboard() {
                 </div>
                 <div className="modal-actions" style={{ gap: '20px', display: 'flex' }}>
                   <button type="button" className="btn-modal-danger" style={{ flex: 1, padding: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Ditolak")}>Tolak Laporan (Bukan Kasus)</button>
-                  <button type="button" className="btn-modal-submit" style={{ flex: 1, padding: '15px', backgroundColor: '#1d4ed8' }} onClick={(e) => handleValidationPPKSAction(e, "Kasus Aktif")}>Validasi & Jadikan "Kasus Aktif"</button>
+                  <button type="button" className="btn-modal-submit" style={{ flex: 1, padding: '15px', backgroundColor: '#1d4ed8' }} onClick={(e) => handleValidationPPKSAction(e, "Selesai Ditangani")}>Validasi & Jadikan "Selesai Ditangani"</button>
                 </div>
               </form>
             </div>
