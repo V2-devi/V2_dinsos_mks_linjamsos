@@ -1329,26 +1329,66 @@ function Dtsen({
       )}
 
       {/* MODAL ANGGOTA */}
-      {isAddAnggotaModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddAnggotaModalOpen(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><h2>Tambah Anggota Keluarga</h2></div></div>
-            <div className="modal-body">
-              <form onSubmit={handleAddAnggotaSubmit}>
-                <div className="form-grid-2">
-                  <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formAnggota.nik} onChange={(e) => setFormAnggota({...formAnggota, nik: e.target.value})} required maxLength="16" placeholder="Ketik NIK..." /></div>
-                  <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_anggota_keluarga" value={formAnggota.nama_anggota_keluarga} onChange={(e) => setFormAnggota({...formAnggota, nama_anggota_keluarga: e.target.value})} required placeholder="Ketik Nama..." /></div>
-                  <div className="form-group-modal"><label>Hubungan Keluarga*</label><div className="select-container-custom"><select name="hubungan_keluarga" value={formAnggota.hubungan_keluarga} onChange={(e) => setFormAnggota({...formAnggota, hubungan_keluarga: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
-                  <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
-                  <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
-                  <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
-                </div>
-                <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
-              </form>
+{isAddAnggotaModalOpen && (
+  <div className="modal-overlay" onClick={() => setIsAddAnggotaModalOpen(false)}>
+    <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-header"><div className="modal-header-title"><h2>Tambah Anggota Keluarga</h2></div></div>
+      <div className="modal-body">
+        <form onSubmit={handleAddAnggotaSubmit}>
+          <div className="form-grid-2">
+            <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formAnggota.nik} onChange={(e) => setFormAnggota({...formAnggota, nik: e.target.value})} required maxLength="16" placeholder="Ketik NIK..." /></div>
+            <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_anggota_keluarga" value={formAnggota.nama_anggota_keluarga} onChange={(e) => setFormAnggota({...formAnggota, nama_anggota_keluarga: e.target.value})} required placeholder="Ketik Nama..." /></div>
+            <div className="form-group-modal"><label>Hubungan Keluarga*</label><div className="select-container-custom"><select name="hubungan_keluarga" value={formAnggota.hubungan_keluarga} onChange={(e) => setFormAnggota({...formAnggota, hubungan_keluarga: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
+            <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
+            <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
+            <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
+            
+            {/* ✅ FIELD 1: STATUS KEHAMILAN (Khusus Perempuan, Read-only untuk Laki-laki) */}
+            <div className="form-group-modal">
+              <label>Status Kehamilan</label>
+              <div className="select-container-custom">
+                <select 
+                  name="hamil" 
+                  value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil")}
+                  onChange={(e) => setFormAnggota({...formAnggota, hamil: e.target.value})}
+                  disabled={formAnggota.jenis_kelamin === "Laki-laki"}
+                  style={formAnggota.jenis_kelamin === "Laki-laki" ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                >
+                  <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
+                  <option value="Sedang Hamil">Sedang Hamil</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ✅ FIELD 2: DISABILITAS / PENYAKIT (Bisa untuk siapa saja) */}
+            <div className="form-group-modal">
+              <label>Kondisi Khusus (Disabilitas/Penyakit)</label>
+              <div className="select-container-custom">
+                <select 
+                  name="kondisi_khusus" 
+                  value={formAnggota.kondisi_khusus || "Tidak ada"}
+                  onChange={(e) => setFormAnggota({...formAnggota, kondisi_khusus: e.target.value})}
+                >
+                  <option value="Tidak ada">Tidak ada</option>
+                  <option value="Disabilitas Fisik">Disabilitas Fisik</option>
+                  <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
+                  <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
+                  <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
+                  <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
+                  <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
+                  <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
+                  <option value="Penyakit Kronis">Penyakit Kronis</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+          
+          <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* MODAL EDIT ANGGOTA DETAIL */}
       {isDetailAnggotaModalOpen && selectedAnggotaData && (
