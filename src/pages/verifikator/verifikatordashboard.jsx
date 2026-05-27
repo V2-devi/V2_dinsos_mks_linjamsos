@@ -30,7 +30,7 @@ function VerifikatorDashboard() {
   if (savedUserData) {
     const parsedData = JSON.parse(savedUserData);
     setCurrentVerifikator({
-      nama: parsedData.namaLengkap || "Verifikator",
+      nama: parsedData.nama_lengkap || "Verifikator",
       nip: parsedData.nip || "-"
     });
   }
@@ -42,8 +42,8 @@ function VerifikatorDashboard() {
         const { data: keluargaData } = await supabase.from('keluarga').select('*');
         if (keluargaData) setDtsenData(keluargaData);
 
-        const { data: ppksData } = await supabase.from('ppks').select('*');
-        if (ppksData) setDummyPPKS(ppksData);
+        // const { data: ppksData } = await supabase.from('ppks').select('*');
+        // if (ppksData) setDummyPPKS(ppksData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -100,7 +100,7 @@ function VerifikatorDashboard() {
     return matchKecamatan && matchKelurahan && matchKeyword;
   });
 
-  const [filterPPKS, setFilterPPKS] = useState({ kategori: "", kecamatan: "", keyword: "" });
+  const [filterPPKS, setFilterPPKS] = useState({ kategori_ppks: "", kecamatan: "", keyword: "" });
 
   const handleFilterPPKSChange = (e) => {
     const { name, value } = e.target;
@@ -108,7 +108,7 @@ function VerifikatorDashboard() {
   };
 
   const filteredPpksList = ppksList.filter(item => {
-    const matchKategori = filterPPKS.kategori_ppks === "" || item.kategori_ppks === filterPPKS.kategori;
+    const matchKategori = filterPPKS.kategori_ppks === "" || item.kategori_ppks === filterPPKS.kategori_ppks;
     const matchKecamatan = filterPPKS.kecamatan === "" || item.kecamatan === filterPPKS.kecamatan;
     const keyword = filterPPKS.keyword.toLowerCase();
     const matchKeyword = keyword === "" || 
@@ -135,9 +135,18 @@ function VerifikatorDashboard() {
       if (errPPKS) throw errPPKS;
       setPpksList(dataPPKS);
 
-      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status_penanganan', 'Menunggu Kelayakan');
+      // ✅ BENAR: Ambil data yang statusnya "Kasus Aktif" ATAU "Selesai Ditangani"
+      const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase
+        .from('ppks')
+        .select('*')
+        .or('status_penanganan.eq.Kasus Aktif,status_penanganan.eq.Selesai Ditangani');
+
       if (errRiwayatPPKS) throw errRiwayatPPKS;
       setRiwayatPpksList(dataRiwayatPPKS);
+
+      // const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status_penanganan', 'Selesai Ditangani', 'Kasus Aktif');
+      // if (errRiwayatPPKS) throw errRiwayatPPKS;
+      // setRiwayatPpksList(dataRiwayatPPKS);
       
       // ✅ DITAMBAHKAN: Mengambil data user yang memiliki role staff
       // Pastikan tabel di supabase Anda bernama 'users' atau sesuaikan namanya

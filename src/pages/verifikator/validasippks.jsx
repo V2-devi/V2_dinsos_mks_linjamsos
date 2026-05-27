@@ -17,7 +17,7 @@ function ValidasiPPKS({
         <button className={`tab-btn ${activeTab === "riwayat" ? "active" : ""}`} onClick={() => setActiveTab("riwayat")}>Riwayat Validasi</button>
       </div>
 
-      {activeTab === "menunggu" && (
+      {activeTab === "menunggu" && ( 
         <div className="outline-box">
           <div className="alert-info-box warning" style={{ marginBottom: '25px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '16px', display: 'flex', gap: '15px' }}>
             <svg style={{color: '#2563eb', flexShrink: 0}} width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -31,7 +31,7 @@ function ValidasiPPKS({
             <div className="filter-group-top">
               <label>Kategori PPKS</label>
               <div className="select-container-custom">
-                <select name="kategori" value={filterPPKS.kategori_ppks} onChange={handleFilterPPKSChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
+                <select name="kategori_ppks" value={filterPPKS.kategori_ppks} onChange={handleFilterPPKSChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
                   <option value="">Semua Kategori</option>
                   <option value="Anak Balita Terlantar">Anak Balita Terlantar</option>
                   <option value="Anak Terlantar">Anak Terlantar</option>
@@ -95,6 +95,7 @@ function ValidasiPPKS({
                   <tr>
                     <th>Nama / Identitas</th>
                     <th>Kategori PPKS</th>
+                    <th>Wilayah Kerja</th>
                     <th>Kecamatan</th>
                     <th>Lokasi Penemuan</th>
                     <th>Tgl Laporan</th>
@@ -110,9 +111,10 @@ function ValidasiPPKS({
                         <span style={{fontSize:'11px', color:'#64748b', fontWeight:'normal'}}>NIK: {item.nik || "-"}</span>
                       </td>
                       <td>{item.kategori_ppks}</td>
+                      <td>{item.wilayah_kerja || "-"}</td>
                       <td>{item.kecamatan}</td>
                       <td>{item.lokasi_penemuan}</td>
-                      <td>{formatDateIndo(item.tanggal_laporan)}</td>
+                      <td>{formatDateIndo(item.tanggal_laporan || item.tanggal_penemuan)}</td>
                       <td style={{ textAlign: "center" }}><span className="badge-status-v waiting">Menunggu Review</span></td>
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-review-action" onClick={() => openValidationPPKSModal(item)}>
@@ -121,7 +123,7 @@ function ValidasiPPKS({
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada laporan PPKS yang sesuai pencarian.</td></tr>
+                    <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Tidak ada laporan PPKS yang sesuai pencarian.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -158,9 +160,17 @@ function ValidasiPPKS({
                       <td>{item.lokasi_penemuan}</td>
                       <td>{formatDateIndo(item.tanggal_laporan)}</td>
                       <td style={{ textAlign: "center" }}>
-                        <span className={`badge-status-v ${item.status_penanganan === 'Kasus Aktif' ? 'approved' : 'rejected'}`}>
-                          {item.status_penanganan}
-                        </span>
+                      <span
+                        className={`badge-status-v ${
+                          item.status_penanganan === 'Kasus Aktif'
+                            ? 'active'
+                            : item.status_penanganan === 'Selesai Ditangani'
+                            ? 'done'
+                            : 'hidden'
+                        }`}
+                      >
+                        {item.status_penanganan}
+                      </span>
                       </td>
                       <td style={{ color: '#64748b', fontSize: '12px', maxWidth: '200px' }}>
                         {item.catatan_verifikator || "-"}

@@ -64,8 +64,8 @@ function Dtsen({
     hubungan_keluarga: "",
     jenis_kelamin: "",
     tanggal_lahir: "",
-    status_keadaan: "Hidup",
-    kondisi_khusus: ""
+    status_khusus: "",
+    status_keadaan: ""
   });
 
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] }; 
@@ -293,8 +293,7 @@ function Dtsen({
         jenis_kelamin: formAnggota.jenis_kelamin,
         tanggal_lahir: formAnggota.tanggal_lahir,
         status_keadaan: formAnggota.status_keadaan,
-        hamil: formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil"),
-        kondisi_khusus: formAnggota.kondisi_khusus || "Tidak ada"
+        kondisi_khusus: formAnggota.kondisi_khusus || "-"
       };
 
       const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
@@ -526,19 +525,24 @@ function Dtsen({
 
   const handleOpenDetailPPKS = (data) => { setSelectedPPKSData(data); setCatatanAssessment(data.deskripsiAwal || ""); setActiveTab("detail_ppks"); };
 
-  const handleUpdateStatusPPKS = async (e, statusBaru) => {
-    e.preventDefault();
-    try {
-      const { error } = await supabase.from('ppks').update({ status_penanganan: statusBaru }).eq('id', selectedPPKSData.id);
-      if (error) throw error;
-      const updatedPPKS = dummyPPKS.map(item => item.id === selectedPPKSData.id ? { ...item, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment } : item);
-      setDummyPPKS(updatedPPKS);
-      setSelectedPPKSData({ ...selectedPPKSData, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment });
-      showSuccess();
-    } catch (error) {
-      alert('Gagal update status PPKS: ' + error.message);
-    }
-  };
+ const handleUpdateStatusPPKS = async (e, statusBaru) => {
+  e.preventDefault();
+  try {
+    const { error } = await supabase.from('ppks').update({ status_penanganan: statusBaru }).eq('id', selectedPPKSData.id);
+    if (error) throw error;
+
+    showSuccess();
+
+    // ✅ FIX UTAMA: Panggil ulang fungsi fetch data Anda
+    // Ini akan otomatis memisahkan ulang data ke ppksList & riwayatPpksList berdasarkan status baru
+    await fetchPPKS(); // <--- Ganti dengan nama fungsi fetch PPKS Anda yang sebenarnya
+
+    // Tutup modal jika ada
+    setIsValidationModalOpen(false);
+  } catch (error) {
+    alert('Gagal update status PPKS: ' + error.message);
+  }
+};
 
   const formatDateIndo = (dateStr) => { if(!dateStr || dateStr === "-") return "-"; const date = new Date(dateStr); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; };
   
@@ -1086,7 +1090,7 @@ function Dtsen({
             <div className="filter-group-top">
               <label>Kategori PPKS</label>
               <div className="select-container-custom">
-                <select name="kategori" value={filterTabelPPKS.kategori} onChange={handleFilterPPKSChange}>
+                <select name="kategori_ppks" value={filterTabelPPKS.kategori_ppks} onChange={handleFilterPPKSChange}>
                   <option value="">Semua Kategori</option>
                   <option>Anak Balita Terlantar</option>
                   <option>Anak Terlantar</option>
@@ -1141,7 +1145,7 @@ function Dtsen({
             </div>
             <div className="filter-group-top">
               <label>Nama/Identitas</label>
-              <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
+              <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
             </div>
           </div>
           
@@ -1178,6 +1182,21 @@ function Dtsen({
                       <td style={{ textAlign: "center" }}>
                         <span className={`badge-ppks ${item.status_penanganan === 'Kasus Aktif' ? 'badge-aktif' : 'badge-menunggu'}`}>{item.status_penanganan}</span>
                       </td>
+
+{/* 
+                      <span
+                        className={`badge-ppks ${
+                          item.status_penanganan === 'Kasus Aktif'
+                            ? 'badge-aktif'
+                            : item.status_penanganan === 'Selesai'
+                            ? 'badge-selesai'
+                            : 'badge-menunggu'
+                        }`}
+                      >
+                        {item.status_penanganan}
+                      </span> */}
+
+
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Detail & Penanganan" onClick={() => handleOpenDetailPPKS(item)}>
                           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -1298,44 +1317,6 @@ function Dtsen({
                   <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
                   <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
                   <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
-                  <div className="form-group-modal">
-                    {/* FIELD 1: STATUS KEHAMILAN (Khusus Perempuan) */}
-                    <label>Status Kehamilan</label>
-                    <div className="select-container-custom">
-                      <select 
-                        name="hamil" 
-                        value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil")}
-                        onChange={(e) => setFormAnggota({...formAnggota, hamil: e.target.value})}
-                        disabled={formAnggota.jenis_kelamin === "Laki-laki"}
-                        style={formAnggota.jenis_kelamin === "Laki-laki" ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
-                      >
-                        <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
-                        <option value="Sedang Hamil">Sedang Hamil</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* FIELD 2: DISABILITAS / PENYAKIT (Bisa untuk siapa saja) */}
-                  <div className="form-group-modal">
-                    <label>Kondisi Khusus (Disabilitas/Penyakit)</label>
-                    <div className="select-container-custom">
-                      <select 
-                        name="kondisi_khusus" 
-                        value={formAnggota.kondisi_khusus || "Tidak ada"}
-                        onChange={(e) => setFormAnggota({...formAnggota, kondisi_khusus: e.target.value})}
-                      >
-                        <option value="Tidak ada">Tidak ada</option>
-                        <option value="Disabilitas Fisik">Disabilitas Fisik</option>
-                        <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
-                        <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
-                        <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
-                        <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
-                        <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
-                        <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
-                        <option value="Penyakit Kronis">Penyakit Kronis</option>
-                      </select>
-                    </div>
-                  </div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
               </form>

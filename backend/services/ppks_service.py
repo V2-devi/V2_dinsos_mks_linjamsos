@@ -2,7 +2,6 @@ from config.database import supabase
 from schemas.ppks_schema import PPKS
 from typing import Optional
 from uuid import uuid4
-
 # ==============================
 # GET ALL PPKS
 # ==============================
