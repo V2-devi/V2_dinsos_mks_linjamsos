@@ -94,6 +94,11 @@ function StaffDashboard() {
             kecamatan: item.kecamatan,
             kelurahan: item.kelurahan,
             alamat: item.alamat,
+            jenis_kelamin: item.jenis_kelamin,
+            tanggal_lahir: item.tanggal_lahir,
+
+
+            // kondisi_khusus: item.kondisi_khusus,
             
             // ✅ STANDARISASI KEY: Gunakan 'desil' agar konsisten di seluruh aplikasi
             hasil_desil: item.hasil_desil || "Belum Dihitung", 
