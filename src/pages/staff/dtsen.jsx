@@ -175,8 +175,8 @@ function Dtsen({
     return month <= 3 ? "q1" : month <= 6 ? "q2" : month <= 9 ? "q3" : "q4";
   };
 
-  // Perhatikan bahwa "dtsenData" di bawah ini saya ubah menjadi "currentDtsenData"
-  const tableDtsenFiltered = currentDtsenData.filter(item => {
+
+  const tableDtsenFiltered = dtsenData.filter(item => {
     const matchKecamatan = filterDtsen.kecamatan === "" || item.kecamatan === filterDtsen.kecamatan;
     const matchKelurahan = filterDtsen.kelurahan === "" || item.kelurahan === filterDtsen.kelurahan;
     const matchKk = filterDtsen.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDtsen.no_kk));

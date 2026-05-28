@@ -153,7 +153,7 @@ function ValidasiBansos({
                         </span>
                       </td>
                       <td style={{ color: '#64748b', fontSize: '12px', maxWidth: '200px' }}>
-                        {item.catatan_verifikator || "-"}
+                        {item.catatan_verifikator_bansos || "-"}
                       </td>
                     </tr>
                   )) : (

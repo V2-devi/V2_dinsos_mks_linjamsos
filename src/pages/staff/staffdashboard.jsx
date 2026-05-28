@@ -181,7 +181,8 @@ function StaffDashboard() {
             kelurahan: item.kelurahan,
             lokasi_penemuan: item.lokasi_penemuan,
             tanggal_penemuan: item.tanggal_penemuan,
-            status_penanganan: item.status_penanganan
+            status_penanganan: item.status_penanganan,
+            catatan_verifikator: item.catatan_verifikator
           }))
         );
       } catch (error) {

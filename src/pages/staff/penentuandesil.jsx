@@ -166,7 +166,7 @@ function PenentuanDesil({
                   skor_pmt: hasil.skor_pmt,
                   hasil_desil: hasil.hasil_desil,
                   kategori_desil: hasil.kategori_desil,
-                  tanggal_hitung_desil: hasil.tanggal_hitung_desil,
+                  tanggal_terakhir_update: hasil.tanggal_terakhir_update,
                 }
               : item
           )
@@ -363,7 +363,7 @@ function PenentuanDesil({
                     <th>Nama Kepala Keluarga</th>
                     <th>Kecamatan</th>
                     <th>Kelurahan</th>
-                    <th>Tanggal Update</th>
+                    <th>Terakhir Update</th>
                     <th>Skor PMT</th>
                     <th style={{ textAlign: "center" }}>Hasil Desil</th>
                   </tr>
@@ -377,7 +377,7 @@ function PenentuanDesil({
                         <td>{item.kecamatan}</td>
                         {/* ✅ [PERBAIKAN: ISI DATA KELURAHAN] */}
                         <td>{item.kelurahan || "-"}</td>
-                        <td>{item.tanggal_hitung_desil}</td>
+                        <td>{item.tanggal_terakhir_update}</td>
                         <td>{item.skor_pmt}</td>
                         <td style={{ textAlign: "center" }}>
                           <span className="desil-badge-table">{item.hasil_desil}</span>

@@ -20,7 +20,7 @@ class Keluarga(BaseModel):
   
 
   kategori_desil: Optional[str] = None
-  tanggal_terakhir_update: Optional[datetime] = None
+  tanggal_terakhir_update: Optional[str] = None
 
 
 class UpdateDesil(BaseModel):
@@ -29,6 +29,7 @@ class UpdateDesil(BaseModel):
     hasil_desil: Optional[str] = None
     kategori_desil: Optional[str] = None
     tanggal_hitung_desil: Optional[str] = None
+    tanggal_terakhir_update: Optional[str] = None
  
  
   # nik: int
