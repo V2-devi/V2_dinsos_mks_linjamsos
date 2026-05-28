@@ -175,49 +175,6 @@ function Dtsen({
     return month <= 3 ? "q1" : month <= 6 ? "q2" : month <= 9 ? "q3" : "q4";
   };
 
-  // ==========================================================
-  // 🔴 [DUMMY DATA DTSEN - START] - HAPUS BLOK INI JIKA SELESAI
-  // ==========================================================
-  const DUMMY_DTSEN = [
-    {
-      id: "dummy-1",
-      no_kk: "7371123456789991",
-      nama_kepala_keluarga: "Bapak Budi (DUMMY)",
-      tanggal_lahir: "1980-05-15",
-      jenis_kelamin: "Laki-laki",
-      kecamatan: "Panakkukang",
-      kelurahan: "Panaikang",
-      alamat: "Jl. Urip Sumoharjo No. 10",
-      hasil_desil: "Belum Dihitung",
-      // Data anggota buatan agar Modal Detail tidak error saat dibuka
-        anggota: [
-        { id: "a1", nik: "7371123456789991", nama_anggota_keluarga: "Bapak Budi", hubungan_keluarga: "Kepala Keluarga", jenis_kelamin: "Laki-laki", tanggal_lahir: "1980-05-15", status_keadaan: "Hidup", kondisi_khusus: "Tidak ada" },
-        // ✅ TAMBAHKAN DUMMY INI UNTUK MENGETES TOMBOL SURAT KEMATIAN
-        { id: "a2", nik: "7371123456789999", nama_anggota_keluarga: "Kakek Fulan", hubungan_keluarga: "Lainnya", jenis_kelamin: "Laki-laki", tanggal_lahir: "1930-01-01", status_keadaan: "Meninggal", kondisi_khusus: "Penyakit Kronis" }
-      ],
-      aset: {} 
-    },
-    {
-      id: "dummy-2",
-      no_kk: "7371123456789992",
-      nama_kepala_keluarga: "Ibu Siti (DUMMY)",
-      tanggal_lahir: "1975-12-01",
-      jenis_kelamin: "Perempuan",
-      kecamatan: "Tallo",
-      kelurahan: "Buloa",
-      alamat: "Jl. Sunu No. 5",
-      hasil_desil: "2",
-      anggota: [],
-      aset: { v01: "Perempuan", v02: "41 - 55 tahun", v03: "Tamat SMA/sederajat" }
-    }
-  ];
-
-  // Logika: Jika data asli dari database kosong, gunakan DUMMY_DTSEN
-  const currentDtsenData = dtsenData.length > 0 ? dtsenData : DUMMY_DTSEN;
-  // ==========================================================
-  // 🔴 [DUMMY DATA DTSEN - END]
-  // ==========================================================
-
   // Perhatikan bahwa "dtsenData" di bawah ini saya ubah menjadi "currentDtsenData"
   const tableDtsenFiltered = currentDtsenData.filter(item => {
     const matchKecamatan = filterDtsen.kecamatan === "" || item.kecamatan === filterDtsen.kecamatan;
