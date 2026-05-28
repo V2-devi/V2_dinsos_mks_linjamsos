@@ -10,6 +10,16 @@ function ValidasiBansos({
   formatDateIndo,
   openValidationModal
 }) {
+
+  // KAMUS DATA KECAMATAN & KELURAHAN
+  const daftarWilayah = {
+    "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
+    "Tamalanrea": ["Tamalanrea", "Tamalanrea Indah", "Tamalanrea Jaya", "Kapasa", "Kapasa Raya", "Bira", "Parang Loe", "Buntusu"],
+    "Biring Kanaya": ["Bakung", "Berua", "Bulurokeng", "Daya", "Katimbang", "Laikang", "Paccerakkang", "Pai", "Sudiang", "Sudiang raya", "Untia"],
+    "Panakkukang": ["Karampuang", "Masale", "Pampang", "Panaikang", "Pandang", "Paropo", "Sinrijala", "Tamamaung"],
+    "Tamalate": ["Balang Baru", "Barombong", "Bongaya", "Bonto Duri", "Jongaya", "Maccini Sombala", "Mangasa", "Mannuruki", "Pa'baeng-baeng", "Parang Tambung", "Tanjung Merdeka"]
+  };
+
   return (
     <>
       <div className="tabs-container">
@@ -33,9 +43,9 @@ function ValidasiBansos({
               <div className="select-container-custom">
                 <select name="kecamatan" value={filterBansos.kecamatan} onChange={handleFilterBansosChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
                   <option value="">Semua Kecamatan</option>
-                  <option value="Tallo">Tallo</option>
-                  <option value="Bontoala">Bontoala</option>
-                  <option value="Panakkukang">Panakkukang</option>
+                  {Object.keys(daftarWilayah).map((kec) => (
+                    <option key={kec} value={kec}>{kec}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -45,9 +55,9 @@ function ValidasiBansos({
               <div className="select-container-custom">
                 <select name="kelurahan" value={filterBansos.kelurahan} onChange={handleFilterBansosChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px', outline: 'none'}}>
                   <option value="">Semua Kelurahan</option>
-                  <option value="Wala-walaya">Wala-walaya</option>
-                  <option value="Baraya">Baraya</option>
-                  <option value="Pannampu">Pannampu</option>
+                  {daftarWilayah[filterBansos.kecamatan]?.map((kel) => (
+                    <option key={kel} value={kel}>{kel}</option>
+                  ))}
                 </select>
               </div>
             </div>
