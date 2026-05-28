@@ -375,6 +375,48 @@ function VerifikatorDashboard() {
         <div className="content-body">
           {activeMenu === "dashboard" && (
             <div className="dashboard-verifikator-wrapper">
+              {/* ======================================================== */}
+              {/* HEADER PINTASAN UNDUHAN TEMPLATE (QUICK ACTIONS)         */}
+              {/* ======================================================== */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>
+                <div>
+                  <h3 className="section-title" style={{ marginTop: 0 }}>Tinjauan Umum</h3>
+                  <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Unduh format data import.</p>
+                </div>
+                
+                {/* Kumpulan Tombol Unduhan (Opsi 2: Solid Abu-Biru) */}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  
+                  {/* Tombol DTSEN */}
+                  <a 
+                    href="/templates/template_import_dtsen.xlsx" download="Template_DTSEN.xlsx"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
+                  >
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Template DTSEN
+                  </a>
+
+                  {/* Tombol PPKS */}
+                  <a 
+                    href="/templates/template_import_ppks.xlsx" download="Template_PPKS.xlsx"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
+                  >
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Template PPKS
+                  </a>
+
+                  {/* Tombol BANSOS */}
+                  <a 
+                    href="/templates/template_import_bansos.xlsx" download="Template_Bansos.xlsx"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
+                  >
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Template Bansos
+                  </a>
+
+                </div>
+              </div>
+          
               <h3 className="section-title" style={{ marginTop: 0 }}>Tugas Menunggu Validasi</h3>
               <div className="task-summary-grid">
                 <div className="task-card bansos-task">
