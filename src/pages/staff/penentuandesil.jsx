@@ -276,7 +276,6 @@ function PenentuanDesil({
                     <th>Nama Kepala Keluarga</th>
                     <th>Kecamatan</th>
                     <th>Kelurahan</th>
-                    <th>Terakhir Update</th>
                     <th style={{ textAlign: "center" }}>Aksi Kalkulasi</th>
                   </tr>
                 </thead>
@@ -289,7 +288,6 @@ function PenentuanDesil({
                         <td>{item.kecamatan}</td>
                         {/* ✅ [PERBAIKAN: ISI DATA KELURAHAN] */}
                         <td>{item.kelurahan || "-"}</td>
-                        <td>{item.tanggal_terakhir_update}</td>
                         <td style={{ textAlign: "center" }}>
                           <button className="btn-hitung-desil" onClick={() => handleOpenKalkulasiModal(item)}>
                             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -302,8 +300,8 @@ function PenentuanDesil({
                     ))
                   ) : (
                     <tr>
-                      {/* ✅ [PERBAIKAN: COLSPAN MENJADI 6] */}
-                      <td colSpan="6" style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
+                      {/* ✅ [PERBAIKAN: COLSPAN MENJADI 5] */}
+                      <td colSpan="5" style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
                         Tidak ada data keluarga yang cocok dengan pencarian Anda.
                       </td>
                     </tr>

@@ -103,7 +103,19 @@ function Dtsen({
     kehamilan: "",
     disabilitas: "",
     penyakit_kronis: "",
+    file_surat_kematian: null // Menyimpan file PDF
   });
+  
+  // FUNGSI UNTUK HANDLE UPLOAD PDF SURAT KEMATIAN]
+  const handleSuratKematianChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type !== "application/pdf") {
+      alert("Harap unggah file Surat Kematian dalam format .pdf");
+      e.target.value = ""; // Reset input
+      return;
+    }
+    setFormAnggota({ ...formAnggota, file_surat_kematian: file });
+  };
 
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
@@ -163,7 +175,51 @@ function Dtsen({
     return month <= 3 ? "q1" : month <= 6 ? "q2" : month <= 9 ? "q3" : "q4";
   };
 
-  const tableDtsenFiltered = dtsenData.filter(item => {
+  // ==========================================================
+  // 🔴 [DUMMY DATA DTSEN - START] - HAPUS BLOK INI JIKA SELESAI
+  // ==========================================================
+  const DUMMY_DTSEN = [
+    {
+      id: "dummy-1",
+      no_kk: "7371123456789991",
+      nama_kepala_keluarga: "Bapak Budi (DUMMY)",
+      tanggal_lahir: "1980-05-15",
+      jenis_kelamin: "Laki-laki",
+      kecamatan: "Panakkukang",
+      kelurahan: "Panaikang",
+      alamat: "Jl. Urip Sumoharjo No. 10",
+      hasil_desil: "Belum Dihitung",
+      // Data anggota buatan agar Modal Detail tidak error saat dibuka
+        anggota: [
+        { id: "a1", nik: "7371123456789991", nama_anggota_keluarga: "Bapak Budi", hubungan_keluarga: "Kepala Keluarga", jenis_kelamin: "Laki-laki", tanggal_lahir: "1980-05-15", status_keadaan: "Hidup", kondisi_khusus: "Tidak ada" },
+        // ✅ TAMBAHKAN DUMMY INI UNTUK MENGETES TOMBOL SURAT KEMATIAN
+        { id: "a2", nik: "7371123456789999", nama_anggota_keluarga: "Kakek Fulan", hubungan_keluarga: "Lainnya", jenis_kelamin: "Laki-laki", tanggal_lahir: "1930-01-01", status_keadaan: "Meninggal", kondisi_khusus: "Penyakit Kronis" }
+      ],
+      aset: {} 
+    },
+    {
+      id: "dummy-2",
+      no_kk: "7371123456789992",
+      nama_kepala_keluarga: "Ibu Siti (DUMMY)",
+      tanggal_lahir: "1975-12-01",
+      jenis_kelamin: "Perempuan",
+      kecamatan: "Tallo",
+      kelurahan: "Buloa",
+      alamat: "Jl. Sunu No. 5",
+      hasil_desil: "2",
+      anggota: [],
+      aset: { v01: "Perempuan", v02: "41 - 55 tahun", v03: "Tamat SMA/sederajat" }
+    }
+  ];
+
+  // Logika: Jika data asli dari database kosong, gunakan DUMMY_DTSEN
+  const currentDtsenData = dtsenData.length > 0 ? dtsenData : DUMMY_DTSEN;
+  // ==========================================================
+  // 🔴 [DUMMY DATA DTSEN - END]
+  // ==========================================================
+
+  // Perhatikan bahwa "dtsenData" di bawah ini saya ubah menjadi "currentDtsenData"
+  const tableDtsenFiltered = currentDtsenData.filter(item => {
     const matchKecamatan = filterDtsen.kecamatan === "" || item.kecamatan === filterDtsen.kecamatan;
     const matchKelurahan = filterDtsen.kelurahan === "" || item.kelurahan === filterDtsen.kelurahan;
     const matchKk = filterDtsen.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDtsen.no_kk));
@@ -400,10 +456,23 @@ const handleAddAnggotaSubmit = async (e) => {
     alert(error.message);
   }
 };
+// =================================================================
+  // ✅ [FUNGSI INI TERHAPUS SEBELUMNYA, PASTIKAN ADA DI SINI]
+  // =================================================================
+  const handleEditAnggotaChange = (e) => { 
+    setSelectedAnggotaData({ ...selectedAnggotaData, [e.target.name]: e.target.value }); 
+  };
 
-
-
-  const handleEditAnggotaChange = (e) => { setSelectedAnggotaData({ ...selectedAnggotaData, [e.target.name]: e.target.value }); };
+  const handleEditSuratKematianChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type !== "application/pdf") {
+      alert("Harap unggah file Surat Kematian dalam format .pdf");
+      e.target.value = ""; // Reset input
+      return;
+    }
+    setSelectedAnggotaData({ ...selectedAnggotaData, file_surat_kematian: file });
+  };
+  // =================================================================
 
 const handleEditAnggotaSubmit = async (e) => {
   e.preventDefault();
@@ -421,7 +490,7 @@ const handleEditAnggotaSubmit = async (e) => {
       disabilitas: selectedAnggotaData.disabilitas,
       penyakit_kronis: selectedAnggotaData.penyakit_kronis
     });
-
+    
     const payload = {
       nama_anggota_keluarga: selectedAnggotaData.nama_anggota_keluarga,
       hubungan_keluarga: selectedAnggotaData.hubungan_keluarga,
@@ -615,6 +684,14 @@ const handleEditAnggotaSubmit = async (e) => {
     alert("Gagal: " + error.message);
   }
 };
+// ==========================================
+  // ✅ FUNGSI BUKA DETAIL PPKS (KEMBALIKAN FUNGSI INI)
+  // ==========================================
+  const handleOpenDetailPPKS = (data) => { 
+    setSelectedPPKSData(data); 
+    setCatatanAssessment(data.deskripsiAwal || ""); 
+    setActiveTab("detail_ppks"); 
+  };
 
   
 const handleUpdateStatusPPKS = async (e, statusBaru) => {
@@ -761,56 +838,31 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
           )}
         </div>
 
+          {/* ✅ [PERBAIKAN: AREA CATATAN DIBUAT READ-ONLY KHUSUS MENAMPILKAN PESAN VERIFIKATOR] */}
           <div className="modal-section" style={{ marginTop: '30px', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            <h3 className="section-subtitle">Tindak Lanjut & Assessment Lapangan</h3>
-            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>Catat hasil temuan lapangan dan perbarui status penanganan kasus ini.</p>
+            <h3 className="section-subtitle">Instruksi & Catatan Verifikator</h3>
             
-            <div className="form-group-modal">
-              <label>Catatan Penanganan / Assessment Singkat</label>
-              <textarea 
-                value={catatanAssessment} 
-                onChange={(e) => setCatatanAssessment(e.target.value)} 
-                rows="4" 
-                placeholder="Ketik hasil observasi atau tindakan yang telah dilakukan..."
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '13px' }}
-              ></textarea>
-            </div>
-            
-            {/* UBAH BAGIAN INI DI MODAL DETAIL PPKS */}
-            <div style={{ display: 'flex', gap: '15px', marginTop: '20px', justifyContent: 'flex-end', alignItems: 'center' }}>
-              
-              {/* ✅ TOMBOL SIMPAN CATATAN BISA DIAKSES SEMUA (STAFF & VERIFIKATOR) */}
-              <button 
-                className="btn-search-outline" 
-                style={{ height: '40px', borderColor: '#3b82f6', color: '#3b82f6' }} 
-                onClick={(e) => handleUpdateStatusPPKS(e, selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan)}
-              >
-              Simpan Catatan
-              </button>
+            {(selectedPPKSData.catatan_verifikator || selectedPPKSData.keterangan) ? (
+              <div style={{ backgroundColor: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #cbd5e1', color: '#1e293b', fontSize: '14px', lineHeight: '1.6' }}>
+                {selectedPPKSData.catatan_verifikator || selectedPPKSData.keterangan}
+              </div>
+            ) : (
+              <div style={{ backgroundColor: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, fontStyle: 'italic' }}>
+                  Belum ada instruksi atau catatan dari Verifikator. Laporan sedang menunggu tinjauan.
+                </p>
+              </div>
+            )}
 
-              {/* 🔒 TOMBOL VALIDASI HANYA UNTUK VERIFIKATOR */}
-              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Kasus Aktif") && (
-                <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
-                  Terima & Ubah ke Kasus Aktif
-                </button>
-              )}
-
-              {/* 🔒 TOMBOL SELESAI HANYA UNTUK VERIFIKATOR */}
-              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Kasus Aktif") && (
-                <button className="btn-modal-submit" style={{ backgroundColor: '#22c55e', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Selesai Ditangani")}>
-                  Tandai Selesai / Dirujuk ke Panti
-                </button>
-              )}
-
-              {/* STATUS DITUTUP BISA DILIHAT SEMUA */}
-              {(selectedPPKSData.status_penanganan === "Selesai Ditangani") && (
-                <span style={{ padding: '10px 20px', backgroundColor: '#e2e8f0', color: '#64748b', borderRadius: '8px', fontWeight: '700', fontSize: '13px' }}>
-                  Kasus Telah Ditutup
+            {/* Jika kasus sudah ditutup, tampilkan badge khusus */}
+            {(selectedPPKSData.status_penanganan === "Selesai Ditangani") && (
+              <div style={{ marginTop: '15px', textAlign: 'right' }}>
+                <span style={{ padding: '8px 16px', backgroundColor: '#e2e8f0', color: '#475569', borderRadius: '6px', fontWeight: '600', fontSize: '12px' }}>
+                  Kasus Telah Ditutup / Selesai
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-
         </div>
       )}
 
@@ -1100,9 +1152,24 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                             </span>
                           </td>
                           <td style={{ textAlign: 'center' }}>
-                            <button type="button" className="btn-icon-keterangan" title="Lihat Detail" onClick={() => handleOpenDetailAnggota(ang)}>
-                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            </button>
+                            {ang.status_keadaan === "Meninggal" ? (
+                              /* ✅ JIKA MENINGGAL: TOMBOL LIHAT SURAT KEMATIAN PDF */
+                              <button 
+                                type="button" 
+                                className="btn-search-outline" 
+                                title="Lihat Surat Kematian" 
+                                onClick={() => alert("Menampilkan Surat Kematian PDF (Dummy)...")} 
+                                style={{ padding: '6px 12px', fontSize: '11px', color: '#be123c', borderColor: '#fecdd3', backgroundColor: '#fff1f2', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                              >
+                                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                Surat Kematian
+                              </button>
+                            ) : (
+                              /* ✅ JIKA HIDUP: TOMBOL IKON MATA (DETAIL BIASA) */
+                              <button type="button" className="btn-icon-keterangan" title="Lihat Detail" onClick={() => handleOpenDetailAnggota(ang)}>
+                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1167,7 +1234,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
               </div>
               <div style={{ textAlign: 'center', marginTop: '30px' }}>
                 <button className="btn-search-outline" style={{ display: 'inline-flex', margin: '0 auto', padding: '10px 25px', backgroundColor: '#fffbeb', borderColor: '#f59e0b', color: '#d97706' }} onClick={handleOpenEditAset}>
-                  📝 Edit Data 39 Variabel Aset
+                   Edit Data 39 Variabel Aset
                 </button>
               </div>
             </div>
@@ -1346,8 +1413,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       </span> */}
 
                       {/* ✅ Kolom KETERANGAN (Sekarang berada di kiri Detail) */}
-                      <td style={{ color: '#64748b' }}>
-                        {item.keterangan || "Tidak Ada"} 
+                      <td style={{ color: '#64748b', maxWidth: '200px' }}>
+                        {item.catatan_verifikator || item.keterangan || "-"} 
                       </td>
 
                       <td style={{ textAlign: "center" }}>
@@ -1423,66 +1490,80 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
       )}
 
       {/* MODAL ANGGOTA */}
-{isAddAnggotaModalOpen && (
-  <div className="modal-overlay" onClick={() => setIsAddAnggotaModalOpen(false)}>
-    <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-      <div className="modal-header"><div className="modal-header-title"><h2>Tambah Anggota Keluarga</h2></div></div>
-      <div className="modal-body">
-        <form onSubmit={handleAddAnggotaSubmit}>
-          <div className="form-grid-2">
-            <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formAnggota.nik} onChange={(e) => setFormAnggota({...formAnggota, nik: e.target.value})} required maxLength="16" placeholder="Ketik NIK..." /></div>
-            <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_anggota_keluarga" value={formAnggota.nama_anggota_keluarga} onChange={(e) => setFormAnggota({...formAnggota, nama_anggota_keluarga: e.target.value})} required placeholder="Ketik Nama..." /></div>
-            <div className="form-group-modal"><label>Hubungan Keluarga*</label><div className="select-container-custom"><select name="hubungan_keluarga" value={formAnggota.hubungan_keluarga} onChange={(e) => setFormAnggota({...formAnggota, hubungan_keluarga: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
-            <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div></div>
-            <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
-            <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option>Hidup</option><option>Meninggal</option></select></div></div>
-            
-            {/* ✅ FIELD 1: STATUS KEHAMILAN (Khusus Perempuan, Read-only untuk Laki-laki) */}
-            <div className="form-group-modal">
-              <label>Status Kehamilan</label>
-              <div className="select-container-custom">
-                <select 
-                  name="kehamilan" 
-                  value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.kehamilan || "Tidak Sedang Hamil")}
-                  onChange={(e) => setFormAnggota({...formAnggota, kehamilan: e.target.value})}
-                  disabled={formAnggota.jenis_kelamin === "Laki-laki"}
-                  style={formAnggota.jenis_kelamin === "Laki-laki" ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
-                >
-                  <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
-                  <option value="Sedang Hamil">Sedang Hamil</option>
-                </select>
-              </div>
-            </div>
+{/* MODAL TAMBAH ANGGOTA */}
+      {isAddAnggotaModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsAddAnggotaModalOpen(false)}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header"><div className="modal-header-title"><h2>Tambah Anggota Keluarga</h2></div></div>
+            <div className="modal-body">
+              <form onSubmit={handleAddAnggotaSubmit}>
 
-            {/* ✅ FIELD 2: DISABILITAS / PENYAKIT (Bisa untuk siapa saja) */}
-            <div className="form-group-modal">
-              <label>Kondisi Khusus (Disabilitas/Penyakit)</label>
-              <div className="select-container-custom">
-                <select 
-                  name="disabilitas" 
-                  value={formAnggota.disabilitas || "Tidak ada"}
-                  onChange={(e) => setFormAnggota({...formAnggota, disabilitas: e.target.value})}
-                >
-                  <option value="Tidak ada">Tidak ada</option>
-                  <option value="Disabilitas Fisik">Disabilitas Fisik</option>
-                  <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
-                  <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
-                  <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
-                  <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
-                  <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
-                  <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
-                  <option value="Penyakit Kronis">Penyakit Kronis</option>
-                </select>
-              </div>
+                {/* 📌 SESI 1: DATA PRIBADI */}
+                <div className="modal-section">
+                  <h3 className="section-subtitle" style={{ color: '#2563eb', borderBottom: '1px solid #bfdbfe', paddingBottom: '8px', marginBottom: '15px' }}>Data Pribadi</h3>
+                  <div className="form-grid-2">
+                    <div className="form-group-modal"><label>NIK*</label><input type="text" name="nik" value={formAnggota.nik} onChange={(e) => setFormAnggota({...formAnggota, nik: e.target.value})} required maxLength="16" placeholder="Ketik NIK..." /></div>
+                    <div className="form-group-modal"><label>Nama Lengkap*</label><input type="text" name="nama_anggota_keluarga" value={formAnggota.nama_anggota_keluarga} onChange={(e) => setFormAnggota({...formAnggota, nama_anggota_keluarga: e.target.value})} required placeholder="Ketik Nama..." /></div>
+                    <div className="form-group-modal"><label>Hubungan Keluarga*</label><div className="select-container-custom"><select name="hubungan_keluarga" value={formAnggota.hubungan_keluarga} onChange={(e) => setFormAnggota({...formAnggota, hubungan_keluarga: e.target.value})} required><option value="" hidden>Pilih Hubungan</option><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
+                    <div className="form-group-modal"><label>Status Keadaan*</label><div className="select-container-custom"><select name="status_keadaan" value={formAnggota.status_keadaan} onChange={(e) => setFormAnggota({...formAnggota, status_keadaan: e.target.value})} required><option value="Hidup">Hidup</option><option value="Meninggal">Meninggal</option></select></div></div>
+                    <div className="form-group-modal"><label>Jenis Kelamin*</label><div className="select-container-custom"><select name="jenis_kelamin" value={formAnggota.jenis_kelamin} onChange={(e) => setFormAnggota({...formAnggota, jenis_kelamin: e.target.value})} required><option value="" hidden>Pilih Kelamin</option><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div></div>
+                    <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
+
+                    {/* ✅ JIKA STATUS MENINGGAL: MUNCUL FORM UPLOAD SURAT KEMATIAN */}
+                    {formAnggota.status_keadaan === "Meninggal" && (
+                      <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
+                        <label style={{ color: '#be123c', fontWeight: 'bold' }}>Unggah Surat Kematian (Format .pdf)*</label>
+                        <input type="file" accept=".pdf" onChange={handleSuratKematianChange} required style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }} />
+                        <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>Wajib melampirkan bukti surat keterangan kematian resmi.</small>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 📌 SESI 2: KONDISI KHUSUS */}
+                <div className="modal-section" style={{ marginTop: '20px' }}>
+                  <h3 className="section-subtitle" style={{ color: '#ef4444', borderBottom: '1px solid #fecaca', paddingBottom: '8px', marginBottom: '15px' }}>Kondisi Khusus (Penting Untuk Bansos)</h3>
+                  <div className="form-grid-2">
+                    <div className="form-group-modal">
+                      <label>Status Kehamilan (Bagi Perempuan)</label>
+                      <div className="select-container-custom">
+                        <select name="hamil" value={formAnggota.jenis_kelamin === 'Laki-laki' ? "Tidak Sedang Hamil" : formAnggota.hamil} onChange={(e) => setFormAnggota({...formAnggota, hamil: e.target.value})} disabled={formAnggota.jenis_kelamin === 'Laki-laki'} style={formAnggota.jenis_kelamin === 'Laki-laki' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8' } : {}}>
+                          <option value="Tidak Sedang Hamil">Tidak Sedang Hamil</option>
+                          <option value="Sedang Hamil">Sedang Hamil</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group-modal">
+                      <label>Kategori Disabilitas</label>
+                      <div className="select-container-custom">
+                        <select name="disabilitas" value={formAnggota.disabilitas} onChange={(e) => setFormAnggota({...formAnggota, disabilitas: e.target.value})}>
+                          <option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option>
+                          <option value="Disabilitas Fisik">Disabilitas Fisik</option>
+                          <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
+                          <option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option>
+                          <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
+                          <option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option>
+                          <option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option>
+                          <option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
+                      <label>Penyakit Kronis / Menahun</label>
+                      <input type="text" name="penyakit" value={formAnggota.penyakit} onChange={(e) => setFormAnggota({...formAnggota, penyakit: e.target.value})} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: '25px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
+                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button>
+                  <button type="submit" className="btn-modal-submit" style={{ backgroundColor: '#10b981' }}>Simpan Anggota</button>
+                </div>
+              </form>
             </div>
           </div>
-          
-          <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button><button type="submit" className="btn-modal-submit">Simpan Anggota</button></div>
-        </form>
-      </div>
-    </div>
-  </div>
-)}
+        </div>
+      )}
 
       {/* MODAL EDIT ANGGOTA DETAIL */}
       {isDetailAnggotaModalOpen && selectedAnggotaData && (
@@ -1497,11 +1578,19 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                     <div className="form-group-modal"><label>NIK</label><input type="text" name="nik" value={selectedAnggotaData.nik} onChange={handleEditAnggotaChange} /></div>
                     <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_anggota_keluarga" value={selectedAnggotaData.nama_anggota_keluarga} onChange={handleEditAnggotaChange} /></div>
                     <div className="form-group-modal"><label>Hubungan Keluarga</label><div className="select-container-custom"><select name="hubungan_keluarga" value={selectedAnggotaData.hubungan_keluarga} onChange={handleEditAnggotaChange}><option>Kepala Keluarga</option><option>Istri</option><option>Anak</option><option>Lainnya</option></select></div></div>
-                    <div className="form-group-modal"><label>Status Keadaan</label><div className="select-container-custom"><select name="status_keadaan" value={selectedAnggotaData.status_keadaan} onChange={handleEditAnggotaChange}><option>Hidup</option><option>Meninggal</option></select></div></div>
+                    <div className="form-group-modal"><label>Status Keadaan</label><div className="select-container-custom"><select name="status_keadaan" value={selectedAnggotaData.status_keadaan} onChange={handleEditAnggotaChange}><option value="Hidup">Hidup</option><option value="Meninggal">Meninggal</option></select></div></div>
                     <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
                       <label>Estimasi Kategori Pendidikan/Usia (Otomatis dari Tanggal Lahir)</label>
                       <input type="text" value={getKategoriPendidikan(selectedAnggotaData.tanggal_lahir)} readOnly style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', fontWeight: 'bold' }} />
                     </div>
+                    {/* ✅ TAMBAHAN: MUNCULKAN FORM UPLOAD JIKA STATUS DIUBAH KE MENINGGAL */}
+                    {selectedAnggotaData.status_keadaan === "Meninggal" && (
+                      <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3', marginTop: '10px' }}>
+                        <label style={{ color: '#be123c', fontWeight: 'bold' }}>Unggah Surat Kematian (Format .pdf)*</label>
+                        <input type="file" accept=".pdf" onChange={handleEditSuratKematianChange} required style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }} />
+                        <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>Wajib melampirkan bukti surat keterangan kematian jika status diubah menjadi Meninggal.</small>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

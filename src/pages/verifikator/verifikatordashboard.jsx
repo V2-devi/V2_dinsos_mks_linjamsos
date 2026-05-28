@@ -173,7 +173,12 @@ function VerifikatorDashboard() {
     setIsValidateModalOpen(true);
   };
 
-  const openValidationPPKSModal = (data) => { setSelectedPPKSReview(data); setIsReviewPPKSModalOpen(true); };
+  const openValidationPPKSModal = (data) => { 
+    setSelectedPPKSReview(data); 
+    setIsReviewPPKSModalOpen(true);
+    setCatatanValidasi(""); // Kosongkan catatan sebelumnya
+    setActiveTab("review_ppks"); // Pindah ke halaman virtual
+    };
 
   const handleValidasiBansos = async (e, statusKeputusan) => {
     e.preventDefault();
@@ -278,11 +283,6 @@ function VerifikatorDashboard() {
     const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; 
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; 
   };
-
-
-
-
-
 
   return (
     <div className="verifikator-layout relative">
@@ -467,8 +467,10 @@ function VerifikatorDashboard() {
             />
           )}
 
-          {/* ✅ PANGGIL KOMPONEN VALIDASI PPKS */}
-          {activeMenu === "validasi_ppks" && (
+          {/* ====================================================================== */}
+          {/* 1. PANGGIL KOMPONEN VALIDASI PPKS (TABEL)                              */}
+          {/* ====================================================================== */}
+          {activeMenu === "validasi_ppks" && activeTab !== "review_ppks" && (
             <ValidasiPPKS 
               activeTab={activeTab} 
               setActiveTab={setActiveTab} 
@@ -480,6 +482,110 @@ function VerifikatorDashboard() {
               openValidationPPKSModal={openValidationPPKSModal}
               onSelesaikanKasus={handleSelesaikanKasusPPKS} 
             />
+          )}
+
+
+          {/* ====================================================================== */}
+          {/* 2. HALAMAN VIRTUAL: REVIEW LAPORAN PPKS (MUNCUL SAAT KLIK REVIEW)      */}
+          {/* ====================================================================== */}
+          {activeMenu === "validasi_ppks" && activeTab === "review_ppks" && selectedPPKSReview && (
+            <div className="dashboard-verifikator-wrapper" style={{ padding: '20px' }}>
+              
+              {/* HEADER HALAMAN & TOMBOL KEMBALI */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                <div>
+                  <h2 className="section-title" style={{ margin: 0 }}>Review Laporan Kasus PPKS</h2>
+                  <p style={{ color: '#64748b', margin: '5px 0 0 0', fontSize: '14px' }}>Tinjau dan berikan instruksi penanganan untuk kasus ini.</p>
+                </div>
+                <button 
+                  className="btn-search-outline" 
+                  onClick={() => setActiveTab("menunggu")} 
+                  style={{ padding: '8px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                >
+                  &larr; Kembali ke Daftar PPKS
+                </button>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', padding: '30px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                
+                {/* 1. STATUS BOX */}
+                <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Ditolak' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Ditolak' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
+                  <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Ditolak' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
+                  <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
+                </div>
+
+                {/* 2. DATA TEMUAN LAPANGAN */}
+                <div style={{ paddingBottom: '20px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>NAMA</span>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.nama || "-"}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>KATEGORI PPKS</span>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.kategori || "-"}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>NOMOR NIK (JIKA ADA)</span>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.nik || "-"}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>KECAMATAN PENEMUAN</span>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.kecamatan || "-"}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '20px' }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>LOKASI PENEMUAN SPESIFIK</span>
+                    <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.lokasi_penemuan || "-"}</div>
+                  </div>
+                </div>
+
+                {/* 3. BUKTI FOTO PENEMUAN */}
+                <div style={{ paddingBottom: '20px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 'bold', margin: '0 0 15px 0' }}>Bukti Foto Penemuan</h3>
+                  {Array.isArray(selectedPPKSReview?.bukti_foto_ppks) && selectedPPKSReview?.bukti_foto_ppks.length > 0 ? (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      {selectedPPKSReview.bukti_foto_ppks.map((fotoUrl, idx) => (
+                        <img key={idx} src={fotoUrl} alt={`Bukti ${idx + 1}`} style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                      ))}
+                    </div>
+                  ) : typeof selectedPPKSReview?.bukti_foto_ppks === 'string' && selectedPPKSReview?.bukti_foto_ppks.trim() !== "" ? (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      {selectedPPKSReview.bukti_foto_ppks.split(",").map((fotoUrl, idx) => (
+                        <img key={idx} src={fotoUrl.trim()} alt={`Bukti ${idx + 1}`} style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>Tidak ada bukti foto yang dilampirkan oleh Staf Lapangan.</p>
+                  )}
+                </div>
+
+                {/* 4. FORM CATATAN VERIFIKATOR */}
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 'bold', margin: '0 0 10px 0' }}>Tindak Lanjut & Assessment Lapangan</h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>
+                    Catat hasil temuan lapangan dan instruksikan penanganan selanjutnya untuk kasus ini.
+                  </p>
+                  <textarea 
+                    className="form-control"
+                    rows="4" 
+                    placeholder="Ketik hasil asesmen atau instruksi di sini..."
+                    required
+                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', resize: 'vertical' }}
+                    value={catatanValidasi || ""} 
+                    onChange={(e) => setCatatanValidasi(e.target.value)} 
+                  ></textarea>
+                </div>
+                
+                {/* 5. TOMBOL AKSI VERIFIKATOR */}
+                <div style={{ gap: '15px', display: 'flex', marginTop: '25px', paddingTop: '20px', borderTop: '2px solid #e2e8f0' }}>
+                   <button type="button" style={{ flex: 1, padding: '15px', backgroundColor: '#ef4444', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Ditolak")}>Tolak Laporan</button>
+                   <button type="button" style={{ flex: 1, padding: '15px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Kasus Aktif")}>Setujui Laporan</button>
+                </div>
+
+              </div>
+            </div>
           )}
 
           {activeMenu === "penentuan_desil" && (
@@ -560,49 +666,8 @@ function VerifikatorDashboard() {
       )}
       
 
-      {/* ================= MODAL VALIDASI / REVIEW Laporan PPKS (BARU) ================= */}
-      {isReviewPPKSModalOpen && selectedPPKSReview && (
-        <div className="modal-overlay" onClick={() => setIsReviewPPKSModalOpen(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-header-title">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h2>Review Laporan Kasus PPKS</h2>
-              </div>
-            </div>
-            
-            <div className="modal-body">
-              <div className="alert-info-box" style={{ backgroundColor: '#f1f5f9', border: '1px dashed #94a3b8', padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
-                <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>KATEGORI:</span><strong style={{ color: '#234a66' }}>{selectedPPKSReview.kategori}</strong></div>
-                <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>TANGGAL LAPORAN:</span><strong style={{ color: '#234a66' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
-              </div>
 
-              <div className="modal-section">
-                <h3 className="section-subtitle">Data Temuan Lapangan (Read-Only)</h3>
-                <div className="form-grid-2">
-                  <div className="form-group-modal"><label>Nama / Alias</label><input type="text" value={selectedPPKSReview.nama} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Kecamatan</label><input type="text" value={selectedPPKSReview.kecamatan} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Lokasi Presisi Penemuan</label><input type="text" value={selectedPPKSReview.lokasi} readOnly className="input-readonly" /></div>
-                </div>
-              </div>
-
-              <form style={{ marginTop: '30px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
-                <div className="form-group-modal" style={{ marginBottom: '20px' }}>
-                  <label style={{ color: '#15803d' }}>Hasil Asesmen / Instruksi Penanganan Lanjutan*</label>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 8px 0' }}>Berikan instruksi kepada staf lapangan apa yang harus dilakukan selanjutnya (misal: Rujuk ke RS, Masukkan Panti, dll) jika kasus ini disetujui. Atau berikan alasan jika ditolak.</p>
-                  <textarea rows="4" value={catatanValidasi} onChange={(e) => setCatatanValidasi(e.target.value)} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', width: '100%', outline: 'none', resize: 'vertical' }} placeholder="Ketik hasil asesmen atau instruksi di sini..." required></textarea>
-                </div>
-                <div className="modal-actions" style={{ gap: '20px', display: 'flex' }}>
-                  <button type="button" className="btn-modal-danger" style={{ flex: 1, padding: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Ditolak")}>Tolak Laporan (Bukan Kasus)</button>
-                  <button type="button" className="btn-modal-submit" style={{ flex: 1, padding: '15px', backgroundColor: '#1d4ed8' }} onClick={(e) => handleValidationPPKSAction(e, "Selesai Ditangani")}>Validasi & Jadikan "Selesai Ditangani"</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL SUCCESS UMUM ================= */}
+            {/* ================= MODAL SUCCESS UMUM ================= */}
       {isSuccessModalOpen && (<div className="modal-overlay" onClick={() => setIsSuccessModalOpen(false)}><div className="modal-content" style={{maxWidth: '400px', borderTop: '8px solid #22c55e'}}><div className="modal-body text-center" style={{ padding: '40px 20px' }}><div style={{width: '60px', height: '60px', backgroundColor: '#22c55e', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto'}}><svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg></div><h2 style={{ color: '#234a66', fontSize: '22px', fontWeight: '800', margin: '0 0 8px 0' }}>Tindakan Berhasil!</h2><p style={{ color: '#475569', fontSize: '13px', margin: '0' }}>Data telah diperbarui dan diteruskan ke sistem.</p></div></div></div>)}
 
     </div>
