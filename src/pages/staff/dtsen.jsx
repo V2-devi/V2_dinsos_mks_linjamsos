@@ -147,7 +147,7 @@ function Dtsen({
   });
 
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
-  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
+  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Menunggu Kelayakan").length;
   const kategoriCount = {};
   dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori_ppks] = (kategoriCount[item.kategori_ppks] || 0) + 1; });
   const top5PPKS = Object.entries(kategoriCount).map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 5); 
@@ -413,10 +413,10 @@ function Dtsen({
   //   try {
   //     const { data, error } = await supabase.from('ppks').insert([{
   //       kategori_ppks: formPPKS.kategori_ppks, tanggal_penemuan: formPPKS.tanggal_penemuan, nik: formPPKS.nik || null, nama_lengkap: formPPKS.nama_lengkap || null,
-  //       kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Kasus Aktif" 
+  //       kecamatan: formPPKS.kecamatan, kelurahan: formPPKS.kelurahan, lokasi_penemuan: formPPKS.lokasi_penemuan, status_penanganan: "Menunggu Kelayakan" 
   //     }]);
   //     if (error) throw error;
-  //     const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Kasus Aktif", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
+  //     const newPPKS = { ...formPPKS, id: data[0].id, status_penanganan: "Menunggu Kelayakan", nik: formPPKS.nik || "Belum Diketahui", nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas" };
   //     setDummyPPKS([newPPKS, ...dummyPPKS]);
   //     setIsAddPPKSModalOpen(false);
   //     setFormPPKS(initialFormPPKS);
@@ -480,7 +480,7 @@ function Dtsen({
           kecamatan: formPPKS.kecamatan,
           kelurahan: formPPKS.kelurahan,
           lokasi_penemuan: formPPKS.lokasi_penemuan,
-          status_penanganan: "Kasus Aktif",
+          status_penanganan: "Menunggu Kelayakan",
           bukti_foto_ppks: fotoUrls.length > 0 ? fotoUrls : null,
 
           // ✅ SIMPAN FOTO
@@ -596,9 +596,9 @@ function Dtsen({
           </div>
 
           <div className="info-alert-box" style={{ 
-              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#fffbeb' : '#dcfce7', 
-              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#fde047' : '#86efac',
-              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Kasus Aktif' ? '#b45309' : '#166534',
+              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
+              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
+              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
               marginBottom: '25px', display: 'flex', justifyContent: 'space-between'
             }}>
             <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan}</strong></span>
@@ -607,7 +607,7 @@ function Dtsen({
 
           <div className="detail-summary-grid">
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Nama / Identitas (Alias)</span><span className="sum-val">{selectedPPKSData.nama_lengkap || "Tanpa Identitas"}</span></div>
+              <div className="summary-item"><span className="sum-label">Nama</span><span className="sum-val">{selectedPPKSData.nama_lengkap || "Tanpa Identitas"}</span></div>
               <div className="summary-item"><span className="sum-label">Nomor NIK (Jika Ada)</span><span className="sum-val">{selectedPPKSData.nik || "-"}</span></div>
             </div>
             <div className="summary-col">
@@ -672,7 +672,7 @@ function Dtsen({
               </button>
 
               {/* 🔒 TOMBOL VALIDASI HANYA UNTUK VERIFIKATOR */}
-              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Kasus Aktif") && (
+              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Menunggu Kelayakan") && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
                   Terima & Ubah ke Kasus Aktif
                 </button>
@@ -1169,8 +1169,8 @@ function Dtsen({
               </div>
             </div>
             <div className="filter-group-top">
-              <label>Nama/Identitas</label>
-              <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama/NIK..." />
+              <label>Nama</label>
+              <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama..." />
             </div>
           </div>
           
@@ -1192,7 +1192,18 @@ function Dtsen({
             <div className="table-responsive">
               <table className="staff-table">
                 <thead>
-                  <tr><th>NIK</th><th>Nama / Identitas</th><th>Kategori PPKS</th><th>Kecamatan</th><th>Kelurahan</th><th>Lokasi Penemuan</th><th>Tgl Laporan</th><th style={{ textAlign: "center" }}>Status</th><th style={{ textAlign: "center" }}>Detail</th><th>Keterangan</th></tr>
+                  <tr>
+                    <th>NIK</th>
+                    <th>Nama</th>
+                    <th>Kategori PPKS</th>
+                    <th>Kecamatan</th>
+                    <th>Kelurahan</th>
+                    <th>Lokasi Penemuan</th>
+                    <th>Tanggal Laporan</th>
+                    <th style={{ textAlign: "center" }}>Status</th>
+                    <th>Keterangan</th>
+                    <th style={{ textAlign: "center" }}>Detail</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {tabelPPKSFiltered.length > 0 ? tabelPPKSFiltered.map((item) => (
@@ -1221,47 +1232,17 @@ function Dtsen({
                         {item.status_penanganan}
                       </span> */}
 
+                      {/* ✅ Kolom KETERANGAN (Sekarang berada di kiri Detail) */}
+                      <td style={{ color: '#64748b' }}>
+                        {item.keterangan || "Tidak Ada"} 
+                      </td>
 
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Detail & Penanganan" onClick={() => handleOpenDetailPPKS(item)}>
                           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         </button>
                       </td>
-                      <td>
-                      {item.bukti_foto_ppks &&
-                      item.bukti_foto_ppks.length > 0 ? (
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "5px",
-                            justifyContent: "center",
-                            flexWrap: "wrap"
-                          }}
-                        >
-                          {item.bukti_foto_ppks
-                            .slice(0, 3)
-                            .map((foto, index) => (
-                              <img
-                                key={index}
-                                src={foto}
-                                alt={`foto-${index}`}
-                                style={{
-                                  width: "50px",
-                                  height: "50px",
-                                  objectFit: "cover",
-                                  borderRadius: "6px",
-                                  border: "1px solid #cbd5e1"
-                                }}
-                              />
-                          ))}
-                        </div>
-
-                      ) : (
-                        <span style={{ color: "#94a3b8" }}>
-                          Tidak Ada
-                        </span>
-                      )}
-                    </td>
+                    
                     </tr>
                   )) : (
                     <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>Tidak ada data PPKS yang cocok.</td></tr>
