@@ -8,7 +8,7 @@ class PengusulanCreate(BaseModel):
     # nama_pengusul: Optional[str] = None
     tanggal_usulan: datetime
     penginput: str
-    catatan_verifikator: str
+    catatan_verifikator_bansos: Optional[str] = None
     alamat: str
     kecamatan: str
     kelurahan: str

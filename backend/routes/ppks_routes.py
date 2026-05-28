@@ -63,6 +63,7 @@ async def create_ppks(
             "kelurahan": data.kelurahan,
             "lokasi_penemuan": data.lokasi_penemuan,
             "status_penanganan": data.status_penanganan,
+            "catatan_verifikator": data.catatan_verifikator,
             "bukti_foto_ppks": data.bukti_foto_ppks or [],  # ✅ Array URL
             "created_by": user_id
         }

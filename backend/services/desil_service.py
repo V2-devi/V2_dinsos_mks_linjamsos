@@ -119,7 +119,7 @@ def proses_kalkulasi_desil(no_kk: str):
     payload_update = {
         "skor_pmt": round(total_skor, 2),
         "hasil_desil": hasil_desil,  # Pastikan kolom ini tipe TEXT di DB
-        "tanggal_hitung_desil": datetime.now().isoformat(),
+        "tanggal_terakhir_update": datetime.now().strftime("%Y-%m-%d"),
         "kategori_desil": kategori   
     }
     
@@ -139,5 +139,5 @@ def proses_kalkulasi_desil(no_kk: str):
         "skor_pmt": round(total_skor, 2),
         "hasil_desil": hasil_desil,
         "kategori_desil": kategori,
-        "tanggal_hitung_desil": payload_update["tanggal_hitung_desil"]
+        "tanggal_terakhir_update": payload_update["tanggal_terakhir_update"]
     }

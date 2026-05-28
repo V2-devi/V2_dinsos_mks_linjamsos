@@ -738,9 +738,9 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
 
           <div className="modal-section" style={{ marginTop: '20px' }}>
           <h3 className="section-subtitle">Bukti Foto Penemuan</h3>
-          {selectedPPKSData.foto_bukti_ppks ? (
+          {selectedPPKSData.bukti_foto_ppks ? (
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-              {selectedPPKSData.foto_bukti_ppks.split(",").map((namaFile, idx) => (
+              {selectedPPKSData.bukti_foto_ppks.split(",").map((namaFile, idx) => (
                 <img 
                   key={idx}
                   // Ganti URL ini dengan URL dari bucket storage Supabase Anda
@@ -1347,7 +1347,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
 
                       {/* ✅ Kolom KETERANGAN (Sekarang berada di kiri Detail) */}
                       <td style={{ color: '#64748b' }}>
-                        {item.keterangan || "Tidak Ada"} 
+                        {item.catatan_verifikator || "Tidak Ada"} 
                       </td>
 
                       <td style={{ textAlign: "center" }}>
