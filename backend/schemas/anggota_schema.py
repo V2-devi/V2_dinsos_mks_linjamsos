@@ -7,17 +7,17 @@ from datetime import datetime
 # =========================================
 class Anggota(BaseModel):
 
-    nik: int
+    nik: Optional[str] = None
 
-    nama_anggota_keluarga: str
+    nama_anggota_keluarga: Optional[str] = None
 
-    hubungan_keluarga: str
+    hubungan_keluarga: Optional[str] = None
 
-    jenis_kelamin: str
+    jenis_kelamin: Optional[str] = None
 
-    tanggal_lahir: str
+    tanggal_lahir: Optional[str] = None
 
-    status_keadaan: str
+    status_keadaan: Optional[str] = None
 
     kondisi_khusus: Optional[str] = None
 
@@ -27,12 +27,19 @@ class Anggota(BaseModel):
 # =========================================
 
 class UpdateKondisiKhusus(BaseModel):
+
     nik: Optional[str] = None
+
     nama_anggota_keluarga: Optional[str] = None
+
     hubungan_keluarga: Optional[str] = None
+
     jenis_kelamin: Optional[str] = None
+
     tanggal_lahir: Optional[str] = None
+
     status_keadaan: Optional[str] = None
+
     kondisi_khusus: Optional[str] = None
     
     # ✅ Field flat dari frontend form

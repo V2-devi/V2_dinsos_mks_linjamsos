@@ -22,6 +22,39 @@ function Dtsen({
     "Panakkukang": ["Karampuang", "Masale", "Pampang", "Panaikang", "Pandang", "Paropo", "Sinrijala", "Tamamaung"],
     "Tamalate": ["Balang Baru", "Barombong", "Bongaya", "Bonto Duri", "Jongaya", "Maccini Sombala", "Mangasa", "Mannuruki", "Pa'baeng-baeng", "Parang Tambung", "Tanjung Merdeka"]
   };
+  
+  
+  // 🔗 GABUNG 3 FIELD MENJADI 1 STRING (untuk kirim ke backend)
+  const gabungKondisiKhusus = ({ kehamilan, disabilitas, penyakit_kronis }) => {
+    const parts = [];
+    if (kehamilan && kehamilan !== "") parts.push(`Kehamilan: ${kehamilan}`);
+    if (disabilitas && disabilitas !== "") parts.push(`Disabilitas: ${disabilitas}`);
+    if (penyakit_kronis && penyakit_kronis.trim() !== "") parts.push(`Penyakit Kronis: ${penyakit_kronis.trim()}`);
+    
+    return parts.length > 0 ? parts.join(" | ") : "";
+  };
+
+  // 🔓 PISAH 1 STRING MENJADI 3 FIELD (untuk edit form)
+  const pisahKondisiKhusus = (kondisi_khusus) => {
+    const result = { kehamilan: "", disabilitas: "", penyakit_kronis: "" };
+    
+    if (!kondisi_khusus) return result;
+    
+    const parts = kondisi_khusus.split(" | ");
+    parts.forEach(part => {
+      if (part.startsWith("Kehamilan:")) {
+        result.kehamilan = part.replace("Kehamilan:", "").trim();
+      } else if (part.startsWith("Disabilitas:")) {
+        result.disabilitas = part.replace("Disabilitas:", "").trim();
+      } else if (part.startsWith("Penyakit Kronis:")) {
+        result.penyakit_kronis = part.replace("Penyakit Kronis:", "").trim();
+      }
+    });
+    
+    return result;
+  };
+
+
 
   // ==========================================
   // STATE PINDAHAN DARI STAFFDASHBOARD (LOGIKA KHUSUS DTSEN/PPKS)
@@ -64,8 +97,11 @@ function Dtsen({
     hubungan_keluarga: "",
     jenis_kelamin: "",
     tanggal_lahir: "",
-    status_khusus: "",
-    status_keadaan: ""
+    // status_khusus: "",
+    status_keadaan: "",
+    kehamilan: "",
+    disabilitas: "",
+    penyakit_kronis: "",
   });
 
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] }; 
@@ -201,30 +237,50 @@ function Dtsen({
     }
   };
 
-  const fetchAnggota = async (no_kk) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://127.0.0.1:8000/keluarga/${no_kk}/anggota`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      
-      const updatedDtsen = dtsenData.map((item) => {
-        if (item.no_kk === no_kk) {
-          return { ...item, anggota: data };
-        }
-        return item;
-      });
-      setDtsenData(updatedDtsen);
 
-      if (selectedDtsenData?.no_kk === no_kk) {
-        setSelectedDtsenData(prev => ({ ...prev, anggota: data }));
+
+ const fetchAnggota = async (no_kk) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`http://127.0.0.1:8000/keluarga/${no_kk}/anggota`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    const data = await response.json();
+    
+    console.log("📦 RAW DATA ANGGOTA:", data); // 🔍 Debug: cek apakah kondisi_khusus ada
+    
+    // ✅ NORMALISASI DATA: Pastikan setiap anggota punya field kondisi_khusus
+    const normalizedAnggota = data.map(anggota => ({
+      ...anggota,
+      kondisi_khusus: anggota.kondisi_khusus || "" // ✅ Default ke empty string jika null/undefined
+    }));
+
+    // Update state dtsenData
+    const updatedDtsen = dtsenData.map((item) => {
+      if (item.no_kk === no_kk) {
+        return { ...item, anggota: normalizedAnggota };
       }
-    } catch (error) {
-      console.error("FETCH ANGGOTA ERROR:", error);
+      return item;
+    });
+    setDtsenData(updatedDtsen);
+
+    // Update selectedDtsenData jika sedang dibuka
+    if (selectedDtsenData?.no_kk === no_kk) {
+      setSelectedDtsenData(prev => ({ 
+        ...prev, 
+        anggota: normalizedAnggota 
+      }));
     }
-  };
+    
+  } catch (error) {
+    console.error("FETCH ANGGOTA ERROR:", error);
+  }
+};
+
+
+
 
   const handleOpenDetailDtsen = async (data) => {
     setSelectedDtsenData(data);
@@ -267,94 +323,151 @@ function Dtsen({
 
   // const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
   const handleOpenDetailAnggota = (anggota) => {
-
+    // ✅ PENTING: Parse dulu string jadi 3 field terpisah
+    const parsed = pisahKondisiKhusus(anggota.kondisi_khusus);
+    
     setSelectedAnggotaData({
       ...anggota,
-
-      kondisi_khusus:
-        anggota.kondisi_khusus || ""
+      // ✅ Isi field terpisah untuk form
+      kehamilan: parsed.kehamilan,
+      disabilitas: parsed.disabilitas,
+      penyakit_kronis: parsed.penyakit_kronis
     });
-
+    
     setIsDetailAnggotaModalOpen(true);
   };
 
 
-  const handleAddAnggotaSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (!formAnggota.nik) { alert("NIK wajib diisi"); return; }
-      if (!selectedNoKK) { alert("No KK tidak ditemukan"); return; }
+const handleAddAnggotaSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    if (!formAnggota.nik) { alert("NIK wajib diisi"); return; }
+    if (!selectedNoKK) { alert("No KK tidak ditemukan"); return; }
 
-      const token = localStorage.getItem("token");
-      const payload = {
-        nik: String(formAnggota.nik),
-        nama_anggota_keluarga: formAnggota.nama_anggota_keluarga,
-        hubungan_keluarga: formAnggota.hubungan_keluarga,
-        jenis_kelamin: formAnggota.jenis_kelamin,
-        tanggal_lahir: formAnggota.tanggal_lahir,
-        status_keadaan: formAnggota.status_keadaan,
-        kondisi_khusus: formAnggota.kondisi_khusus || "-"
-      };
+    const token = localStorage.getItem("token");
+    
+    // ✅ GABUNG 3 FIELD JADI 1 STRING SEBELUM KIRIM
+    const kondisi_khusus_gabung = gabungKondisiKhusus({
+      kehamilan: formAnggota.kehamilan,
+      disabilitas: formAnggota.disabilitas,
+      penyakit_kronis: formAnggota.penyakit_kronis
+    });
 
-      const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await response.json();
-      if (!response.ok) { alert(JSON.stringify(data, null, 2)); return; }
+    // ✅ PAYLOAD YANG BENAR
+    const payload = {
+      nik: String(formAnggota.nik),
+      nama_anggota_keluarga: formAnggota.nama_anggota_keluarga,
+      hubungan_keluarga: formAnggota.hubungan_keluarga,
+      jenis_kelamin: formAnggota.jenis_kelamin,
+      tanggal_lahir: formAnggota.tanggal_lahir,
+      status_keadaan: formAnggota.status_keadaan,
+      kondisi_khusus: kondisi_khusus_gabung  // ✅ KIRIM HASIL GABUNGAN, BUKAN formAnggota.kondisi_khusus
+    };
 
-      await fetchAnggota(selectedNoKK);
-      setIsAddAnggotaModalOpen(false);
-      setFormAnggota({ nik: "", nama_anggota_keluarga: "", hubungan_keluarga: "", jenis_kelamin: "", tanggal_lahir: "", status_keadaan: "", kondisi_khusus: "" });
-      showSuccess();
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+    console.log("📤 PAYLOAD ADD ANGGOTA:", payload); // 🔍 Debug: pastikan kondisi_khusus terisi lengkap
+
+    const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await response.json();
+    if (!response.ok) { alert(JSON.stringify(data, null, 2)); return; }
+
+    await fetchAnggota(selectedNoKK);
+    setIsAddAnggotaModalOpen(false);
+    
+    // ✅ Reset form dengan 3 field terpisah
+    setFormAnggota({ 
+      nik: "", 
+      nama_anggota_keluarga: "", 
+      hubungan_keluarga: "", 
+      jenis_kelamin: "", 
+      tanggal_lahir: "", 
+      status_keadaan: "",
+      kehamilan: "",        // ✅ Reset field terpisah
+      disabilitas: "",      // ✅ Reset field terpisah
+      penyakit_kronis: ""   // ✅ Reset field terpisah
+    });
+    
+    showSuccess();
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
+
 
   const handleEditAnggotaChange = (e) => { setSelectedAnggotaData({ ...selectedAnggotaData, [e.target.name]: e.target.value }); };
 
-  const handleEditAnggotaSubmit = (e) => {
-    e.preventDefault();
-    try {
-      if (!selectedAnggotaData?.id && !selectedAnggotaData?.nik) { alert("Data anggota tidak valid"); return; }
+const handleEditAnggotaSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!selectedAnggotaData?.id || !selectedDtsenData?.no_kk) { 
+    alert("Data anggota atau No KK tidak valid"); 
+    return; 
+  }
 
-      setDtsenData(prevData => 
-        prevData.map(family => {
-          if (family.no_kk === selectedDtsenData?.no_kk || family.id === selectedDtsenData?.id) {
-            const updatedAnggotaList = family.anggota?.map(ang => {
-              if (ang.id === selectedAnggotaData.id || ang.nik === selectedAnggotaData.nik) {
-                return { ...ang, ...selectedAnggotaData }; 
-              }
-              return ang;
-            });
-            return { ...family, anggota: updatedAnggotaList || [selectedAnggotaData] };
-          }
-          return family;
-        })
-      );
+  try {
+    const token = localStorage.getItem("token");
+    
+    const kondisi_khusus_gabung = gabungKondisiKhusus({
+      kehamilan: selectedAnggotaData.kehamilan,
+      disabilitas: selectedAnggotaData.disabilitas,
+      penyakit_kronis: selectedAnggotaData.penyakit_kronis
+    });
 
-      if (selectedDtsenData) {
-        const updatedAnggotaList = selectedDtsenData.anggota?.map(ang => {
-          if (ang.id === selectedAnggotaData.id || ang.nik === selectedAnggotaData.nik) {
-            return { ...ang, ...selectedAnggotaData };
-          }
-          return ang;
-        });
-        setSelectedDtsenData({ ...selectedDtsenData, anggota: updatedAnggotaList });
-      }
+    const payload = {
+      nama_anggota_keluarga: selectedAnggotaData.nama_anggota_keluarga,
+      hubungan_keluarga: selectedAnggotaData.hubungan_keluarga,
+      jenis_kelamin: selectedAnggotaData.jenis_kelamin,
+      tanggal_lahir: selectedAnggotaData.tanggal_lahir,
+      status_keadaan: selectedAnggotaData.status_keadaan,
+      kondisi_khusus: kondisi_khusus_gabung
+    };
 
-      setIsDetailAnggotaModalOpen(false); 
-      showSuccess();
-    } catch (error) {
-      alert("Gagal menyimpan perubahan: " + error.message);
+    // ✅ PERBAIKAN URL DI SINI
+    const endpoint = `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${selectedAnggotaData.id}`;    
+    console.log("📤 EDIT URL:", endpoint); // Debug log
+    
+    const res = await fetch(endpoint, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(result.detail || `Gagal (Status: ${res.status})`);
     }
-  };
+
+
+    console.log("=================================");
+    console.log("🔍 DEBUG EDIT REQUEST");
+    console.log("No KK:", selectedDtsenData?.no_kk);
+    console.log("ID Anggota:", selectedAnggotaData?.id);
+    console.log("URL Endpoint:", endpoint);
+    console.log("Payload:", payload);
+    console.log("=================================");
+
+    await fetchAnggota(selectedDtsenData?.no_kk);
+    setIsDetailAnggotaModalOpen(false);
+    setSelectedAnggotaData(null);
+    showSuccess();
+    
+  } catch (error) {
+    console.error(error);
+    alert("Gagal: " + error.message);
+  }
+};
 
   const handleOpenEditAset = () => {
     const existingAset = selectedDtsenData?.aset || {};
@@ -908,26 +1021,22 @@ function Dtsen({
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedDtsenData?.anggota?.map((ang, index) => {
-
-                      const kondisiList = [];
-
-                      if (ang.hamil && ang.hamil !== "Tidak Sedang Hamil") {
-                        kondisiList.push("Hamil");
-                      }
-
-                      if (ang.disabilitas && ang.disabilitas !== "Tidak Ada Disabilitas") {
-                        kondisiList.push(ang.disabilitas);
-                      }
-
-                      if (ang.penyakit && ang.penyakit.trim() !== "") {
-                        kondisiList.push(ang.penyakit);
-                      }
-
-                      const kondisi_khusus =
-                        kondisiList.length > 0
-                          ? kondisiList.join(", ")
-                          : "-";
+                      {selectedDtsenData?.anggota?.map((ang, index) => {
+                        // ✅ Parse string gabungan jadi object 3 field
+                        const parsed = pisahKondisiKhusus(ang.kondisi_khusus);
+                        
+                        const kondisiList = [];
+                        if (parsed.kehamilan && parsed.kehamilan !== "Tidak Sedang Hamil") {
+                          kondisiList.push(`Hamil (${parsed.kehamilan})`);
+                        }
+                        if (parsed.disabilitas && parsed.disabilitas !== "Tidak Ada Disabilitas") {
+                          kondisiList.push(parsed.disabilitas);
+                        }
+                        if (parsed.penyakit_kronis && parsed.penyakit_kronis.trim() !== "") {
+                          kondisiList.push(parsed.penyakit_kronis);
+                        }
+                        const kondisi_khusus = kondisiList.length > 0 ? kondisiList.join(", ") : "-";
+  
 
                       return (
                         <tr key={ang.id || index}>
@@ -1348,9 +1457,9 @@ function Dtsen({
               <label>Status Kehamilan</label>
               <div className="select-container-custom">
                 <select 
-                  name="hamil" 
-                  value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.hamil || "Tidak Sedang Hamil")}
-                  onChange={(e) => setFormAnggota({...formAnggota, hamil: e.target.value})}
+                  name="kehamilan" 
+                  value={formAnggota.jenis_kelamin === "Laki-laki" ? "Tidak Sedang Hamil" : (formAnggota.kehamilan || "Tidak Sedang Hamil")}
+                  onChange={(e) => setFormAnggota({...formAnggota, kehamilan: e.target.value})}
                   disabled={formAnggota.jenis_kelamin === "Laki-laki"}
                   style={formAnggota.jenis_kelamin === "Laki-laki" ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
                 >
@@ -1365,9 +1474,9 @@ function Dtsen({
               <label>Kondisi Khusus (Disabilitas/Penyakit)</label>
               <div className="select-container-custom">
                 <select 
-                  name="kondisi_khusus" 
-                  value={formAnggota.kondisi_khusus || "Tidak ada"}
-                  onChange={(e) => setFormAnggota({...formAnggota, kondisi_khusus: e.target.value})}
+                  name="disabilitas" 
+                  value={formAnggota.disabilitas || "Tidak ada"}
+                  onChange={(e) => setFormAnggota({...formAnggota, disabilitas: e.target.value})}
                 >
                   <option value="Tidak ada">Tidak ada</option>
                   <option value="Disabilitas Fisik">Disabilitas Fisik</option>
@@ -1418,8 +1527,8 @@ function Dtsen({
                       <label>Status Kehamilan (Bagi Perempuan)</label>
                       <div className="select-container-custom">
                         <select 
-                          name="hamil" 
-                          value={selectedAnggotaData.jenis_kelamin === 'Laki-laki' ? "Tidak Sedang Hamil" : (selectedAnggotaData.hamil || "Tidak Sedang Hamil")} 
+                          name="kehamilan" 
+                          value={selectedAnggotaData.jenis_kelamin === 'Laki-laki' ? "Tidak Sedang Hamil" : (selectedAnggotaData.kehamilan || "Tidak Sedang Hamil")} 
                           onChange={handleEditAnggotaChange}
                           disabled={selectedAnggotaData.jenis_kelamin === 'Laki-laki'}
                           style={selectedAnggotaData.jenis_kelamin === 'Laki-laki' ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#94a3b8' } : {}}
@@ -1430,7 +1539,7 @@ function Dtsen({
                       </div>
                     </div>
                     <div className="form-group-modal"><label>Kategori Disabilitas</label><div className="select-container-custom"><select name="disabilitas" value={selectedAnggotaData.disabilitas || "Tidak Ada Disabilitas"} onChange={handleEditAnggotaChange}><option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option><option value="Disabilitas Fisik">Disabilitas Fisik</option><option value="Disabilitas Intelektual">Disabilitas Intelektual</option><option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option><option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option><option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option><option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option><option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option></select></div></div>
-                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Penyakit Kronis / Menahun</label><input type="text" name="penyakit" value={selectedAnggotaData.penyakit || ""} onChange={handleEditAnggotaChange} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." /></div>
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Penyakit Kronis / Menahun</label><input type="text" name="penyakit_kronis" value={selectedAnggotaData.penyakit || ""} onChange={handleEditAnggotaChange} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." /></div>
                   </div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDetailAnggotaModalOpen(false)}>Tutup</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div>
