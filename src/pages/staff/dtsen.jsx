@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../config/supabase";
+import API from "../../api/api";
 
 function Dtsen({
   activeMenu,
@@ -183,7 +184,7 @@ function Dtsen({
   });
 
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
-  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Menunggu Kelayakan").length;
+  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
   const kategoriCount = {};
   dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori_ppks] = (kategoriCount[item.kategori_ppks] || 0) + 1; });
   const top5PPKS = Object.entries(kategoriCount).map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 5); 
@@ -540,120 +541,123 @@ const handleEditAnggotaSubmit = async (e) => {
   //   }
   // };
 
-    const handleAddPPKSSubmit = async (e) => {
+
+
+  const handleAddPPKSSubmit = async (e) => {
   e.preventDefault();
-
   try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Silakan login ulang.");
 
     // =====================================
-    // UPLOAD FOTO KE STORAGE
+    // 1. UPLOAD FOTO DULU → DAPAT URL
     // =====================================
-
     let fotoUrls = [];
-
+    
     if (fotoBuktiPPKS.length > 0) {
+      const formDataFoto = new FormData();
+      fotoBuktiPPKS.forEach(file => formDataFoto.append("files", file));
 
-      for (const file of fotoBuktiPPKS) {
+      const uploadRes = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataFoto
+      });
 
-        const fileName =
-          `${Date.now()}-${file.name}`;
-
-        const { data: uploadData, error: uploadError } =
-          await supabase.storage
-            .from("bukti-foto-ppks")
-            .upload(fileName, file);
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        // ambil public url
-        const {
-          data: { publicUrl }
-        } = supabase.storage
-          .from("foto-ppks")
-          .getPublicUrl(fileName);
-
-        fotoUrls.push(publicUrl);
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json();
+        throw new Error(err.detail || "Gagal upload foto");
       }
+
+      // ✅ PARSE RESPONSE & AMBIL ARRAY URL
+      const uploadData = await uploadRes.json();
+      fotoUrls = uploadData.urls; 
+      
+      console.log("✅ URLs dari upload:", fotoUrls);
+      // Output: ["https://.../foto1.jpg", "https://.../foto2.jpg"]
     }
 
     // =====================================
-    // INSERT DATABASE
+    // 2. INSERT DATA PPKS (dengan URL foto)
     // =====================================
+    const res = await fetch("http://127.0.0.1:8000/ppks/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        kategori_ppks: formPPKS.kategori_ppks,
+        tanggal_penemuan: formPPKS.tanggal_penemuan,
+        nik: formPPKS.nik || null,
+        nama_lengkap: formPPKS.nama_lengkap || null,
+        kecamatan: formPPKS.kecamatan,
+        kelurahan: formPPKS.kelurahan,
+        lokasi_penemuan: formPPKS.lokasi_penemuan,
+        status_penanganan: "Kasus Aktif",
+        bukti_foto_ppks: fotoUrls // ✅ Kirim array URL ke backend
+      })
+    });
 
-    const { data, error } =
-      await supabase
-        .from("ppks")
-        .insert([{
-          kategori_ppks: formPPKS.kategori_ppks,
-          tanggal_penemuan: formPPKS.tanggal_penemuan,
-          nik: formPPKS.nik || null,
-          nama_lengkap: formPPKS.nama_lengkap || null,
-          kecamatan: formPPKS.kecamatan,
-          kelurahan: formPPKS.kelurahan,
-          lokasi_penemuan: formPPKS.lokasi_penemuan,
-          status_penanganan: "Menunggu Kelayakan",
-          bukti_foto_ppks: fotoUrls.length > 0 ? fotoUrls : null,
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Gagal simpan data PPKS");
+    }
 
-          // ✅ SIMPAN FOTO
-          foto_bukti: fotoUrls
-        }])
-        .select();
-
-    if (error) throw error;
-
-    // =====================================
-    // UPDATE STATE
-    // =====================================
-
-    const newPPKS = {
-      ...data[0]
-    };
-
-    setDummyPPKS([
-      newPPKS,
-      ...dummyPPKS
-    ]);
-
-    setIsAddPPKSModalOpen(false);
-
-    setFormPPKS(initialFormPPKS);
-
-    setFotoBuktiPPKS([]);
-
-    showSuccess();
+    const result = await res.json();
+    console.log("✅ Data tersimpan dengan ID:", result.data.id);
+    
+    alert("✅ Laporan PPKS berhasil ditambahkan!");
+    // ... reset form & refresh ...
 
   } catch (error) {
-
-    alert(
-      "Gagal menambah laporan PPKS: " +
-      error.message
-    );
+    console.error("❌ Error:", error);
+    alert("Gagal: " + error.message);
   }
 };
 
-
   
-
-  const handleOpenDetailPPKS = (data) => { setSelectedPPKSData(data); setCatatanAssessment(data.deskripsiAwal || ""); setActiveTab("detail_ppks"); };
-
- const handleUpdateStatusPPKS = async (e, statusBaru) => {
+const handleUpdateStatusPPKS = async (e, statusBaru) => {
   e.preventDefault();
   try {
-    const { error } = await supabase.from('ppks').update({ status_penanganan: statusBaru }).eq('id', selectedPPKSData.id);
-    if (error) throw error;
+    const token = localStorage.getItem("token");
+
+    // ✅ Update via backend REST (konsisten dengan sumber data)
+    const res = await fetch(`http://127.0.0.1:8000/ppks/${selectedPPKSData.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        status_penanganan: statusBaru,
+        catatan: catatanAssessment
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Gagal update status");
+    }
+
+    // ✅ Update state FE langsung
+    const updatedPPKS = dummyPPKS.map(item =>
+      item.id === selectedPPKSData.id
+        ? { ...item, status_penanganan: statusBaru, deskripsiAwal: catatanAssessment }
+        : item
+    );
+    setDummyPPKS(updatedPPKS);
+    setSelectedPPKSData(prev => ({
+      ...prev,
+      status_penanganan: statusBaru,
+      deskripsiAwal: catatanAssessment
+    }));
 
     showSuccess();
 
-    // ✅ FIX UTAMA: Panggil ulang fungsi fetch data Anda
-    // Ini akan otomatis memisahkan ulang data ke ppksList & riwayatPpksList berdasarkan status baru
-    await fetchPPKS(); // <--- Ganti dengan nama fungsi fetch PPKS Anda yang sebenarnya
-
-    // Tutup modal jika ada
-    setIsValidationModalOpen(false);
   } catch (error) {
-    alert('Gagal update status PPKS: ' + error.message);
+    console.error("Error updating PPKS:", error);
+    alert("Gagal update status PPKS: " + error.message);
   }
 };
 
@@ -709,9 +713,9 @@ const handleEditAnggotaSubmit = async (e) => {
           </div>
 
           <div className="info-alert-box" style={{ 
-              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fffbeb' : '#dcfce7', 
-              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#fde047' : '#86efac',
-              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Menunggu Kelayakan' ? '#b45309' : '#166534',
+              backgroundColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#eff6ff' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Selesai Ditangani' ? '#fffbeb' : '#dcfce7', 
+              borderColor: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#bfdbfe' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Selesai Ditangani' ? '#fde047' : '#86efac',
+              color: (selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan) === 'Kasus Aktif' ? '#1e3a8a' : (selectedPPKSData.status_penanganan || selectedPPKSData.status) === 'Selesai Ditangani' ? '#b45309' : '#166534',
               marginBottom: '25px', display: 'flex', justifyContent: 'space-between'
             }}>
             <span>Status Penanganan Saat Ini: <strong>{selectedPPKSData.status_penanganan || selectedPPKSData.status_penanganan}</strong></span>
@@ -734,9 +738,9 @@ const handleEditAnggotaSubmit = async (e) => {
 
           <div className="modal-section" style={{ marginTop: '20px' }}>
           <h3 className="section-subtitle">Bukti Foto Penemuan</h3>
-          {selectedPPKSData.foto_bukti ? (
+          {selectedPPKSData.foto_bukti_ppks ? (
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-              {selectedPPKSData.foto_bukti.split(",").map((namaFile, idx) => (
+              {selectedPPKSData.foto_bukti_ppks.split(",").map((namaFile, idx) => (
                 <img 
                   key={idx}
                   // Ganti URL ini dengan URL dari bucket storage Supabase Anda
@@ -785,7 +789,7 @@ const handleEditAnggotaSubmit = async (e) => {
               </button>
 
               {/* 🔒 TOMBOL VALIDASI HANYA UNTUK VERIFIKATOR */}
-              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Menunggu Kelayakan") && (
+              {currentRole === "verifikator" && (selectedPPKSData.status_penanganan === "Kasus Aktif") && (
                 <button className="btn-modal-submit" style={{ backgroundColor: '#3b82f6', width: 'auto' }} onClick={(e) => handleUpdateStatusPPKS(e, "Kasus Aktif")}>
                   Terima & Ubah ke Kasus Aktif
                 </button>

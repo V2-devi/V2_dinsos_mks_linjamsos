@@ -1,4 +1,5 @@
-from config.database import supabase
+# from config.database import supabase, storage_client, SUPABASE_BUCKET
+from config.database import supabase, SUPABASE_BUCKET
 from schemas.ppks_schema import PPKS
 from typing import Optional
 from uuid import uuid4
@@ -88,29 +89,27 @@ def delete_ppks_service(ppks_id: str):
 
 
 
-
-def upload_foto_ppks(file):
-
-    filename = f"{uuid4()}-{file.filename}"
-
-    path = f"ppks/{filename}"
-
-    supabase.storage \
-        .from_("bukti-foto-ppks") \
-        .upload(
-            path,
-            file.file.read(),
-            {
-                "content-type": file.content_type
-            }
+def upload_foto_ppks(file, file_name: str):
+    """Upload foto ke Supabase Storage dan return public URL"""
+    try:
+        # Baca file sebagai bytes
+        file_content = file.read()
+        file_type = file.content_type
+        
+        # Upload ke bucket
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            file_name,
+            file_content,
+            {"content-type": file_type}
         )
-
-    url = supabase.storage \
-        .from_("bukti-foto-ppks") \
-        .get_public_url(path)
-
-    return url
-
+        
+        # Dapatkan public URL
+        public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(file_name)
+        return public_url
+        
+    except Exception as e:
+        print(f"❌ Upload error: {e}")
+        raise Exception(f"Gagal upload foto: {str(e)}")
 
 
 
