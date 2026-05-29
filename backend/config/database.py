@@ -9,5 +9,7 @@ load_dotenv(dotenv_path=BASE_DIR / ".env") # ✅ Wajib load sebelum os.getenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET") # ✅ Nama harus sama dengan .env
+SUPABASE_BUCKET_DOKUMEN = os.getenv("SUPABASE_BUCKET_DOKUMEN") # ✅
+
 
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)

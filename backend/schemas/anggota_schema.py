@@ -21,6 +21,7 @@ class Anggota(BaseModel):
 
     kondisi_khusus: Optional[str] = None
 
+    surat_kematian: Optional[str] = None
 
 # =========================================
 # UPDATE KONDISI KHUSUS
@@ -41,6 +42,10 @@ class UpdateKondisiKhusus(BaseModel):
     status_keadaan: Optional[str] = None
 
     kondisi_khusus: Optional[str] = None
+
+    surat_kematian: Optional[str] = None
+
+
     
     # ✅ Field flat dari frontend form
     # hamil: Optional[str] = Field(default="Tidak Sedang Hamil")

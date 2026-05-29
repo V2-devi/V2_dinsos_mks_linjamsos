@@ -64,6 +64,15 @@ function Dtsen({
   const [selectedDtsenData, setSelectedDtsenData] = useState(null);
   const [detailDtsenInnerTab, setDetailDtsenInnerTab] = useState("anggota"); 
 
+
+
+  // ✅ State terpisah untuk file PDF baru (hanya saat edit)
+  const [newSuratKematianFile, setNewSuratKematianFile] = useState(null);
+  // State untuk preview URL (bisa dari DB atau file baru)
+  const [previewSuratKematianUrl, setPreviewSuratKematianUrl] = useState("");
+
+
+
   const [isAddAnggotaModalOpen, setIsAddAnggotaModalOpen] = useState(false);
   const [isDetailAnggotaModalOpen, setIsDetailAnggotaModalOpen] = useState(false);
   const [selectedAnggotaData, setSelectedAnggotaData] = useState(null);
@@ -103,19 +112,64 @@ function Dtsen({
     kehamilan: "",
     disabilitas: "",
     penyakit_kronis: "",
-    file_surat_kematian: null // Menyimpan file PDF
+    surat_kematian: null // Menyimpan file PDF
   });
   
   // FUNGSI UNTUK HANDLE UPLOAD PDF SURAT KEMATIAN]
   const handleSuratKematianChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type !== "application/pdf") {
-      alert("Harap unggah file Surat Kematian dalam format .pdf");
-      e.target.value = ""; // Reset input
-      return;
+    
+    if (file) {
+      // Validasi tipe
+      if (file.type !== "application/pdf") {
+        alert("Harap unggah file Surat Kematian dalam format .pdf");
+        e.target.value = "";
+        return;
+      }
+      
+      // Validasi ukuran (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file maksimal 5MB");
+        e.target.value = "";
+        return;
+      }
     }
-    setFormAnggota({ ...formAnggota, file_surat_kematian: file });
+    
+    // Simpan File object ke state
+    setFormAnggota({ ...formAnggota, surat_kematian: file });
   };
+
+
+
+const uploadSuratKematianToDB = async (no_kk, anggotaId, file) => {
+  if (!file) return null;
+  
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("file", file);
+
+  console.log("📤 Mengirim upload ke backend...");
+  const res = await fetch(
+    `http://127.0.0.1:8000/keluarga/${no_kk}/anggota/${anggotaId}/upload-surat-kematian`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error("❌ Backend Upload Error:", err);
+    throw new Error(err.detail || "Gagal simpan ke database");
+  }
+
+  const data = await res.json();
+  console.log("✅ Backend Return URL:", data.url);
+  return data.url; // ← URL ini HARUS dipakai untuk update state/preview
+};
+
+
 
   const initialFormPPKS = { nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] }; 
   const [formPPKS, setFormPPKS] = useState(initialFormPPKS);
@@ -337,17 +391,19 @@ function Dtsen({
 
   // const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
   const handleOpenDetailAnggota = (anggota) => {
-    // ✅ PENTING: Parse dulu string jadi 3 field terpisah
     const parsed = pisahKondisiKhusus(anggota.kondisi_khusus);
-    
+
     setSelectedAnggotaData({
       ...anggota,
-      // ✅ Isi field terpisah untuk form
       kehamilan: parsed.kehamilan,
       disabilitas: parsed.disabilitas,
       penyakit_kronis: parsed.penyakit_kronis
     });
-    
+
+    // ✅ Set preview URL dari data DB saat modal dibuka
+    setPreviewSuratKematianUrl(anggota.surat_kematian || "");
+    setNewSuratKematianFile(null); // ✅ Reset file baru
+
     setIsDetailAnggotaModalOpen(true);
   };
 
@@ -360,14 +416,15 @@ const handleAddAnggotaSubmit = async (e) => {
 
     const token = localStorage.getItem("token");
     
-    // ✅ GABUNG 3 FIELD JADI 1 STRING SEBELUM KIRIM
+    // =====================================
+    // 1. PERSIAPAN DATA & GABUNG KONDISI KHUSUS
+    // =====================================
     const kondisi_khusus_gabung = gabungKondisiKhusus({
       kehamilan: formAnggota.kehamilan,
       disabilitas: formAnggota.disabilitas,
       penyakit_kronis: formAnggota.penyakit_kronis
     });
 
-    // ✅ PAYLOAD YANG BENAR
     const payload = {
       nik: String(formAnggota.nik),
       nama_anggota_keluarga: formAnggota.nama_anggota_keluarga,
@@ -375,11 +432,15 @@ const handleAddAnggotaSubmit = async (e) => {
       jenis_kelamin: formAnggota.jenis_kelamin,
       tanggal_lahir: formAnggota.tanggal_lahir,
       status_keadaan: formAnggota.status_keadaan,
-      kondisi_khusus: kondisi_khusus_gabung  // ✅ KIRIM HASIL GABUNGAN, BUKAN formAnggota.kondisi_khusus
+      kondisi_khusus: kondisi_khusus_gabung
+      // ❌ JANGAN kirim surat_kematian di sini (karena belum diupload)
     };
 
-    console.log("📤 PAYLOAD ADD ANGGOTA:", payload); // 🔍 Debug: pastikan kondisi_khusus terisi lengkap
+    console.log("📤 PAYLOAD ADD ANGGOTA:", payload);
 
+    // =====================================
+    // 2. INSERT DATA ANGGOTA (DAPATKAN ID)
+    // =====================================
     const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
       method: "POST",
       headers: {
@@ -390,12 +451,75 @@ const handleAddAnggotaSubmit = async (e) => {
     });
     
     const data = await response.json();
-    if (!response.ok) { alert(JSON.stringify(data, null, 2)); return; }
+    if (!response.ok) { 
+      alert(JSON.stringify(data, null, 2)); 
+      return; 
+    }
 
-    await fetchAnggota(selectedNoKK);
+    // ✅ AMBIL ID ANGGOTA BARU DARI RESPONSE
+    // Pastikan backend mengembalikan field 'id'. Jika field-nya '_id' atau 'anggota_id', sesuaikan di sini.
+    const newAnggotaId = data.data?.id || data.id; 
+
+    // =====================================
+    // 3. UPLOAD SURAT KEMATIAN (JIKA ADA FILE)
+    // =====================================
+    // Cek apakah ada file PDF yang dipilih
+// =====================================
+// 3. UPLOAD SURAT KEMATIAN (JIKA ADA FILE)
+// =====================================
+if (formAnggota.surat_kematian instanceof File && newAnggotaId) {
+  try {
+    console.log("📤 Mengupload PDF untuk anggota ID:", newAnggotaId);
+    
+    const formDataPDF = new FormData();
+    formDataPDF.append("file", formAnggota.surat_kematian);
+
+    const uploadRes = await fetch(
+      `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${newAnggotaId}/upload-surat-kematian`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataPDF
+      }
+    );
+
+    const uploadData = await uploadRes.json(); // ✅ Parse JSON dulu sebelum cek status
+
+    if (!uploadRes.ok) {
+      console.error("❌ Upload PDF Gagal:", uploadData);
+      // ✅ LEMPAR ERROR agar user tahu & proses berhenti
+      throw new Error(uploadData.detail || "Gagal upload surat kematian");
+    }
+
+    console.log("✅ PDF Terupload, URL:", uploadData.url);
+    
+    // ✅ PENTING: Update state lokal agar preview langsung muncul!
+    // Pilih salah satu sesuai state yang dipakai tombol preview Anda:
+    
+    // Opsi A: Jika preview baca dari selectedAnggotaData
+    setSelectedAnggotaData(prev => prev ? { ...prev, surat_kematian: uploadData.url } : null);
+    
+    // Opsi B: Jika preview baca dari formAnggota
+    // setFormAnggota(prev => ({ ...prev, surat_kematian: uploadData.url }));
+    
+    // Opsi C: Jika preview baca dari state terpisah
+    // setPreviewPdfUrl(uploadData.url);
+    
+  } catch (uploadError) {
+    console.error("Upload error:", uploadError);
+    // ✅ Tampilkan alert agar user sadar ada yang gagal
+    alert("⚠️ Data anggota tersimpan, tapi upload PDF gagal: " + uploadError.message);
+    // Jangan return, biar data anggota tetap tersimpan
+  }
+}
+
+    // =====================================
+    // 4. SUCCESS & RESET
+    // =====================================
+    await fetchAnggota(selectedNoKK); // Refresh tabel
     setIsAddAnggotaModalOpen(false);
     
-    // ✅ Reset form dengan 3 field terpisah
+    // Reset form
     setFormAnggota({ 
       nik: "", 
       nama_anggota_keluarga: "", 
@@ -403,16 +527,22 @@ const handleAddAnggotaSubmit = async (e) => {
       jenis_kelamin: "", 
       tanggal_lahir: "", 
       status_keadaan: "",
-      kehamilan: "",        // ✅ Reset field terpisah
-      disabilitas: "",      // ✅ Reset field terpisah
-      penyakit_kronis: ""   // ✅ Reset field terpisah
+      kehamilan: "",
+      disabilitas: "",
+      penyakit_kronis: "",
+      surat_kematian: null // ✅ Reset file PDF juga
     });
     
     showSuccess();
+
   } catch (error) {
-    alert(error.message);
+    console.error(error);
+    alert("Gagal: " + error.message);
   }
 };
+
+
+
 // =================================================================
   // ✅ [FUNGSI INI TERHAPUS SEBELUMNYA, PASTIKAN ADA DI SINI]
   // =================================================================
@@ -420,34 +550,60 @@ const handleAddAnggotaSubmit = async (e) => {
     setSelectedAnggotaData({ ...selectedAnggotaData, [e.target.name]: e.target.value }); 
   };
 
-  const handleEditSuratKematianChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type !== "application/pdf") {
+
+
+
+const handleEditSuratKematianChange = (e) => {
+  const file = e.target.files[0];
+  
+  if (file) {
+    // Validasi tipe
+    if (file.type !== "application/pdf") {
       alert("Harap unggah file Surat Kematian dalam format .pdf");
-      e.target.value = ""; // Reset input
+      e.target.value = "";
       return;
     }
-    setSelectedAnggotaData({ ...selectedAnggotaData, file_surat_kematian: file });
-  };
+    
+    // Validasi ukuran (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran file maksimal 5MB");
+      e.target.value = "";
+      return;
+    }
+  }
+  
+  // ✅ Simpan File object ke state terpisah (JANGAN ke selectedAnggotaData)
+  setNewSuratKematianFile(file);
+  
+  // Update preview (opsional, untuk UX)
+  if (file) {
+    setPreviewSuratKematianUrl(URL.createObjectURL(file));
+  } else {
+    // Jika user batal pilih file, kembalikan preview ke URL dari DB
+    setPreviewSuratKematianUrl(selectedAnggotaData?.surat_kematian || "");
+  }
+};
+
+
   // =================================================================
 
 const handleEditAnggotaSubmit = async (e) => {
   e.preventDefault();
-  
-  if (!selectedAnggotaData?.id || !selectedDtsenData?.no_kk) { 
-    alert("Data anggota atau No KK tidak valid"); 
-    return; 
+
+  if (!selectedAnggotaData?.id || !selectedDtsenData?.no_kk) {
+    alert("Data anggota atau No KK tidak valid");
+    return;
   }
 
   try {
     const token = localStorage.getItem("token");
-    
+
     const kondisi_khusus_gabung = gabungKondisiKhusus({
       kehamilan: selectedAnggotaData.kehamilan,
       disabilitas: selectedAnggotaData.disabilitas,
       penyakit_kronis: selectedAnggotaData.penyakit_kronis
     });
-    
+
     const payload = {
       nama_anggota_keluarga: selectedAnggotaData.nama_anggota_keluarga,
       hubungan_keluarga: selectedAnggotaData.hubungan_keluarga,
@@ -457,10 +613,8 @@ const handleEditAnggotaSubmit = async (e) => {
       kondisi_khusus: kondisi_khusus_gabung
     };
 
-    // ✅ PERBAIKAN URL DI SINI
-    const endpoint = `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${selectedAnggotaData.id}`;    
-    console.log("📤 EDIT URL:", endpoint); // Debug log
-    
+    const endpoint = `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${selectedAnggotaData.id}`;
+
     const res = await fetch(endpoint, {
       method: "PUT",
       headers: {
@@ -471,30 +625,75 @@ const handleEditAnggotaSubmit = async (e) => {
     });
 
     const result = await res.json();
-    
-    if (!res.ok) {
-      throw new Error(result.detail || `Gagal (Status: ${res.status})`);
+    if (!res.ok) throw new Error(result.detail || `Gagal (Status: ${res.status})`);
+
+    // ✅ UPLOAD PDF JIKA ADA FILE BARU
+    let suratKematianUrl = selectedAnggotaData.surat_kematian || null;
+
+    if (newSuratKematianFile instanceof File) {
+      try {
+        const formDataPDF = new FormData();
+        formDataPDF.append("file", newSuratKematianFile);
+
+        const uploadRes = await fetch(
+          `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${selectedAnggotaData.id}/upload-surat-kematian`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formDataPDF
+          }
+        );
+
+        const uploadData = await uploadRes.json();
+
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.detail || "Gagal upload surat kematian");
+        }
+
+        suratKematianUrl = uploadData.url;
+        console.log("✅ PDF terupload, URL:", suratKematianUrl);
+
+      } catch (uploadError) {
+        alert("⚠️ Data tersimpan tapi upload PDF gagal: " + uploadError.message);
+      }
     }
 
+    // ✅ UPDATE STATE dengan URL terbaru (dari DB atau upload baru)
+    setSelectedAnggotaData(prev => ({
+      ...prev,
+      surat_kematian: suratKematianUrl
+    }));
 
-    console.log("=================================");
-    console.log("🔍 DEBUG EDIT REQUEST");
-    console.log("No KK:", selectedDtsenData?.no_kk);
-    console.log("ID Anggota:", selectedAnggotaData?.id);
-    console.log("URL Endpoint:", endpoint);
-    console.log("Payload:", payload);
-    console.log("=================================");
+    // ✅ Update dtsenData agar tabel ikut refresh
+    setDtsenData(prevList => prevList.map(family => {
+      if (family.no_kk === selectedDtsenData.no_kk) {
+        return {
+          ...family,
+          anggota: (family.anggota || []).map(ang =>
+            ang.id === selectedAnggotaData.id
+              ? { ...ang, ...payload, surat_kematian: suratKematianUrl, kondisi_khusus: kondisi_khusus_gabung }
+              : ang
+          )
+        };
+      }
+      return family;
+    }));
 
-    await fetchAnggota(selectedDtsenData?.no_kk);
+    // ✅ Reset file state
+    setNewSuratKematianFile(null);
+    setPreviewSuratKematianUrl(suratKematianUrl || "");
+
+    await fetchAnggota(selectedDtsenData.no_kk);
     setIsDetailAnggotaModalOpen(false);
     setSelectedAnggotaData(null);
     showSuccess();
-    
+
   } catch (error) {
     console.error(error);
     alert("Gagal: " + error.message);
   }
 };
+
 
   const handleOpenEditAset = () => {
     const existingAset = selectedDtsenData?.aset || {};
@@ -998,7 +1197,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
             </div>
           </div>
 
-          {selectedDtsenData.desil === 'Belum Dihitung' && (
+          {selectedDtsenData.hasil_desil === 'Belum Dihitung' && (
             <div className="info-alert-box" style={{ backgroundColor: '#fffbeb', borderColor: '#fde047', color: '#b45309', marginBottom: '30px' }}>
               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               <span>Keluarga ini merupakan data baru. Anda harus melengkapi 39 Variabel Aset terlebih dahulu untuk menghitung Tingkat Desil.</span>
@@ -1115,7 +1314,17 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                                 type="button" 
                                 className="btn-search-outline" 
                                 title="Lihat Surat Kematian" 
-                                onClick={() => alert("Menampilkan Surat Kematian PDF (Dummy)...")} 
+                                onClick={() => {
+                                    const pdfUrl = selectedAnggotaData?.surat_kematian; // ← Baca dari state modal
+                                    if (pdfUrl && typeof pdfUrl === "string" && pdfUrl.startsWith("http")) {
+                                      window.open(pdfUrl, "_blank", "noopener,noreferrer");
+                                    } else {
+                                      alert("❌ Surat kematian belum tersedia.");
+                                    }
+                                  }} 
+                                  disabled={!selectedAnggotaData?.surat_kematian}
+
+                                
                                 style={{ padding: '6px 12px', fontSize: '11px', color: '#be123c', borderColor: '#fecdd3', backgroundColor: '#fff1f2', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                               >
                                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
@@ -1307,7 +1516,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
             </div>
             <div className="filter-group-top">
               <label>Nama</label>
-              <input type="text" name="nama_lengkap" value={filterTabelPPKS.nama_lengkap} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama..." />
+              <input type="text" name="nama" value={filterTabelPPKS.nama} onChange={handleFilterPPKSChange} className="input-custom" placeholder="Cari Nama..." />
             </div>
           </div>
           
@@ -1447,14 +1656,13 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
       )}
 
       {/* MODAL ANGGOTA */}
-{/* MODAL TAMBAH ANGGOTA */}
+    {/* MODAL TAMBAH ANGGOTA */}
       {isAddAnggotaModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddAnggotaModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header"><div className="modal-header-title"><h2>Tambah Anggota Keluarga</h2></div></div>
             <div className="modal-body">
               <form onSubmit={handleAddAnggotaSubmit}>
-
                 {/* 📌 SESI 1: DATA PRIBADI */}
                 <div className="modal-section">
                   <h3 className="section-subtitle" style={{ color: '#2563eb', borderBottom: '1px solid #bfdbfe', paddingBottom: '8px', marginBottom: '15px' }}>Data Pribadi</h3>
@@ -1467,15 +1675,51 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                     <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
 
                     {/* ✅ JIKA STATUS MENINGGAL: MUNCUL FORM UPLOAD SURAT KEMATIAN */}
-                    {formAnggota.status_keadaan === "Meninggal" && (
-                      <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
-                        <label style={{ color: '#be123c', fontWeight: 'bold' }}>Unggah Surat Kematian (Format .pdf)*</label>
-                        <input type="file" accept=".pdf" onChange={handleSuratKematianChange} required style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }} />
-                        <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>Wajib melampirkan bukti surat keterangan kematian resmi.</small>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                   {formAnggota.status_keadaan === "Meninggal" && (
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
+                      <label style={{ color: '#be123c', fontWeight: 'bold' }}>
+                        Unggah Surat Kematian (Format .pdf)*
+                      </label>
+
+                      {/* ✅ Preview PDF yang sudah tersimpan — hanya untuk modal EDIT */}
+                      {(previewSuratKematianUrl || selectedAnggotaData?.surat_kematian) && (
+                        <div style={{ marginBottom: '8px', marginTop: '8px' }}>
+                          <a
+                            href={previewSuratKematianUrl || selectedAnggotaData?.surat_kematian}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#3b82f6', fontSize: '13px', textDecoration: 'underline' }}
+                          >
+                            📄 Lihat Surat Kematian Tersimpan
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Input upload file */}
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleSuratKematianChange}
+                        required={!formAnggota.surat_kematian}
+                        style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }}
+                      />
+
+                      {/* ✅ Indikator file baru dipilih */}
+                      {formAnggota.surat_kematian instanceof File && (
+                        <div style={{ marginTop: '6px', padding: '6px 10px', backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: '6px', fontSize: '12px', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>✅</span>
+                          <span>File dipilih: <strong>{formAnggota.surat_kematian.name}</strong></span>
+                        </div>
+                      )}
+
+                      <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>
+                        Wajib melampirkan bukti surat keterangan kematian resmi. Maks 5MB.
+                      </small>
+                    </div>
+                  )}
+              </div>  {/* ← TUTUP form-grid-2 */}
+              </div>
+
 
                 {/* 📌 SESI 2: KONDISI KHUSUS */}
                 <div className="modal-section" style={{ marginTop: '20px' }}>
@@ -1507,7 +1751,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                     </div>
                     <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}>
                       <label>Penyakit Kronis / Menahun</label>
-                      <input type="text" name="penyakit" value={formAnggota.penyakit} onChange={(e) => setFormAnggota({...formAnggota, penyakit: e.target.value})} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." />
+                      <input type="text" name="penyakit_kronis" value={formAnggota.penyakit_kronis} onChange={(e) => setFormAnggota({...formAnggota, penyakit_kronis: e.target.value})} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." />
                     </div>
                   </div>
                 </div>
@@ -1540,6 +1784,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       <label>Estimasi Kategori Pendidikan/Usia (Otomatis dari Tanggal Lahir)</label>
                       <input type="text" value={getKategoriPendidikan(selectedAnggotaData.tanggal_lahir)} readOnly style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', fontWeight: 'bold' }} />
                     </div>
+
+                    
                     {/* ✅ TAMBAHAN: MUNCULKAN FORM UPLOAD JIKA STATUS DIUBAH KE MENINGGAL */}
                     {selectedAnggotaData.status_keadaan === "Meninggal" && (
                       <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3', marginTop: '10px' }}>
@@ -1547,6 +1793,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                         <input type="file" accept=".pdf" onChange={handleEditSuratKematianChange} required style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }} />
                         <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>Wajib melampirkan bukti surat keterangan kematian jika status diubah menjadi Meninggal.</small>
                       </div>
+
+
                     )}
                   </div>
                 </div>
@@ -1570,7 +1818,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       </div>
                     </div>
                     <div className="form-group-modal"><label>Kategori Disabilitas</label><div className="select-container-custom"><select name="disabilitas" value={selectedAnggotaData.disabilitas || "Tidak Ada Disabilitas"} onChange={handleEditAnggotaChange}><option value="Tidak Ada Disabilitas">Tidak Ada Disabilitas</option><option value="Disabilitas Fisik">Disabilitas Fisik</option><option value="Disabilitas Intelektual">Disabilitas Intelektual</option><option value="Disabilitas Mental (ODGJ)">Disabilitas Mental (ODGJ)</option><option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option><option value="Disabilitas Sensorik Rungu">Disabilitas Sensorik Rungu</option><option value="Disabilitas Sensorik Wicara">Disabilitas Sensorik Wicara</option><option value="Disabilitas Ganda/Multi">Disabilitas Ganda/Multi</option></select></div></div>
-                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Penyakit Kronis / Menahun</label><input type="text" name="penyakit_kronis" value={selectedAnggotaData.penyakit || ""} onChange={handleEditAnggotaChange} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." /></div>
+                    <div className="form-group-modal" style={{ gridColumn: '1 / -1' }}><label>Penyakit Kronis / Menahun</label><input type="text" name="penyakit_kronis" value={selectedAnggotaData.penyakit_kronis || ""} onChange={handleEditAnggotaChange} placeholder="Kosongkan jika tidak ada, misal: TBC, Kanker, Paru-paru..." /></div>
                   </div>
                 </div>
                 <div className="modal-actions"><button type="button" className="btn-modal-cancel" onClick={() => setIsDetailAnggotaModalOpen(false)}>Tutup</button><button type="submit" className="btn-modal-submit">Simpan Perubahan</button></div>

@@ -14,6 +14,7 @@ from services.anggota_service import (
     update_anggota
 )
 from schemas.anggota_schema import Anggota, UpdateKondisiKhusus
+from config.database import supabase, SUPABASE_BUCKET_DOKUMEN
 
 router = APIRouter(prefix="/keluarga", tags=["Keluarga"])
 security = HTTPBearer()
@@ -82,3 +83,67 @@ async def update_desil_route(
     data: UpdateDesil
 ):
     return update_desil(no_kk, data)
+
+
+
+
+# 📂 backend/routes/keluarga_routes.py
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from config.database import supabase
+from config.auth import security
+import time
+
+
+# ==========================================
+# UPLOAD SURAT KEMATIAN (Disesuaikan dengan pola /keluarga/{no_kk}/anggota/{id})
+# ==========================================
+@router.post("/{no_kk}/anggota/{anggota_id}/upload-surat-kematian")
+async def upload_surat_kematian(
+    no_kk: str,
+    anggota_id: str,
+    file: UploadFile = File(...),
+    credentials = Depends(security)
+):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Hanya file PDF yang diperbolehkan")
+    
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(0)
+    if size > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Ukuran file maksimal 5MB")
+
+    try:
+        timestamp = int(time.time() * 1000)
+        safe_filename = f"{no_kk}/{anggota_id}/{timestamp}-{file.filename.replace(' ', '_')}"
+        
+        file_bytes = await file.read()
+        
+        # 1. Upload ke Storage
+        supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).upload(
+            safe_filename,
+            file_bytes,
+            {"content-type": "application/pdf"}
+        )
+
+        public_url = supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).get_public_url(safe_filename)
+        # 2. Update Database (WAJIB CEK HASILNYA)
+        print(f"🔍 Updating DB: id={anggota_id}, url={public_url}")
+        result = supabase.table("anggota_keluarga") \
+            .update({"surat_kematian": public_url}) \
+            .eq("id", anggota_id) \
+            .eq("no_kk", no_kk) \
+            .execute()
+            
+        if not result.data:
+            raise Exception("Database update returned empty. Check RLS Policy for UPDATE.")
+            
+        print("✅ DB Updated Successfully")
+        return {"message": "Berhasil", "url": public_url}
+        
+    except Exception as e:
+        print(f"❌ Upload/DB Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
