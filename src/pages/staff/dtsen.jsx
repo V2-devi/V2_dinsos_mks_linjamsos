@@ -416,9 +416,6 @@ const handleAddAnggotaSubmit = async (e) => {
 
     const token = localStorage.getItem("token");
     
-    // =====================================
-    // 1. PERSIAPAN DATA & GABUNG KONDISI KHUSUS
-    // =====================================
     const kondisi_khusus_gabung = gabungKondisiKhusus({
       kehamilan: formAnggota.kehamilan,
       disabilitas: formAnggota.disabilitas,
@@ -433,20 +430,16 @@ const handleAddAnggotaSubmit = async (e) => {
       tanggal_lahir: formAnggota.tanggal_lahir,
       status_keadaan: formAnggota.status_keadaan,
       kondisi_khusus: kondisi_khusus_gabung
-      // ❌ JANGAN kirim surat_kematian di sini (karena belum diupload)
     };
 
     console.log("📤 PAYLOAD ADD ANGGOTA:", payload);
 
     // =====================================
-    // 2. INSERT DATA ANGGOTA (DAPATKAN ID)
+    // 1. INSERT DATA ANGGOTA
     // =====================================
     const response = await fetch(`http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
     });
     
@@ -456,81 +449,71 @@ const handleAddAnggotaSubmit = async (e) => {
       return; 
     }
 
-    // ✅ AMBIL ID ANGGOTA BARU DARI RESPONSE
-    // Pastikan backend mengembalikan field 'id'. Jika field-nya '_id' atau 'anggota_id', sesuaikan di sini.
-    const newAnggotaId = data.data?.id || data.id; 
+    // 🔍 DEBUG: Lihat struktur response backend
+    console.log("📦 RESPONSE CREATE:", JSON.stringify(data, null, 2));
 
-    // =====================================
-    // 3. UPLOAD SURAT KEMATIAN (JIKA ADA FILE)
-    // =====================================
-    // Cek apakah ada file PDF yang dipilih
-// =====================================
-// 3. UPLOAD SURAT KEMATIAN (JIKA ADA FILE)
-// =====================================
-if (formAnggota.surat_kematian instanceof File && newAnggotaId) {
-  try {
-    console.log("📤 Mengupload PDF untuk anggota ID:", newAnggotaId);
-    
-    const formDataPDF = new FormData();
-    formDataPDF.append("file", formAnggota.surat_kematian);
+    // ✅ AMBIL ID DENGAN CARA FLEKSIBEL (sesuaikan dengan response backend Anda)
+    const newAnggotaId = data.data?.id || data.id || data.anggota_id || data._id;
+    console.log("🆔 ID ANGGOTA BARU:", newAnggotaId);
 
-    const uploadRes = await fetch(
-      `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${newAnggotaId}/upload-surat-kematian`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formDataPDF
+    if (!newAnggotaId) {
+      console.warn("⚠️ ID tidak ditemukan di response backend");
+      alert("Data anggota tersimpan, tapi ID tidak ditemukan. Upload PDF dibatalkan.");
+    } else {
+      // =====================================
+      // 2. UPLOAD PDF (HANYA DI MODE ADD)
+      // =====================================
+      if (formAnggota.surat_kematian instanceof File) {
+        try {
+          console.log("📤 Mengupload PDF untuk ID:", newAnggotaId);
+          
+          const formDataPDF = new FormData();
+          formDataPDF.append("file", formAnggota.surat_kematian);
+
+          const uploadRes = await fetch(
+            `http://127.0.0.1:8000/keluarga/${selectedDtsenData.no_kk}/anggota/${newAnggotaId}/upload-surat-kematian`,
+            {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+              body: formDataPDF
+            }
+          );
+
+          const uploadData = await uploadRes.json();
+          
+          if (!uploadRes.ok) {
+            console.error("❌ Upload PDF Gagal:", uploadData);
+            throw new Error(uploadData.detail || "Gagal upload surat kematian");
+          }
+
+          console.log("✅ PDF Berhasil Upload. URL:", uploadData.url);
+          // ✅ URL sudah tersimpan di DB oleh endpoint upload. 
+          // TIDAK PERLU update state lokal karena akan di-refresh oleh fetchAnggota()
+          
+        } catch (uploadErr) {
+          console.error("Upload Error:", uploadErr);
+          alert("⚠️ Data anggota tersimpan, tapi upload PDF gagal: " + uploadErr.message);
+          // Jangan return, biar data anggota tetap tersimpan
+        }
       }
-    );
-
-    const uploadData = await uploadRes.json(); // ✅ Parse JSON dulu sebelum cek status
-
-    if (!uploadRes.ok) {
-      console.error("❌ Upload PDF Gagal:", uploadData);
-      // ✅ LEMPAR ERROR agar user tahu & proses berhenti
-      throw new Error(uploadData.detail || "Gagal upload surat kematian");
     }
 
-    console.log("✅ PDF Terupload, URL:", uploadData.url);
-    
-    // ✅ PENTING: Update state lokal agar preview langsung muncul!
-    // Pilih salah satu sesuai state yang dipakai tombol preview Anda:
-    
-    // Opsi A: Jika preview baca dari selectedAnggotaData
-    setSelectedAnggotaData(prev => prev ? { ...prev, surat_kematian: uploadData.url } : null);
-    
-    // Opsi B: Jika preview baca dari formAnggota
-    // setFormAnggota(prev => ({ ...prev, surat_kematian: uploadData.url }));
-    
-    // Opsi C: Jika preview baca dari state terpisah
-    // setPreviewPdfUrl(uploadData.url);
-    
-  } catch (uploadError) {
-    console.error("Upload error:", uploadError);
-    // ✅ Tampilkan alert agar user sadar ada yang gagal
-    alert("⚠️ Data anggota tersimpan, tapi upload PDF gagal: " + uploadError.message);
-    // Jangan return, biar data anggota tetap tersimpan
-  }
-}
-
     // =====================================
-    // 4. SUCCESS & RESET
+    // 3. REFRESH & RESET (URUTAN PENTING!)
     // =====================================
-    await fetchAnggota(selectedNoKK); // Refresh tabel
+    
+    // ✅ TUNGGU fetchAnggota SELESAI sebelum tutup modal
+    await fetchAnggota(selectedNoKK);
+    
+    // ✅ Tutup modal SETELAH refresh selesai
     setIsAddAnggotaModalOpen(false);
     
-    // Reset form
+    // ✅ Reset form
     setFormAnggota({ 
-      nik: "", 
-      nama_anggota_keluarga: "", 
-      hubungan_keluarga: "", 
-      jenis_kelamin: "", 
-      tanggal_lahir: "", 
-      status_keadaan: "",
-      kehamilan: "",
-      disabilitas: "",
-      penyakit_kronis: "",
-      surat_kematian: null // ✅ Reset file PDF juga
+      nik: "", nama_anggota_keluarga: "", hubungan_keluarga: "", 
+      jenis_kelamin: "", tanggal_lahir: "", status_keadaan: "",
+      kehamilan: "", disabilitas: "", penyakit_kronis: "",
+      surat_kematian: null 
     });
     
     showSuccess();

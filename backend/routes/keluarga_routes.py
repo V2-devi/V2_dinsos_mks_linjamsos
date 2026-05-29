@@ -40,6 +40,7 @@ async def update_keluarga_route(
     return update_keluarga(id, data)
 
 # ================= ANGGOTA =================
+# 📂 backend/routes/keluarga_routes.py
 @router.post("/{no_kk}/anggota")
 async def create_anggota_keluarga_route(
     no_kk: str,
@@ -48,7 +49,23 @@ async def create_anggota_keluarga_route(
 ):
     if not credentials:
         raise HTTPException(status_code=401, detail="Authorization header is required")
-    return create_anggota_keluarga(no_kk, data)
+    
+    # Panggil service function
+    result = create_anggota_keluarga(no_kk, data)
+    
+    # ✅ BUNGKUS RESULT AGAR SESUAI DENGAN FRONTEND
+    # Jika result sudah object, langsung return dengan key 'data'
+    # Jika result adalah tuple (data, error), ambil data-nya saja
+    if isinstance(result, tuple):
+        inserted_data, error = result
+        if error:
+            raise HTTPException(status_code=400, detail=str(error))
+        return {"message": "Berhasil", "data": inserted_data}
+    else:
+        # Jika result langsung data object
+        return {"message": "Berhasil", "data": result}
+
+        
 
 @router.get("/{no_kk}/anggota")
 async def get_anggota_keluarga_route(

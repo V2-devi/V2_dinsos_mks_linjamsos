@@ -4,32 +4,32 @@ from schemas.anggota_schema import Anggota
 
 
 
+# 📂 backend/services/ppks_service.py
 def create_anggota_keluarga(no_kk: str, data: Anggota):
-
-    # 1. convert Pydantic → JSON safe
-    data_dict = data.model_dump(mode="json")
-
-    # 2. build payload (AMAN + CLEAN)
-    payload = {
-        "nik": str(data_dict.get("nik")) if data_dict.get("nik") else None,
-        "no_kk": no_kk,
-        "nama_anggota_keluarga": data_dict.get("nama_anggota_keluarga"),
-        "hubungan_keluarga": data_dict.get("hubungan_keluarga"),
-        "jenis_kelamin": data_dict.get("jenis_kelamin"),
-        "tanggal_lahir": data_dict.get("tanggal_lahir"),
-        "status_keadaan": data_dict.get("status_keadaan"),
-        "kondisi_khusus": data_dict.get("kondisi_khusus")
-    }
-
-    # 3. DEBUG (WAJIB SEMENTARA)
-    print("PAYLOAD ANGGOTA:", payload)
-
-    # 4. INSERT KE SUPABASE
-    result = supabase.table("anggota_keluarga") \
-        .insert(payload) \
-        .execute()
-
-    return result.data
+    try:
+        payload = {
+            "no_kk": no_kk,
+            "nik": str(data.nik),
+            "nama_anggota_keluarga": data.nama_anggota_keluarga,
+            "hubungan_keluarga": data.hubungan_keluarga,
+            "jenis_kelamin": data.jenis_kelamin,
+            "tanggal_lahir": data.tanggal_lahir,
+            "status_keadaan": data.status_keadaan,
+            "kondisi_khusus": data.kondisi_khusus,
+        }
+        
+        result = supabase.table("anggota_keluarga").insert(payload).execute()
+        
+        # ✅ PASTIKAN RETURN OBJECT DATA LANGSUNG (bukan array/response wrapper)
+        if result.data and len(result.data) > 0:
+            return result.data[0]  # ← Return object { id: "...", nik: "..." }
+        
+        return None
+        
+    except Exception as e:
+        print(f"❌ Service Error: {e}")
+        raise e
+    
 # =========================================
 # GET ANGGOTA BERDASARKAN NO KK
 # =========================================
