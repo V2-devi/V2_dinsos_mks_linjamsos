@@ -114,6 +114,23 @@ function Dtsen({
     penyakit_kronis: "",
     surat_kematian: null // Menyimpan file PDF
   });
+
+  const resetAddAnggotaModal = () => {
+    setFormAnggota({
+      nik: "",
+      nama_anggota_keluarga: "",
+      hubungan_keluarga: "",
+      jenis_kelamin: "",
+      tanggal_lahir: "",
+      status_keadaan: "",
+      kehamilan: "",
+      disabilitas: "",
+      penyakit_kronis: "",
+      surat_kematian: null
+    });
+    setNewSuratKematianFile(null);
+    setPreviewSuratKematianUrl("");
+  };
   
   // FUNGSI UNTUK HANDLE UPLOAD PDF SURAT KEMATIAN]
   const handleSuratKematianChange = (e) => {
@@ -135,8 +152,13 @@ function Dtsen({
       }
     }
     
-    // Simpan File object ke state
+    // Simpan File object ke state dan set preview hanya untuk file saat ini
     setFormAnggota({ ...formAnggota, surat_kematian: file });
+    if (file) {
+      setPreviewSuratKematianUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewSuratKematianUrl("");
+    }
   };
 
 
@@ -507,14 +529,7 @@ const handleAddAnggotaSubmit = async (e) => {
     
     // ✅ Tutup modal SETELAH refresh selesai
     setIsAddAnggotaModalOpen(false);
-    
-    // ✅ Reset form
-    setFormAnggota({ 
-      nik: "", nama_anggota_keluarga: "", hubungan_keluarga: "", 
-      jenis_kelamin: "", tanggal_lahir: "", status_keadaan: "",
-      kehamilan: "", disabilitas: "", penyakit_kronis: "",
-      surat_kematian: null 
-    });
+    resetAddAnggotaModal();
     
     showSuccess();
 
@@ -1196,7 +1211,13 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
           {detailDtsenInnerTab === "anggota" && (
             <div>
               <div className="action-row-right" style={{ marginBottom: '15px' }}>
-                <button className="btn-add-staff" onClick={() => setIsAddAnggotaModalOpen(true)}>
+                <button className="btn-add-staff" onClick={() => {
+                    setSelectedAnggotaData(null);
+                    setNewSuratKematianFile(null);
+                    setPreviewSuratKematianUrl("");
+                    resetAddAnggotaModal();
+                    setIsAddAnggotaModalOpen(true);
+                  }}>
                   <span className="plus-icon">+</span> Tambah Anggota
                 </button>
               </div>
@@ -1297,15 +1318,18 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                                 type="button" 
                                 className="btn-search-outline" 
                                 title="Lihat Surat Kematian" 
-                                onClick={() => {
-                                    const pdfUrl = selectedAnggotaData?.surat_kematian; // ← Baca dari state modal
+                                onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    const pdfUrl = ang?.surat_kematian;
+
                                     if (pdfUrl && typeof pdfUrl === "string" && pdfUrl.startsWith("http")) {
                                       window.open(pdfUrl, "_blank", "noopener,noreferrer");
                                     } else {
                                       alert("❌ Surat kematian belum tersedia.");
                                     }
                                   }} 
-                                  disabled={!selectedAnggotaData?.surat_kematian}
+                                  disabled={!ang?.surat_kematian}
 
                                 
                                 style={{ padding: '6px 12px', fontSize: '11px', color: '#be123c', borderColor: '#fecdd3', backgroundColor: '#fff1f2', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
@@ -1641,7 +1665,10 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
       {/* MODAL ANGGOTA */}
     {/* MODAL TAMBAH ANGGOTA */}
       {isAddAnggotaModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddAnggotaModalOpen(false)}>
+        <div className="modal-overlay" onClick={() => {
+            setIsAddAnggotaModalOpen(false);
+            resetAddAnggotaModal();
+          }}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header"><div className="modal-header-title"><h2>Tambah Anggota Keluarga</h2></div></div>
             <div className="modal-body">
@@ -1665,15 +1692,15 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       </label>
 
                       {/* ✅ Preview PDF yang sudah tersimpan — hanya untuk modal EDIT */}
-                      {(previewSuratKematianUrl || selectedAnggotaData?.surat_kematian) && (
+                      {formAnggota.surat_kematian instanceof File && previewSuratKematianUrl && (
                         <div style={{ marginBottom: '8px', marginTop: '8px' }}>
                           <a
-                            href={previewSuratKematianUrl || selectedAnggotaData?.surat_kematian}
+                            href={previewSuratKematianUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#3b82f6', fontSize: '13px', textDecoration: 'underline' }}
                           >
-                            📄 Lihat Surat Kematian Tersimpan
+                            📄 Lihat Surat Kematian yang Dipilih
                           </a>
                         </div>
                       )}
@@ -1740,7 +1767,10 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                 </div>
 
                 <div className="modal-actions" style={{ marginTop: '25px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
-                  <button type="button" className="btn-modal-cancel" onClick={() => setIsAddAnggotaModalOpen(false)}>Batal</button>
+                  <button type="button" className="btn-modal-cancel" onClick={() => {
+                      setIsAddAnggotaModalOpen(false);
+                      resetAddAnggotaModal();
+                    }}>Batal</button>
                   <button type="submit" className="btn-modal-submit" style={{ backgroundColor: '#10b981' }}>Simpan Anggota</button>
                 </div>
               </form>

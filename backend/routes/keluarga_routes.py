@@ -108,7 +108,23 @@ async def update_desil_route(
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from config.database import supabase
 from config.auth import security
+import os
+import re
 import time
+import uuid
+
+
+def sanitize_storage_filename(filename: str) -> str:
+    """Buat key file Supabase yang valid dari nama file asli."""
+    name = os.path.basename(filename)
+    name = name.replace(' ', '_')
+    name = re.sub(r'[^0-9A-Za-z._-]+', '_', name)
+    name = name.strip('_')
+    if not name:
+        name = str(uuid.uuid4()) + '.pdf'
+    if not name.lower().endswith('.pdf'):
+        name = f"{os.path.splitext(name)[0]}.pdf"
+    return name
 
 
 # ==========================================
@@ -135,7 +151,8 @@ async def upload_surat_kematian(
 
     try:
         timestamp = int(time.time() * 1000)
-        safe_filename = f"{no_kk}/{anggota_id}/{timestamp}-{file.filename.replace(' ', '_')}"
+        sanitized_name = sanitize_storage_filename(file.filename)
+        safe_filename = f"{no_kk}/{anggota_id}/{timestamp}-{sanitized_name}"
         
         file_bytes = await file.read()
         
