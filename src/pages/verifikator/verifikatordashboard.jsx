@@ -24,16 +24,19 @@ function VerifikatorDashboard() {
 
   // ✅ DITAMBAHKAN: State untuk menyimpan daftar staff
   const [staffList, setStaffList] = useState([]);
+  const [notifData, setNotifData] = useState([
+    { id: 1, title: "Sistem Terhubung", date: "Hari ini", desc: "Data berhasil disinkronkan dengan Staf Lapangan." }
+  ]);
 
   useEffect(() => {
     const savedUserData = localStorage.getItem("currentStaffUser"); // atau key yang Anda gunakan
-  if (savedUserData) {
-    const parsedData = JSON.parse(savedUserData);
-    setCurrentVerifikator({
-      nama: parsedData.nama_lengkap || "Verifikator",
-      nip: parsedData.nip || "-"
-    });
-  }
+    if (savedUserData) {
+      const parsedData = JSON.parse(savedUserData);
+      setCurrentVerifikator({
+        nama: parsedData.nama_lengkap || "Verifikator",
+        nip: parsedData.nip || "-"
+      });
+    }
     const fetchData = async () => {
       try {
         const { data: pengusulanData } = await supabase.from('pengusulan_bansos').select('*');
@@ -49,6 +52,27 @@ function VerifikatorDashboard() {
       }
     };
     fetchData();
+  }, []);
+
+  // ==========================================
+  // NOTIFIKASI SELAMAT DATANG VERIFIKATOR
+  // ==========================================
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem("hasSeenWelcomeVerifikator");
+
+    if (!hasSeenWelcome) {
+      const welcomeNotif = {
+        id: "welcome-verifikator",
+        title: "Selamat Datang di SICADAS!",
+        desc: "Akun Anda telah aktif. Silakan lengkapi profil Anda sekarang.",
+        link: "/verifikatorprofile", // Rute menuju halaman profil verifikator
+        isWelcome: true,
+        date: "Baru saja"
+      };
+
+      setNotifData(prev => [welcomeNotif, ...prev]);
+      localStorage.setItem("hasSeenWelcomeVerifikator", "true");
+    }
   }, []);
 
   const usulanMenunggu = usulanData.filter(i => i.status_pengusulan === "Belum").length;
@@ -135,21 +159,11 @@ function VerifikatorDashboard() {
       if (errPPKS) throw errPPKS;
       setPpksList(dataPPKS);
 
-      // ✅ BENAR: Ambil data yang statusnya "Kasus Aktif" ATAU "Selesai Ditangani"
       const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').eq('status_penanganan', 'Selesai Ditangani');
       if (errRiwayatPPKS) throw errRiwayatPPKS;
 
-      console.log("📦 Riwayat Found:", dataRiwayatPPKS?.length, "items");
-      console.log("🔍 Contoh Status Riwayat:", dataRiwayatPPKS?.[0]?.status_penanganan);
-
       setRiwayatPpksList(dataRiwayatPPKS);
-
-      // const { data: dataRiwayatPPKS, error: errRiwayatPPKS } = await supabase.from('ppks').select('*').neq('status_penanganan', 'Selesai Ditangani', 'Kasus Aktif');
-      // if (errRiwayatPPKS) throw errRiwayatPPKS;
-      // setRiwayatPpksList(dataRiwayatPPKS);
       
-      // ✅ DITAMBAHKAN: Mengambil data user yang memiliki role staff
-      // Pastikan tabel di supabase Anda bernama 'users' atau sesuaikan namanya
       const { data: staffData, error: errStaff } = await supabase.from('users').select('*').eq('role', 'staff');
       if (!errStaff && staffData) {
         setStaffList(staffData);
@@ -160,7 +174,12 @@ function VerifikatorDashboard() {
     }
   };
 
-  const notifData = [{ id: 1, title: "Sistem Terhubung", date: "Hari ini", desc: "Data berhasil disinkronkan dengan Staf Lapangan." }];
+  const handleNotifClick = (notif) => {
+    if (notif.link) {
+      navigate(notif.link); 
+      setIsNotifOpen(false); 
+    }
+  };
 
   const openValidationModal = async (data) => {
     setSelectedData(data);
@@ -176,8 +195,8 @@ function VerifikatorDashboard() {
   const openValidationPPKSModal = (data) => { 
     setSelectedPPKSReview(data); 
     setIsReviewPPKSModalOpen(true);
-    setCatatanValidasi(""); // Kosongkan catatan sebelumnya
-    setActiveTab("review_ppks"); // Pindah ke halaman virtual
+    setCatatanValidasi("");
+    setActiveTab("review_ppks");
     };
 
   const handleValidasiBansos = async (e, statusKeputusan) => {
@@ -194,88 +213,41 @@ function VerifikatorDashboard() {
     } catch (error) { console.error("Gagal update status:", error); alert("Gagal melakukan validasi."); }
   };
 
-
-
-
-
   const handleValidationPPKSAction = async (e, statusKeputusan) => {
-  e.preventDefault();
-  if (!selectedPPKSReview) return;
-
-  const statusFinal = statusKeputusan.trim(); // Hapus spasi
-
-  try {
-    console.log("🔄 Updating ID:", selectedPPKSReview.id, "to:", statusFinal);
-    
-    const { error, data } = await supabase
-      .from('ppks')
-      .update({
-        status_penanganan: statusFinal,
-        catatan_verifikator: catatanValidasi
-      })
-      .eq('id', selectedPPKSReview.id)
-      .select(); // Penting: return data setelah update
-
-    if (error) {
-      console.error("❌ Supabase Error:", error);
-      throw error;
+    e.preventDefault();
+    if (!selectedPPKSReview) return;
+    const statusFinal = statusKeputusan.trim();
+    try {
+      const { error, data } = await supabase
+        .from('ppks')
+        .update({ status_penanganan: statusFinal, catatan_verifikator: catatanValidasi })
+        .eq('id', selectedPPKSReview.id)
+        .select();
+      if (error) throw error;
+      await fetchDataVerifikator();
+      setIsReviewPPKSModalOpen(false);
+      setSelectedPPKSReview(null);
+      setCatatanValidasi("");
+      const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "aktif";
+      setActiveTab(targetTab);
+      alert(`✅ Berhasil! Masuk ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
+    } catch (error) {
+      console.error("💥 Action Failed:", error);
+      alert("Gagal: " + error.message);
     }
-
-    console.log("✅ Update Success, returned data:", data);
-
-    // Refresh data dari server
-    await fetchDataVerifikator();
-
-    // Bersihkan modal
-    setIsReviewPPKSModalOpen(false);
-    setSelectedPPKSReview(null);
-    setCatatanValidasi("");
-
-    // Pindah tab sesuai status
-    const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "aktif";
-    setActiveTab(targetTab);
-    
-    alert(`✅ Berhasil! Masuk ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
-
-  } catch (error) {
-    console.error("💥 Action Failed:", error);
-    alert("Gagal: " + error.message);
-  }
-};
-
-
+  };
 
   const handleSelesaikanKasusPPKS = async (id) => {
-  if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
-  
-  try {
-    const { error } = await supabase
-      .from('ppks')
-      .update({ status_penanganan: "Selesai Ditangani" })
-      .eq('id', id);
-      
-    if (error) throw error;
-    
-    // Refresh data agar otomatis pindah ke status Selesai & tab Riwayat tetap sinkron
-    await fetchDataVerifikator(); 
-    alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
-  } catch (err) {
-    alert("Gagal update status: " + err.message);
-  }
-      if (statusKeputusan === "Selesai Ditangani") {
-      setActiveTab("riwayat"); // Jika dipilih Selesai, pindah ke Riwayat
-      alert("✅ Kasus selesai! Data dipindah ke Riwayat.");
-    } else {
-      // Jika dipilih Aktif (atau status lain), tetap di Menunggu/Aktif
-      setActiveTab("aktif"); 
-      alert("✅ Status diperbarui menjadi Kasus Aktif.");
+    if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
+    try {
+      const { error } = await supabase.from('ppks').update({ status_penanganan: "Selesai Ditangani" }).eq('id', id);
+      if (error) throw error;
+      await fetchDataVerifikator(); 
+      alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
+    } catch (err) {
+      alert("Gagal update status: " + err.message);
     }
-
-    // Tutup modal
-    setIsReviewPPKSModalOpen(false);
-    setSelectedPPKSReview(null);
-    };
-
+  };
 
   const formatDateIndo = (dateStr) => { 
     if(!dateStr || dateStr === "-") return "-"; 
@@ -287,32 +259,16 @@ function VerifikatorDashboard() {
   return (
     <div className="verifikator-layout relative">
       <aside className="sidebar">
-        
-        {/* ✅ LOGO SICADAS DITENGAHKAN DAN TEKS LAMA DIHAPUS AGAR BERSIH */}
         <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '15px 0' }}>
-          <img 
-            src={logoSicadasDashboard} 
-            alt="Logo SICADAS" 
-            className="sidebar-logo" 
-            style={{ width: "100%", maxWidth: "150px", height: "auto", margin: "0 auto" }} 
-          />
+          <img src={logoSicadasDashboard} alt="Logo SICADAS" className="sidebar-logo" style={{ width: "100%", maxWidth: "150px", height: "auto", margin: "0 auto" }} />
         </div>
-
         <div className="sidebar-profile" style={{ cursor: 'pointer' }} onClick={() => navigate("/verifikatorprofile")} title="Lihat Profil">
-  {/* Ikon Profil */}
-  <div className="profile-avatar-small">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="12" cy="8" r="4"></circle>
-      <path d="M4 20c0-4 4-7 8-7s8 3 8 7"></path>
-    </svg>
-  </div>
-  
-  {/* Info Profil */}
-  <div className="profile-info">
-    <span className="profile-name">{currentVerifikator.nama}</span>
-    <span className="profile-nip">{currentVerifikator.nip}</span>
-  </div>
-</div>
+          <div className="profile-avatar-small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 4-7 8-7s8 3 8 7"></path></svg></div>
+          <div className="profile-info">
+            <span className="profile-name">{currentVerifikator.nama}</span>
+            <span className="profile-nip">{currentVerifikator.nip}</span>
+          </div>
+        </div>
         <nav className="sidebar-menu">
           <button className={`menu-item ${activeMenu === "dashboard" ? "active" : ""}`} onClick={() => setActiveMenu("dashboard")}>
             <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Dashboard Utama
@@ -327,49 +283,50 @@ function VerifikatorDashboard() {
               <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> Validasi PPKS
             </button>
           </div>
-
-          <button 
-            className={`menu-item ${activeMenu === "penentuan_desil" ? "active" : ""}`} 
-            onClick={() => { setActiveMenu("penentuan_desil"); setActiveTab("menunggu_penentuan"); }}
-          >
-            <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-            </svg> 
-            Penentuan Desil
+          <button className={`menu-item ${activeMenu === "penentuan_desil" ? "active" : ""}`} onClick={() => { setActiveMenu("penentuan_desil"); setActiveTab("menunggu_penentuan"); }}>
+            <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> Penentuan Desil
           </button>
-
           <button className="menu-item" style={{ marginTop: '40px', color: '#ef4444' }} onClick={() => navigate("/login")}>
              <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Keluar
           </button>
         </nav>
       </aside>
-
       <main className="main-content">
         <header className="main-header">
           <h1 className="header-title">
             {activeMenu === "dashboard" && "Dashboard Verifikator"}
             {activeMenu === "validasi_bansos" && "Validasi Usulan Bansos"}
             {activeMenu === "validasi_ppks" && "Validasi Laporan PPKS"}
-            {activeMenu === "monitoring" && "Monitoring Tanggung Jawab Wilayah"}
             {activeMenu === "penentuan_desil" && "Kalkulasi & Penentuan Desil Keluarga"}
           </h1>
           <div className="notif-wrapper">
             <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
               <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-              <span className="notif-badge-red">1</span>
             </button>
             {isNotifOpen && (
-              <div className="notif-dropdown">
+              <div className="notif-dropdown" onClick={(e) => e.stopPropagation()} style={{ zIndex: 9999, position: 'absolute' }}>
                 <div className="notif-header"><h3>Pemberitahuan</h3></div>
                 <div className="notif-body">
-                  {notifData.map((n) => (<div className="notif-item" key={n.id}><div className="notif-title-row"><h4>{n.title}</h4><span>{n.date}</span></div><p>{n.desc}</p></div>))}
+                  {notifData.map((n) => (
+                    <div 
+                      className={`notif-item ${n.isWelcome ? 'welcome-notif-style' : ''}`} 
+                      key={n.id} 
+                      onClick={(e) => { e.stopPropagation(); handleNotifClick(n); }}
+                      style={n.isWelcome ? { backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', cursor: 'pointer', position: 'relative', pointerEvents: 'auto' } : { cursor: 'pointer', pointerEvents: 'auto' }}
+                    >
+                      <div className="notif-title-row">
+                        <h4 style={n.isWelcome ? { color: '#1e40af' } : {}}>{n.title}</h4>
+                        <span>{n.date}</span>
+                      </div>
+                      <p>{n.desc}</p>
+                      {n.isWelcome && <small style={{ color: '#2563eb', fontWeight: 'bold' }}>Klik untuk lengkapi profil &rarr;</small>}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
           </div>
         </header>
-
         {isNotifOpen && <div className="notif-backdrop" onClick={() => setIsNotifOpen(false)}></div>}
 
         <div className="content-body">
@@ -607,7 +564,6 @@ function VerifikatorDashboard() {
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-header-title">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <h2>Review Data Usulan Bansos</h2>
               </div>
             </div>
@@ -665,7 +621,6 @@ function VerifikatorDashboard() {
         
       )}
       
-
 
             {/* ================= MODAL SUCCESS UMUM ================= */}
       {isSuccessModalOpen && (<div className="modal-overlay" onClick={() => setIsSuccessModalOpen(false)}><div className="modal-content" style={{maxWidth: '400px', borderTop: '8px solid #22c55e'}}><div className="modal-body text-center" style={{ padding: '40px 20px' }}><div style={{width: '60px', height: '60px', backgroundColor: '#22c55e', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto'}}><svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg></div><h2 style={{ color: '#234a66', fontSize: '22px', fontWeight: '800', margin: '0 0 8px 0' }}>Tindakan Berhasil!</h2><p style={{ color: '#475569', fontSize: '13px', margin: '0' }}>Data telah diperbarui dan diteruskan ke sistem.</p></div></div></div>)}

@@ -68,10 +68,9 @@ const fetchUsers = async () => {
   }).length;
   // === HANDLER FUNGSI ===
   const handleOpenApproval = (account) => {
-    setSelectedApproval(account);
-    setIsApprovalModalOpen(true);
-    setIsNotifOpen(false); 
-  };
+    navigate("/datauser", { state: { filterStatus: "Menunggu" } });
+    setIsNotifOpen(false);
+    };
 
   const handleApproveAccount = () => {
     const newActiveUser = { ...selectedApproval, status_akun: "disetujui", id: Date.now() };
@@ -245,56 +244,6 @@ const fetchUsers = async () => {
         </div>
 
       </main>
-
-      {/* ================= 🌟 MODAL PERSETUJUAN AKUN (DETAIL LENGKAP) 🌟 ================= */}
-      {isApprovalModalOpen && selectedApproval && (
-        <div className="modal-overlay" onClick={() => setIsApprovalModalOpen(false)}>
-          <div className="modal-content modal-large" style={{ backgroundColor: '#f8fafc', maxWidth: '650px' }} onClick={(e) => e.stopPropagation()}>
-            
-            <div className="modal-header">
-              <div className="modal-header-title">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h2>Tinjau Pengusulan Akun Lengkap</h2>
-              </div>
-            </div>
-
-            <div className="modal-body" style={{ padding: '30px' }}>
-              <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e3a8a', padding: '15px', borderRadius: '8px', marginBottom: '25px', fontSize: '13px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span><strong>Perhatian:</strong> Akun ini diusulkan sebagai <strong>{selectedApproval.role}</strong>. Pastikan data pendaftar sudah diverifikasi kebenarannya sebelum memberikan akses sistem.</span>
-              </div>
-
-              {/* SEKSI 1: INFORMASI LOGIN & ROLE */}
-              <div style={{ marginBottom: '25px' }}>
-                <h3 style={{ fontSize: '14px', color: '#3b82f6', fontWeight: '700', marginBottom: '15px', paddingBottom: '8px', borderBottom: '1px solid #cbd5e1' }}>Informasi Akun & Akses</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-                  <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>NIP Pegawai</span><strong style={{ fontSize: '14px', color: '#1e293b' }}>{selectedApproval.nip || "-"}</strong></div>
-                  <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Role / Akses Diminta</span><strong style={{ fontSize: '14px', color: '#2563eb', padding: '4px 10px', backgroundColor: '#dbeafe', borderRadius: '6px' }}>{selectedApproval.role}</strong></div>
-                </div>
-              </div>
-
-              {/* SEKSI 2: DATA PRIBADI */}
-              <div style={{ marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '14px', color: '#3b82f6', fontWeight: '700', marginBottom: '15px', paddingBottom: '8px', borderBottom: '1px solid #cbd5e1' }}>Data Pribadi Staf</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-                  <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Nama Lengkap (Sesuai KTP)</span><strong style={{ fontSize: '14px', color: '#1e293b' }}>{selectedApproval.name}</strong></div>
-                  <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Nomor Induk Kependudukan (NIK)</span><strong style={{ fontSize: '14px', color: '#1e293b' }}>{selectedApproval.nik}</strong></div>
-                  <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Email Aktif</span><strong style={{ fontSize: '14px', color: '#1e293b' }}>{selectedApproval.email}</strong></div>
-                  <div><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>No. WhatsApp / Handphone</span><strong style={{ fontSize: '14px', color: '#1e293b' }}>{selectedApproval.phone}</strong></div>
-                  <div style={{ gridColumn: '1 / -1' }}><span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>Alamat Instansi / Wilayah Penugasan</span><strong style={{ fontSize: '14px', color: '#1e293b' }}>{selectedApproval.address}</strong></div>
-                </div>
-              </div>
-
-              {/* TOMBOL AKSI */}
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
-                <button onClick={handleRejectAccount} className="btn-modal-cancel" style={{ width: 'auto', border: '1px solid #ef4444', color: '#ef4444' }}>Tolak Usulan</button>
-                <button onClick={handleApproveAccount} className="btn-modal-submit" style={{ width: 'auto' }}>Setujui & Aktifkan Akun</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* ================= MODAL SUKSES ================= */}
       {isSuccessModalOpen && (

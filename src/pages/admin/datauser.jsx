@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./datauser.css"; 
 
 // ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH) AGAR SERAGAM DENGAN ADMIN DASHBOARD
@@ -17,7 +17,11 @@ import axios from "axios";
 
 function DataUser() {
   const navigate = useNavigate();
+  const location = useLocation();
   // const status = String(user.status_akun || user.status || "").toLowerCase();
+
+  // State dari lokasi (untuk filter notifikasi)
+  const [filter, setFilter] = useState(location.state?.filterStatus || "");
 
 //   // === STATE NOTIFIKASI ===
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -106,7 +110,7 @@ const fetchUsers = async () => {
   setIsInitialLoad(true);
   try {
     const res = await axios.get("http://localhost:8000/admin/users");
-
+    setUsers(res.data);
     const data = Array.isArray(res.data)
       ? res.data
       : Array.isArray(res.data?.data)
