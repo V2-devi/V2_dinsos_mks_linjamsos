@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../config/supabase";
 import API from "../../api/api";
+import { ExportButton, ImportButton } from '../staff/DataIO';
+import { exportToCSV } from "../../utils/exportCSV";
 
 function Dtsen({
   activeMenu,
@@ -15,6 +17,130 @@ function Dtsen({
   currentRole
 }) {
   
+
+
+  
+
+const [isExporting, setIsExporting] = useState(false);
+
+const handleExport = async (tableName) => {
+  setIsExporting(true);
+  try {
+    if (tableName === "dtsen") {
+      const dataToExport = tableDtsenFiltered;
+      const csvData = dataToExport.map((item) => ({
+        "No. KK": item.no_kk || "",
+        "Nama Kepala Keluarga": item.nama_kepala_keluarga || "",
+        "Tanggal Lahir": item.tanggal_lahir || "",
+        "Jenis Kelamin": item.jenis_kelamin || "",
+        "Kecamatan": item.kecamatan || "",
+        "Kelurahan": item.kelurahan || "",
+        "Alamat Lengkap": item.alamat || "",
+        "Desil": item.hasil_desil || ""
+      }));
+      exportToCSV(csvData, "Data_DTSEN");
+      return;
+    }
+
+    if (tableName === "ppks") {
+      const dataToExport = tabelPPKSFiltered;
+      const csvData = dataToExport.map((item) => ({
+        "NIK": item.nik || "",
+        "Nama": item.nama_lengkap || "",
+        "Kategori PPKS": item.kategori_ppks || "",
+        "Kecamatan": item.kecamatan || "",
+        "Kelurahan": item.kelurahan || "",
+        "Lokasi Penemuan": item.lokasi_penemuan || "",
+        "Tanggal Laporan": item.tanggal_penemuan || "",
+        "Status": item.status_penanganan || "",
+        "Keterangan": item.catatan_verifikator || item.keterangan || ""
+      }));
+      exportToCSV(csvData, "Data_PPKS");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
+
+    const res = await fetch(`http://127.0.0.1:8000/data/${tableName}/export`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Gagal export data");
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${tableName}_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ " + err.message);
+  } finally {
+    setIsExporting(false);
+  }
+};
+
+
+
+
+const [isImporting, setIsImporting] = useState(false);
+const importInputRef = useRef(null);
+
+const handleImportClick = () => {
+  importInputRef.current?.click();
+};
+
+const handleImportFile = async (e, tableName, onSuccess) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  // Validasi ekstensi
+  if (!file.name.toLowerCase().endsWith('.csv')) {
+    alert("⚠️ Hanya file .CSV yang didukung");
+    e.target.value = "";
+    return;
+  }
+
+  setIsImporting(true);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Sesi login habis");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`http://127.0.0.1:8000/data/${tableName}/import`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Gagal import");
+
+    alert(`✅ ${data.message}`);
+    if (onSuccess) onSuccess(); // Refresh tabel setelah sukses
+    
+  } catch (err) {
+    alert("❌ " + err.message);
+  } finally {
+    setIsImporting(false);
+    e.target.value = ""; // Reset input agar bisa pilih file yang sama lagi
+  }
+};
+
+
+
+
   // === KAMUS DATA KECAMATAN & KELURAHAN (FILTER DINAMIS) ===
   const daftarWilayah = {
     "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
@@ -1106,14 +1232,61 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
           </div>
 
           <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
-            <button className="btn-action-data btn-export" onClick={() => alert("Fitur Export Excel akan segera tersedia...")}>
+           
+            <button 
+              className="btn-action-data btn-export" 
+              onClick={() => handleExport("dtsen")} // ✅ Gunakan data DTSEN yang tampil di tabel FE
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                "⏳ Exporting..."
+              ) : (
+                <>
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  Export
+                </>
+              )}
+            </button>
+            
+            
+            {/* <button className="btn-action-data btn-export" onClick={() => alert("Fitur Export Excel akan segera tersedia...")}>
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
               Export
-            </button>
-            <button className="btn-action-data btn-import" onClick={() => alert("Fitur Import Data akan segera tersedia...")}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-              Import
-            </button>
+            </button> */}
+<div className="flex items-center gap-2">
+  <button 
+    className="btn-action-data btn-import" 
+    onClick={handleImportClick}
+    disabled={isImporting}
+  >
+    {isImporting ? (
+      "⏳ Importing..."
+    ) : (
+      <>
+        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l-4-4m4 4v12"></path>
+        </svg>
+        Import
+      </>
+    )}
+  </button>
+
+  {/* Hidden File Input */}
+  <input
+    type="file"
+    accept=".csv"
+    ref={importInputRef}
+    style={{ display: 'none' }}
+    onChange={(e) => handleImportFile(e, "keluarga", fetchKeluarga)} 
+    // 🔁 Ganti "dtsen" & fetchDtsenData sesuai halaman
+  />
+</div>
+
+
+
+
             <button className="btn-add-staff" onClick={() => setIsAddDtsenModalOpen(true)}>
               <span className="plus-icon">+</span> Tambah DTSEN
             </button>
@@ -1528,14 +1701,62 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
           </div>
           
           <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
-            <button className="btn-action-data btn-export" onClick={() => alert("Fitur Export Excel akan segera tersedia...")}>
+
+
+            <button 
+              className="btn-action-data btn-export" 
+              onClick={() => handleExport("ppks")} // ✅ Ganti: "dtsen", "bansos", atau "ppks"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                "⏳ Exporting..."
+              ) : (
+                <>
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  Export
+                </>
+              )}
+            </button>
+
+
+            {/* <button className="btn-action-data btn-export" onClick={() => alert("Fitur Export Excel akan segera tersedia...")}>
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
               Export
-            </button>
-            <button className="btn-action-data btn-import" onClick={() => alert("Fitur Import Data akan segera tersedia...")}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-              Import
-            </button>
+            </button> */}
+
+  <div className="flex items-center gap-2">
+  <button 
+    className="btn-action-data btn-import" 
+    onClick={handleImportClick}
+    disabled={isImporting}
+  >
+    {isImporting ? (
+      "⏳ Importing..."
+    ) : (
+      <>
+        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l-4-4m4 4v12"></path>
+        </svg>
+        Import
+      </>
+    )}
+  </button>
+
+  {/* Hidden File Input */}
+  <input
+    type="file"
+    accept=".csv"
+    ref={importInputRef}
+    style={{ display: 'none' }}
+    onChange={(e) => handleImportFile(e, "ppks", fetchKeluarga)} 
+    // 🔁 Ganti "dtsen" & fetchDtsenData sesuai halaman
+  />
+</div>
+
+
+
             <button className="btn-add-staff" onClick={() => setIsAddPPKSModalOpen(true)}>
               <span className="plus-icon">+</span> Tambah Laporan PPKS
             </button>

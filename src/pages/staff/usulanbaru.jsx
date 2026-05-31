@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { supabase } from "../../config/supabase";
+import { ExportButton, ImportButton } from '../staff/DataIO';
+// import { exportToCSV } from "../utils/exportCSV";
+
 
 function UsulanBaru({
   activeTab,
@@ -11,6 +14,145 @@ function UsulanBaru({
   formatDateIndo,
   getQuarter
 }) {
+
+
+
+const [isExporting, setIsExporting] = useState(false);
+// Import helpers (prevent undefined runtime errors)
+const importInputRef = useRef(null);
+const [isImporting, setIsImporting] = useState(false);
+
+const handleImportClick = () => {
+  if (importInputRef.current) importInputRef.current.click();
+};
+
+const handleImportFile = async (e, tableName, refreshFn) => {
+  setIsImporting(true);
+  try {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    // Basic CSV parse (header first row, comma-separated)
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) {
+      alert('File CSV kosong atau tidak valid.');
+      return;
+    }
+    const headers = lines[0].split(',').map(h => h.trim());
+    const rows = lines.slice(1).map(line => {
+      const cols = line.split(',');
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = (cols[i] || '').trim(); });
+      return obj;
+    });
+    console.log('Imported rows for', tableName, rows);
+    alert(`Berhasil membaca ${rows.length} baris dari CSV (tidak langsung menyimpan).`);
+    if (typeof refreshFn === 'function') {
+      try { refreshFn(); } catch (err) { /* ignore */ }
+    }
+  } catch (err) {
+    console.error('Import error', err);
+    alert('Gagal mengimpor file: ' + err.message);
+  } finally {
+    setIsImporting(false);
+    // reset input so same file can be re-selected
+    if (e && e.target) e.target.value = '';
+  }
+};
+
+
+// ✅ FUNGSI EXPORT FRONTEND (Gunakan data yang tampil di tabel FE)
+const handleExport = () => {
+  const dataToExport = tableDataFiltered; // Gunakan data tabel terfilter yang sedang ditampilkan
+
+  if (!dataToExport || dataToExport.length === 0) {
+    alert("⚠️ Tidak ada data untuk diekspor");
+    return;
+  }
+
+  const headers = [
+    "Nama Kepala Keluarga",
+    "NIK",
+    "No. KK",
+    "Kecamatan",
+    "Kelurahan",
+    "Tanggal Pengusulan",
+    "Alamat",
+    "Status"
+  ];
+
+  const csvRows = [headers.map(h => `"${h}"`).join(",")];
+
+  for (const row of dataToExport) {
+    const values = [
+      row.nama_lengkap || "",
+      row.nik || "",
+      row.no_kk || "",
+      row.kecamatan || "",
+      row.kelurahan || "",
+      formatDateIndo(row.tanggal_usulan || row.tanggal) || "",
+      row.alamat || "",
+      row.status_pengusulan || ""
+    ].map(val => {
+      const escaped = String(val).replace(/"/g, '""');
+      return `"${escaped}"`;
+    });
+
+    csvRows.push(values.join(","));
+  }
+
+  const csvString = "\uFEFF" + csvRows.join("\n");
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Data_Pengusulan_Bansos_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+
+
+// const handleExport = async (tableName) => {
+//   setIsExporting(true);
+//   try {
+//     const token = localStorage.getItem("token");
+//     if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
+
+//     const res = await fetch(`http://127.0.0.1:8000/data/${tableName}/export`, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     });
+
+//     if (!res.ok) {
+//       const err = await res.json();
+//       throw new Error(err.detail || "Gagal export data");
+//     }
+
+//     // Trigger download otomatis
+//     const blob = await res.blob();
+//     const url = window.URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `${tableName}_export_${new Date().toISOString().slice(0, 10)}.csv`;
+//     document.body.appendChild(a);
+//     a.click();
+//     a.remove();
+//     window.URL.revokeObjectURL(url);
+
+//   } catch (err) {
+//     console.error(err);
+//     alert("❌ " + err.message);
+//   } finally {
+//     setIsExporting(false);
+//   }
+// };
+
+
+
+
+
   const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
   const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -185,15 +327,50 @@ function UsulanBaru({
           </div>
           {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
 <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginBottom: '20px' }}>
-  <button className="btn-action-data btn-export" onClick={() => {/* Tambahkan fungsi export Anda */}}>
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-    Export
-  </button>
   
-  <button className="btn-action-data btn-import" onClick={() => {/* Tambahkan fungsi import Anda */}}>
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-    Import
+
+  
+ <button 
+  className="btn-action-data btn-export" 
+  onClick={handleExport} // ✅ Langsung panggil fungsi, tanpa parameter
+  type="button"
+>
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+  </svg>
+  Export
+</button>
+
+
+  
+<div className="flex items-center gap-2">
+  <button 
+    className="btn-action-data btn-import" 
+    onClick={handleImportClick}
+    disabled={isImporting}
+  >
+    {isImporting ? (
+      "⏳ Importing..."
+    ) : (
+      <>
+        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l-4-4m4 4v12"></path>
+        </svg>
+        Import
+      </>
+    )}
   </button>
+
+  {/* Hidden File Input */}
+  <input
+    type="file"
+    accept=".csv"
+    ref={importInputRef}
+    style={{ display: 'none' }}
+    onChange={(e) => handleImportFile(e, "pengusulan_bansos", fetchDtsenData)} 
+    // 🔁 Ganti "dtsen" & fetchDtsenData sesuai halaman
+  />
+</div>
 
   <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
     <span className="plus-icon">+</span> Tambah Usulan
