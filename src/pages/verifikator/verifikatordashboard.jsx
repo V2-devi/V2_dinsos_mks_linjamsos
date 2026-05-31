@@ -300,35 +300,44 @@ function VerifikatorDashboard() {
             {activeMenu === "penentuan_desil" && "Kalkulasi & Penentuan Desil Keluarga"}
           </h1>
           <div className="notif-wrapper">
-            <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
-              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-            </button>
-            {isNotifOpen && (
-              <div className="notif-dropdown" onClick={(e) => e.stopPropagation()} style={{ zIndex: 9999, position: 'absolute' }}>
-                <div className="notif-header"><h3>Pemberitahuan</h3></div>
-                <div className="notif-body">
-                  {notifData.map((n) => (
-                    <div 
-                      className={`notif-item ${n.isWelcome ? 'welcome-notif-style' : ''}`} 
-                      key={n.id} 
-                      onClick={(e) => { e.stopPropagation(); handleNotifClick(n); }}
-                      style={n.isWelcome ? { backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', cursor: 'pointer', position: 'relative', pointerEvents: 'auto' } : { cursor: 'pointer', pointerEvents: 'auto' }}
-                    >
-                      <div className="notif-title-row">
-                        <h4 style={n.isWelcome ? { color: '#1e40af' } : {}}>{n.title}</h4>
-                        <span>{n.date}</span>
-                      </div>
-                      <p>{n.desc}</p>
-                      {n.isWelcome && <small style={{ color: '#2563eb', fontWeight: 'bold' }}>Klik untuk lengkapi profil &rarr;</small>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
-        {isNotifOpen && <div className="notif-backdrop" onClick={() => setIsNotifOpen(false)}></div>}
+  <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
+    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+  </button>
+  
+  {isNotifOpen && (
+    <>
+      {/* ✅ BACKDROP DIPINDAHKAN KE SINI (Di atas dropdown) */}
+      <div 
+        className="notif-backdrop" 
+        onClick={() => setIsNotifOpen(false)}
+        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 900, cursor: 'default' }}
+      ></div>
 
+      <div className="notif-dropdown" style={{ zIndex: 999, position: 'absolute' }}>
+        <div className="notif-header"><h3>Pemberitahuan</h3></div>
+        <div className="notif-body">
+          {notifData.map((n) => (
+            <div 
+              className={`notif-item ${n.isWelcome ? 'welcome-notif-style' : ''}`} 
+              key={n.id} 
+              onClick={() => handleNotifClick(n)}
+              style={n.isWelcome ? { backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', cursor: 'pointer' } : { cursor: 'pointer' }}
+            >
+              <div className="notif-title-row">
+                <h4 style={n.isWelcome ? { color: '#1e40af' } : {}}>{n.title}</h4>
+                <span>{n.date}</span>
+              </div>
+              <p>{n.desc}</p>
+              {n.isWelcome && <small style={{ color: '#2563eb', fontWeight: 'bold' }}>Klik untuk lengkapi profil &rarr;</small>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )}
+</div>
+        </header>
+        
         <div className="content-body">
           {activeMenu === "dashboard" && (
             <div className="dashboard-verifikator-wrapper">
