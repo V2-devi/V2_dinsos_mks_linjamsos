@@ -1285,41 +1285,53 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
         <div className="tab-content-wrapper">
           <div className="dtsen-summary-top">
             <div className="dtsen-top-content">
-              <div><h2 className="dtsen-top-title">Total Keluarga Terdaftar di DTSEN</h2></div>
+              <div>
+                <h2 className="dtsen-top-title">Total Keluarga Terdaftar di DTSEN</h2>
+                {/* ✅ 1. MENGEMBALIKAN SUBTITLE YANG TERHAPUS */}
+                <p className="dtsen-top-subtitle">Data terpadu Kota Makassar yang telah tervalidasi</p>
+              </div>
               <div className="dtsen-top-number">{dtsenData.length} <span>Keluarga</span></div>
             </div>
           </div>
-          <h3 className="section-title">Sebaran Desil Kesejahteraan</h3>
+          
+          <h3 className="section-title" style={{ marginBottom: '15px' }}>Sebaran Desil Kesejahteraan</h3>
+          
           <div className="decile-grid">
+            {/* ✅ 2. MEMPERBAIKI CLASS CSS (dec-title) & ✅ 3. MENGEMBALIKAN SPAN KELUARGA */}
             <div className="decile-card d1">
               <div className="dec-head"><span className="dec-badge d1-bg">Desil 1</span></div>
-              <div className="decile-title">Sangat Rentan / Ekstrem</div>
-              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "1").length}</div>
+              <div className="dec-title">Sangat Rentan / Ekstrem</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "1").length} <span>Keluarga</span></div>
             </div>
+            
             <div className="decile-card d2">
               <div className="dec-head"><span className="dec-badge d2-bg">Desil 2</span></div>
-              <div className="decile-title">Keluarga Rentan</div>
-              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "2").length}</div>
+              <div className="dec-title">Keluarga Rentan</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "2").length} <span>Keluarga</span></div>
             </div>
+            
             <div className="decile-card d3">
               <div className="dec-head"><span className="dec-badge d3-bg">Desil 3</span></div>
-              <div className="decile-title">Hampir Rentan</div>
-              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "3").length}</div>
+              <div className="dec-title">Hampir Rentan</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "3").length} <span>Keluarga</span></div>
             </div>
+            
             <div className="decile-card d4">
               <div className="dec-head"><span className="dec-badge d4-bg">Desil 4</span></div>
-              <div className="decile-title">Rentan Sedang</div>
-              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "4").length}</div>
+              <div className="dec-title">Rentan Sedang</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "4").length} <span>Keluarga</span></div>
             </div>
+            
             <div className="decile-card d5">
               <div className="dec-head"><span className="dec-badge d5-bg">Desil 5</span></div>
-              <div className="decile-title">Menuju Aman</div>
-              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "5").length}</div>
+              <div className="dec-title">Menuju Aman</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "5").length} <span>Keluarga</span></div>
             </div>
+            
             <div className="decile-card d6">
               <div className="dec-head"><span className="dec-badge d6-bg">Desil 6-10</span></div>
-              <div className="decile-title">Keluarga Mampu / Aman</div>
-              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "6-10").length}</div>
+              <div className="dec-title">Keluarga Mampu / Aman</div>
+              <div className="dec-val">{dtsenData.filter(item => item.hasil_desil === "6-10").length} <span>Keluarga</span></div>
             </div>
           </div>
         </div>
