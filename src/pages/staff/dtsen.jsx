@@ -31,6 +31,7 @@ const handleExport = async (tableName) => {
       const dataToExport = tableDtsenFiltered;
       const csvData = dataToExport.map((item) => ({
         "No. KK": item.no_kk || "",
+        "NIK": item.nik || "",
         "Nama Kepala Keluarga": item.nama_kepala_keluarga || "",
         "Tanggal Lahir": item.tanggal_lahir || "",
         "Jenis Kelamin": item.jenis_kelamin || "",
@@ -1414,6 +1415,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                 <thead>
                   <tr>
                     <th>No. KK</th>
+                    <th>NIK</th>
                     <th>Nama Kepala Keluarga</th>
                     <th>Tanggal Lahir</th>
                     <th>Jenis Kelamin</th>
@@ -1428,6 +1430,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                   {tableDtsenFiltered.length > 0 ? tableDtsenFiltered.map((item) => (
                     <tr key={item.user_id || item.id}>
                       <td>{item.no_kk}</td>
+                      <td>{item.nik || "-"}</td>
                       <td style={{ fontWeight: '600' }}>{item.nama_kepala_keluarga}</td>
                       <td>{item.tanggal_lahir || "-"}</td>
                       <td>{item.jenis_kelamin || "-"}</td> 
