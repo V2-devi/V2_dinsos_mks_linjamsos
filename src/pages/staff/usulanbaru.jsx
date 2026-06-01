@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { supabase } from "../../config/supabase";
 import { ExportButton, ImportButton } from '../staff/DataIO';
+import { parseAndMapCSV } from "../../utils/importCSV";
 // import { exportToCSV } from "../utils/exportCSV";
 
 
@@ -31,34 +32,102 @@ const handleImportFile = async (e, tableName, refreshFn) => {
   try {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const text = await file.text();
-    // Basic CSV parse (header first row, comma-separated)
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    if (lines.length < 2) {
-      alert('File CSV kosong atau tidak valid.');
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      alert('⚠️ Hanya file .CSV yang didukung');
       return;
     }
-    const headers = lines[0].split(',').map(h => h.trim());
-    const rows = lines.slice(1).map(line => {
-      const cols = line.split(',');
-      const obj = {};
-      headers.forEach((h, i) => { obj[h] = (cols[i] || '').trim(); });
-      return obj;
-    });
-    console.log('Imported rows for', tableName, rows);
-    alert(`Berhasil membaca ${rows.length} baris dari CSV (tidak langsung menyimpan).`);
-    if (typeof refreshFn === 'function') {
-      try { refreshFn(); } catch (err) { /* ignore */ }
-    }
+
+    const text = await file.text();
+      const rows = parseAndMapCSV(text, tableName);
+      console.log('Imported mapped rows for', tableName, rows);
+
+      if (tableName === 'pengusulan_bansos' || tableName === 'pengusulan' || tableName === 'pengusulan_bansos_import') {
+        // Filter duplicates based on nik OR (no_kk + tanggal_usulan)
+        const existing = usulanData || [];
+        const normalizeVal = v => (v || '').toString().trim().toLowerCase();
+
+        const deduped = rows.filter(r => {
+          // Ensure mapped keys: nama_lengkap, nik, no_kk, tanggal_usulan, alamat
+          const nik = normalizeVal(r.nik);
+          const noKk = normalizeVal(r.no_kk || r['no_kk']);
+          const tanggal = normalizeVal(r.tanggal_usulan || r.tanggal);
+          // If nik present, check existing nik + tanggal
+          const found = existing.find(e => {
+            const enik = normalizeVal(e.nik);
+            const enk = normalizeVal(e.no_kk);
+            const etgl = normalizeVal(e.tanggal_usulan || e.tanggal);
+            if (nik && enik && nik === enik && tanggal && tanggal === etgl) return true;
+            if (noKk && enk && noKk === enk && tanggal && tanggal === etgl) return true;
+            // Fallback: match name + alamat
+            const name = normalizeVal(r.nama_lengkap || r.nama);
+            const ename = normalizeVal(e.nama_lengkap || e.nama);
+            const addr = normalizeVal(r.alamat);
+            const eaddr = normalizeVal(e.alamat);
+            if (name && ename && name === ename && addr && eaddr && addr === eaddr) return true;
+            return false;
+          });
+          return !found;
+        });
+
+        if (!deduped || deduped.length === 0) {
+          alert('Tidak ada baris baru untuk diimpor (semua duplikat atau format tidak dikenali).');
+          if (typeof refreshFn === 'function') {
+            try { refreshFn(); } catch (err) { /* ignore */ }
+          }
+        } else {
+          // reconstruct CSV with mapped DB keys
+          const headers = Object.keys(deduped[0]);
+          const csvRows = [headers.map(h => `"${h}"`).join(',')];
+          for (const r of deduped) {
+            const vals = headers.map(h => {
+              const v = r[h] ?? '';
+              return `"${String(v).replace(/"/g, '""')}"`;
+            });
+            csvRows.push(vals.join(','));
+          }
+          const csvString = csvRows.join('\n');
+
+          // upload mapped CSV to backend import endpoint
+          const token = localStorage.getItem('token');
+          if (!token) {
+            alert('Sesi login habis. Silakan login ulang.');
+          } else {
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const mappedFile = new File([blob], file.name, { type: 'text/csv' });
+            const formData = new FormData();
+            formData.append('file', mappedFile);
+
+            try {
+              const res = await fetch(`http://127.0.0.1:8000/data/pengusulan_bansos/import`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || data.message || 'Gagal import');
+              alert(`✅ ${data.message || 'Import berhasil'}`);
+              if (typeof refreshFn === 'function') { try { refreshFn(); } catch (err) {} }
+            } catch (err) {
+              console.error('Upload error', err);
+              alert('Gagal mengunggah file ter-mapping: ' + err.message);
+            }
+          }
+        }
+      } else {
+        // Generic behavior: just report rows count
+        alert(`Berhasil membaca ${rows.length} baris dari CSV (tidak langsung menyimpan).`);
+        if (typeof refreshFn === 'function') { try { refreshFn(); } catch (err) {} }
+      }
   } catch (err) {
     console.error('Import error', err);
     alert('Gagal mengimpor file: ' + err.message);
   } finally {
     setIsImporting(false);
-    // reset input so same file can be re-selected
     if (e && e.target) e.target.value = '';
   }
 };
+
+
 
 
 // ✅ FUNGSI EXPORT FRONTEND (Gunakan data yang tampil di tabel FE)
@@ -90,7 +159,7 @@ const handleExport = () => {
       row.no_kk || "",
       row.kecamatan || "",
       row.kelurahan || "",
-      formatDateIndo(row.tanggal_usulan || row.tanggal) || "",
+      formatDateIndo(row.tanggal_usulan) || "",
       row.alamat || "",
       row.status_pengusulan || ""
     ].map(val => {

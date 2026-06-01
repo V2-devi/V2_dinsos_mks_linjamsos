@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../config/supabase";
 import API from "../../api/api";
 import { ExportButton, ImportButton } from '../staff/DataIO';
+import { parseAndMapCSV } from "../../utils/importCSV";
 import { exportToCSV } from "../../utils/exportCSV";
 
 function Dtsen({
@@ -26,7 +27,7 @@ const [isExporting, setIsExporting] = useState(false);
 const handleExport = async (tableName) => {
   setIsExporting(true);
   try {
-    if (tableName === "dtsen") {
+    if (tableName === "keluarga") {
       const dataToExport = tableDtsenFiltered;
       const csvData = dataToExport.map((item) => ({
         "No. KK": item.no_kk || "",
@@ -102,8 +103,7 @@ const handleImportClick = () => {
 const handleImportFile = async (e, tableName, onSuccess) => {
   const file = e.target.files[0];
   if (!file) return;
-  
-  // Validasi ekstensi
+
   if (!file.name.toLowerCase().endsWith('.csv')) {
     alert("⚠️ Hanya file .CSV yang didukung");
     e.target.value = "";
@@ -112,29 +112,161 @@ const handleImportFile = async (e, tableName, onSuccess) => {
 
   setIsImporting(true);
   try {
+    const text = await file.text();
+    const mappedRows = parseAndMapCSV(text, tableName);
+
+    if (!mappedRows || mappedRows.length === 0) {
+      alert("❌ Gagal membaca CSV. Pastikan file tidak kosong dan header sesuai template.");
+      return;
+    }
+
+    // ✅ Tentukan tabel untuk cleaning
+    const isDtsen = tableName?.toLowerCase().includes('keluarga') ||
+                    tableName?.toLowerCase().includes('dtsen');
+    const isPPKS  = tableName?.toLowerCase().includes('ppks');
+
+    // ✅ Bersihkan rows — hapus id, konversi tipe, isi default
+    const cleanedRows = mappedRows.map(row => {
+      // Hapus semua variasi kolom id
+      const { id, ID, Id, ...rest } = row;
+
+      if (isDtsen) {
+        return {
+          nama_kepala_keluarga: rest.nama_kepala_keluarga || null,
+          nik:          rest.nik ? parseInt(String(rest.nik).replace(/\D/g, ''), 10) || null : null,
+          no_kk:         rest.no_kk ? String(rest.no_kk).trim() || null : null,
+          tanggal_lahir: rest.tanggal_lahir || null,
+          jenis_kelamin: rest.jenis_kelamin || null,
+          kecamatan:    rest.kecamatan || null,
+          kelurahan:    rest.kelurahan || null,
+          alamat:       rest.alamat || null,
+          hasil_desil:  rest.hasil_desil || "Belum Dihitung",
+          skor_pmt:     rest.skor_pmt ? parseFloat(rest.skor_pmt) || 0 : 0,
+          tanggal_hitung_desil: rest.tanggal_hitung_desil || new Date().toISOString(),
+
+        };
+      }
+
+      if (isPPKS) {
+        return {
+          nama_lengkap:     rest.nama_lengkap || null,
+          nik:              rest.nik || null,
+          kategori_ppks:    rest.kategori_ppks || null,
+          kecamatan:        rest.kecamatan || null,
+          kelurahan:        rest.kelurahan || null,
+          lokasi_penemuan:  rest.lokasi_penemuan || null,
+          tanggal_penemuan: rest.tanggal_penemuan || null,
+          status_penanganan: rest.status_penanganan || "Menunggu Kelayakan",
+        };
+      }
+
+      // Default: Usulan Bansos
+      return {
+        nama_lengkap:      rest.nama_lengkap || null,
+        nik:               rest.nik ? parseInt(String(rest.nik).replace(/\D/g, ''), 10) || null : null,
+        no_kk:         rest.no_kk ? String(rest.no_kk).trim() || null : null,
+        kecamatan:         rest.kecamatan || null,
+        kelurahan:         rest.kelurahan || null,
+        tanggal_usulan:    rest.tanggal_usulan || null,
+        alamat:            rest.alamat || null,
+        status_pengusulan: rest.status_pengusulan || "Belum",
+      };
+    });
+
+    // ✅ Filter baris kosong
+    const validRows = cleanedRows.filter(row =>
+      Object.values(row).some(v => v !== null && v !== '' && v !== undefined)
+    );
+
+    if (validRows.length === 0) {
+      alert("❌ Tidak ada data valid setelah proses pembersihan.");
+      return;
+    }
+
+    console.log("📤 Headers:", Object.keys(validRows[0]));
+    console.log("📤 Baris pertama:", validRows[0]);
+    console.log(`📊 Total baris valid: ${validRows.length}`);
+
+    // ✅ Rebuild CSV dari cleanedRows
+    const headers = Object.keys(validRows[0]);
+    const csvRows = [headers.map(h => `"${h}"`).join(',')];
+    for (const row of validRows) {
+      const vals = headers.map(h => {
+        const v = row[h] ?? '';
+        return `"${String(v).replace(/"/g, '""')}"`;
+      });
+      csvRows.push(vals.join(','));
+    }
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const mappedFile = new File([blob], file.name, { type: 'text/csv' });
+
     const token = localStorage.getItem("token");
-    if (!token) throw new Error("Sesi login habis");
+    if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', mappedFile);
 
     const res = await fetch(`http://127.0.0.1:8000/data/${tableName}/import`, {
-      method: "POST",
+      method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Gagal import");
+    // ✅ Baca response sekali saja
+    const responseText = await res.text();
+    console.log("📥 Raw response:", responseText);
 
-    alert(`✅ ${data.message}`);
-    if (onSuccess) onSuccess(); // Refresh tabel setelah sukses
-    
+    let responseData = null;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = { message: responseText };
+    }
+
+    if (!res.ok) {
+      const detail = responseData?.detail || responseData?.message || responseText;
+      let pesanError = `❌ Gagal import (Status ${res.status})\n\n`;
+
+      if (typeof detail === 'string') {
+        if (detail.includes('column "id" does not exist')) {
+          pesanError += `Kolom "id" masih ada di CSV.\nSolusi: Hubungi developer untuk cek backend.\n\nDetail: ${detail}`;
+        } else if (detail.includes('duplicate key') || detail.includes('unique constraint')) {
+          pesanError += `Data duplikat — NIK atau No. KK sudah ada di database.\n\nDetail: ${detail}`;
+        } else if (detail.includes('null value') || detail.includes('not-null')) {
+          pesanError += `Ada kolom wajib yang kosong di CSV.\n\nDetail: ${detail}`;
+        } else if (detail.includes('invalid input syntax') && detail.includes('integer')) {
+          pesanError += `Format NIK atau No. KK tidak valid (harus angka).\n\nDetail: ${detail}`;
+        } else if (detail.includes('invalid input syntax') && detail.includes('timestamp')) {
+          pesanError += `Format tanggal tidak valid. Gunakan format YYYY-MM-DD.\n\nDetail: ${detail}`;
+        } else if (Array.isArray(detail)) {
+          pesanError += detail.map(d => `• ${d.loc?.join('.')} → ${d.msg}`).join('\n');
+        } else {
+          pesanError += `Detail: ${detail}`;
+        }
+      }
+
+      console.error("❌ Import error:", detail);
+      alert(pesanError);
+      return;
+    }
+
+    alert(`✅ ${responseData?.message || `Berhasil import ${validRows.length} data!`}`);
+    if (onSuccess) onSuccess();
+
   } catch (err) {
-    alert("❌ " + err.message);
+    console.error("❌ Error:", err);
+    alert(
+      `❌ Gagal import.\n\n` +
+      `Kemungkinan penyebab:\n` +
+      `• Backend tidak berjalan\n` +
+      `• Koneksi terputus\n\n` +
+      `Detail: ${err.message}`
+    );
   } finally {
     setIsImporting(false);
-    e.target.value = ""; // Reset input agar bisa pilih file yang sama lagi
+    e.target.value = "";
   }
 };
 
