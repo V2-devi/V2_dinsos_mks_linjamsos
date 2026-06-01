@@ -119,8 +119,8 @@ function VerifikatorDashboard() {
     const matchKelurahan = filterBansos.kelurahan === "" || item.kelurahan === filterBansos.kelurahan;
     const keyword = filterBansos.keyword.toLowerCase();
     const matchKeyword = keyword === "" || 
-                         (item.nik && String(item.nik).toLowerCase().includes(keyword)) || 
-                         (item.nama_lengkap && String(item.nama_lengkap).toLowerCase().includes(keyword));
+               (item.nik && String(item.nik).toLowerCase().includes(keyword)) || 
+               (item.nama_kepala_keluarga && String(item.nama_kepala_keluarga).toLowerCase().includes(keyword));
     return matchKecamatan && matchKelurahan && matchKeyword;
   });
 
@@ -587,7 +587,7 @@ function VerifikatorDashboard() {
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK</label><input type="text" value={selectedData.nik} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>No. KK</label><input type="text" value={selectedData.no_kk || "-"} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Nama Kepala Keluarga</label><input type="text" value={selectedData.nama_lengkap} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Nama Kepala Keluarga</label><input type="text" value={selectedData.nama_kepala_keluarga} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Kecamatan</label><input type="text" value={selectedData.kecamatan} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Kelurahan</label><input type="text" value={selectedData.kelurahan} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Tingkat Desil Saat Ini</label><input type="text" value={asetKeluarga ? asetKeluarga.hasil_desil : "Belum Dihitung"} readOnly className="input-readonly" style={{ fontWeight: 'bold', color: '#b45309', backgroundColor: '#fffbeb' }} /></div>

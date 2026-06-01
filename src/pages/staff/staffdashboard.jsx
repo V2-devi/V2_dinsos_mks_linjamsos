@@ -157,7 +157,7 @@ function StaffDashboard() {
             id: item.id,
             nik: item.nik,
             no_kk: item.no_kk,
-            nama_lengkap: item.nama_lengkap,
+            nama_kepala_keluarga: item.nama_kepala_keluarga,
             kecamatan: item.kecamatan,
             kelurahan: item.kelurahan,
             tanggal_usulan: item.tanggal_usulan,

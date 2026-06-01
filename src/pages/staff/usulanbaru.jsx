@@ -15,118 +15,127 @@ function UsulanBaru({
   formatDateIndo,
   getQuarter
 }) {
-
-
-
-const [isExporting, setIsExporting] = useState(false);
-// Import helpers (prevent undefined runtime errors)
-const importInputRef = useRef(null);
-const [isImporting, setIsImporting] = useState(false);
-
+ 
+  const importInputRef = useRef(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 const handleImportClick = () => {
   if (importInputRef.current) importInputRef.current.click();
 };
 
+// ============================================================
+// ✅ TIDAK PERLU MAPPING DI FE
+// Backend sudah punya HEADER_MAP sendiri yang handle mapping
+// dari header display (CSV export) ke kolom DB
+// FE cukup kirim file original langsung
+// ============================================================
 const handleImportFile = async (e, tableName, refreshFn) => {
   setIsImporting(true);
   try {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+
     if (!file.name.toLowerCase().endsWith('.csv')) {
       alert('⚠️ Hanya file .CSV yang didukung');
       return;
     }
 
-    const text = await file.text();
-      const rows = parseAndMapCSV(text, tableName);
-      console.log('Imported mapped rows for', tableName, rows);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('❌ Sesi login habis. Silakan login ulang.');
+      return;
+    }
 
-      if (tableName === 'pengusulan_bansos' || tableName === 'pengusulan' || tableName === 'pengusulan_bansos_import') {
-        // Filter duplicates based on nik OR (no_kk + tanggal_usulan)
-        const existing = usulanData || [];
-        const normalizeVal = v => (v || '').toString().trim().toLowerCase();
+    // ✅ Kirim file original langsung — backend yang handle mapping
+    const formData = new FormData();
+    formData.append('file', file);
 
-        const deduped = rows.filter(r => {
-          // Ensure mapped keys: nama_lengkap, nik, no_kk, tanggal_usulan, alamat
-          const nik = normalizeVal(r.nik);
-          const noKk = normalizeVal(r.no_kk || r['no_kk']);
-          const tanggal = normalizeVal(r.tanggal_usulan || r.tanggal);
-          // If nik present, check existing nik + tanggal
-          const found = existing.find(e => {
-            const enik = normalizeVal(e.nik);
-            const enk = normalizeVal(e.no_kk);
-            const etgl = normalizeVal(e.tanggal_usulan || e.tanggal);
-            if (nik && enik && nik === enik && tanggal && tanggal === etgl) return true;
-            if (noKk && enk && noKk === enk && tanggal && tanggal === etgl) return true;
-            // Fallback: match name + alamat
-            const name = normalizeVal(r.nama_lengkap || r.nama);
-            const ename = normalizeVal(e.nama_lengkap || e.nama);
-            const addr = normalizeVal(r.alamat);
-            const eaddr = normalizeVal(e.alamat);
-            if (name && ename && name === ename && addr && eaddr && addr === eaddr) return true;
-            return false;
-          });
-          return !found;
-        });
+    console.log(`📤 Mengirim file "${file.name}" ke tabel "${tableName}"...`);
 
-        if (!deduped || deduped.length === 0) {
-          alert('Tidak ada baris baru untuk diimpor (semua duplikat atau format tidak dikenali).');
-          if (typeof refreshFn === 'function') {
-            try { refreshFn(); } catch (err) { /* ignore */ }
-          }
+    const res = await fetch(`http://127.0.0.1:8000/data/${tableName}/import`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+
+    console.log('📥 Status:', res.status, res.statusText);
+
+    // ✅ Baca response sekali sebagai text — hindari double .json()
+    const responseText = await res.text();
+    console.log('📥 Raw response:', responseText);
+
+    let responseData = null;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = { message: responseText };
+    }
+
+    if (!res.ok) {
+      const detail =
+        responseData?.detail ||
+        responseData?.message ||
+        responseText ||
+        'Tidak ada detail error';
+
+      let pesanError = `❌ Gagal import (Status ${res.status})\n\n`;
+
+      if (typeof detail === 'string') {
+        if (detail.includes('Header CSV tidak dikenali')) {
+          pesanError +=
+            `Header CSV tidak dikenali backend.\n\n` +
+            `Pastikan file yang diupload adalah hasil dari fitur Export.\n` +
+            `Header yang didukung:\n` +
+            `  • Pengusulan: Nama Kepala Keluarga, NIK, No. KK,\n` +
+            `    Kecamatan, Kelurahan, Tanggal Pengusulan, Alamat, Status\n` +
+            `  • Keluarga: No. KK, Nama Kepala Keluarga, NIK, dll\n` +
+            `  • PPKS: Kategori PPKS, Lokasi Penemuan, Tanggal Penemuan, dll`;
+        } else if (detail.includes('duplicate key') || detail.includes('unique constraint')) {
+          pesanError += `Data duplikat — NIK atau No. KK sudah ada di database.\n\nDetail: ${detail}`;
+        } else if (detail.includes('null value') || detail.includes('not-null')) {
+          pesanError += `Ada kolom wajib yang kosong di CSV.\n\nDetail: ${detail}`;
+        } else if (detail.includes('numerik') || detail.includes('numeric') || detail.includes('integer')) {
+          pesanError += `Format NIK atau No. KK tidak valid.\nPastikan hanya berisi angka.\n\nDetail: ${detail}`;
+        } else if (detail.includes('timestamp') || detail.includes('tanggal')) {
+          pesanError += `Format tanggal tidak valid.\nGunakan format YYYY-MM-DD.\n\nDetail: ${detail}`;
+        } else if (detail.includes('File CSV kosong')) {
+          pesanError += `File CSV yang diupload kosong atau tidak berisi data.`;
         } else {
-          // reconstruct CSV with mapped DB keys
-          const headers = Object.keys(deduped[0]);
-          const csvRows = [headers.map(h => `"${h}"`).join(',')];
-          for (const r of deduped) {
-            const vals = headers.map(h => {
-              const v = r[h] ?? '';
-              return `"${String(v).replace(/"/g, '""')}"`;
-            });
-            csvRows.push(vals.join(','));
-          }
-          const csvString = csvRows.join('\n');
-
-          // upload mapped CSV to backend import endpoint
-          const token = localStorage.getItem('token');
-          if (!token) {
-            alert('Sesi login habis. Silakan login ulang.');
-          } else {
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const mappedFile = new File([blob], file.name, { type: 'text/csv' });
-            const formData = new FormData();
-            formData.append('file', mappedFile);
-
-            try {
-              const res = await fetch(`http://127.0.0.1:8000/data/pengusulan_bansos/import`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData
-              });
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.detail || data.message || 'Gagal import');
-              alert(`✅ ${data.message || 'Import berhasil'}`);
-              if (typeof refreshFn === 'function') { try { refreshFn(); } catch (err) {} }
-            } catch (err) {
-              console.error('Upload error', err);
-              alert('Gagal mengunggah file ter-mapping: ' + err.message);
-            }
-          }
+          pesanError += `Detail: ${detail}`;
         }
+      } else if (Array.isArray(detail)) {
+        pesanError += detail.map(d => `• ${d.loc?.join('.')} → ${d.msg}`).join('\n');
       } else {
-        // Generic behavior: just report rows count
-        alert(`Berhasil membaca ${rows.length} baris dari CSV (tidak langsung menyimpan).`);
-        if (typeof refreshFn === 'function') { try { refreshFn(); } catch (err) {} }
+        pesanError += JSON.stringify(detail, null, 2);
       }
+
+      console.error('❌ Import error:', detail);
+      alert(pesanError);
+      return;
+    }
+
+    // ✅ Sukses
+    const pesanSukses = responseData?.message || `Berhasil import data dari "${file.name}"!`;
+    alert(`✅ ${pesanSukses}`);
+
+    if (typeof refreshFn === 'function') {
+      try { await refreshFn(); } catch (err) { console.error('Refresh error:', err); }
+    }
+
   } catch (err) {
-    console.error('Import error', err);
-    alert('Gagal mengimpor file: ' + err.message);
+    console.error('❌ Network/upload error:', err);
+    alert(
+      `❌ Gagal import.\n\n` +
+      `Kemungkinan penyebab:\n` +
+      `• Backend tidak berjalan (cek http://127.0.0.1:8000)\n` +
+      `• Koneksi terputus\n\n` +
+      `Detail: ${err.message}`
+    );
   } finally {
     setIsImporting(false);
     if (e && e.target) e.target.value = '';
   }
 };
-
 
 
 
@@ -152,9 +161,9 @@ const handleExport = () => {
 
   const csvRows = [headers.map(h => `"${h}"`).join(",")];
 
-  for (const row of dataToExport) {
+    for (const row of dataToExport) {
     const values = [
-      row.nama_lengkap || "",
+      row.nama_kepala_keluarga || row.nama_lengkap || "",
       row.nik || "",
       row.no_kk || "",
       row.kecamatan || "",
@@ -223,18 +232,18 @@ const handleExport = () => {
 
 
   const [filterPeriodeDashboard, setFilterPeriodeDashboard] = useState("q1");
-  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_lengkap: "" });
+  const [filterTable, setFilterTable] = useState({ kecamatan: "", kelurahan: "", nik: "", nama_kepala_keluarga: "" });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedDetailData, setSelectedDetailData] = useState(null);
 
   const initialFormState = { 
-    nik: "", no_kk: "", nama_lengkap: "", 
+    nik: "", no_kk: "", nama_kepala_keluarga: "", 
     kecamatan: "", kelurahan: "", tanggal: "", alamat: "", hasil_desil: "", 
     jenis_bansos: "", status_pengusulan: "Belum" 
   };
   const [formData, setFormData] = useState(initialFormState);
   const [form, setForm] = useState({
-    nama_lengkap: "", nik: "", no_kk: "",
+    nama_kepala_keluarga: "", nik: "", no_kk: "",
     kecamatan: "", kelurahan: "", alamat: "", jenis_bansos: ""
   });
 
@@ -260,11 +269,11 @@ const handleExport = () => {
   const dashboardDataFiltered = usulanData.filter(item => getQuarter(item.tanggal_usulan || item.tanggal) === filterPeriodeDashboard);
   const tableDataFiltered = usulanData.filter(item => {
     const itemNik = item.nik ? String(item.nik) : "";
-    const itemNama = item.nama_lengkap ? String(item.nama_lengkap) : "";
+    const itemNama = (item.nama_kepala_keluarga || item.nama_lengkap) ? String(item.nama_kepala_keluarga || item.nama_lengkap) : "";
     return (filterTable.kecamatan === "" || item.kecamatan === filterTable.kecamatan) && 
            (filterTable.kelurahan === "" || item.kelurahan === filterTable.kelurahan) && 
            (filterTable.nik === "" || itemNik.includes(filterTable.nik)) && 
-           (filterTable.nama_lengkap === "" || itemNama.toLowerCase().includes(filterTable.nama_lengkap.toLowerCase()));
+           (filterTable.nama_kepala_keluarga === "" || itemNama.toLowerCase().includes(filterTable.nama_kepala_keluarga.toLowerCase()));
   });
 
   const statTotal = dashboardDataFiltered.length;
@@ -292,13 +301,13 @@ const handleExport = () => {
     e.preventDefault();
     try {
       const { data, error } = await supabase.from('pengusulan_bansos').insert([{
-        nama_lengkap: formData.nama_lengkap, nik: formData.nik || null, no_kk: formData.no_kk || null,
+        nama_kepala_keluarga: formData.nama_kepala_keluarga, nik: formData.nik || null, no_kk: formData.no_kk || null,
         kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, alamat: formData.alamat, 
         status_pengusulan: "Belum", jenis_bansos: formData.jenis_bansos
       }]).select(); 
       if (error) throw error;
       const newUsulan = {
-        id: data[0].id, nik: formData.nik, no_kk: formData.no_kk, nama_lengkap: formData.nama_lengkap, 
+        id: data[0].id, nik: formData.nik, no_kk: formData.no_kk, nama_kepala_keluarga: formData.nama_kepala_keluarga, 
         kecamatan: formData.kecamatan, kelurahan: formData.kelurahan, tanggal: formData.tanggal, alamat: formData.alamat,
         jenis_bansos: formData.jenis_bansos, status_pengusulan: "Belum"
       };
@@ -392,7 +401,7 @@ const handleExport = () => {
   </div>
 </div>
             <div className="filter-group-top"><label>NIK (0-16)</label><input type="text" name="nik" className="input-custom" placeholder="Cari NIK..." value={filterTable.nik} onChange={handleFilterChange} /></div>
-            <div className="filter-group-top"><label>Nama</label><input type="text" name="nama_lengkap" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama_lengkap} onChange={handleFilterChange} /></div>
+            <div className="filter-group-top"><label>Nama</label><input type="text" name="nama_kepala_keluarga" className="input-custom" placeholder="Cari Nama..." value={filterTable.nama_kepala_keluarga} onChange={handleFilterChange} /></div>
           </div>
           {/* Ganti baris tombol lama Anda dengan blok di bawah ini */}
 <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
@@ -417,7 +426,7 @@ const handleExport = () => {
     )}
   </button>
 
-  <input type="file" accept=".csv" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "pengusulan_bansos", fetchDtsenData)} />
+  <input type="file" accept=".csv" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "pengusulan_bansos", undefined)} />
 
   <button className="btn-add-staff" onClick={() => setIsAddModalOpen(true)}>
     <span className="plus-icon">+</span> Tambah Usulan
@@ -441,7 +450,7 @@ const handleExport = () => {
                 <tbody>
                   {tableDataFiltered.map((item) => (
                     <tr key={item.id}>
-                      <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</span></td>
+                      <td><span style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_kepala_keluarga || item.nama_lengkap}</span></td>
                       <td>{item.nik}</td>
                       <td>{item.no_kk}</td>
                       <td>{item.kecamatan}</td><td>{item.kelurahan}</td><td>{formatDateIndo(item.tanggal_usulan || item.tanggal)}</td><td>{item.alamat}</td>
@@ -475,7 +484,7 @@ const handleExport = () => {
           {/* ✅ PERBAIKAN HEADER: Disesuaikan dengan desain Detail Data Terpadu Keluarga */}
           <div className="detail-summary-grid">
             <div className="summary-col">
-              <div className="summary-item"><span className="sum-label">Nama Kepala Keluarga</span><span className="sum-val">{selectedDetailData.nama_lengkap}</span></div>
+              <div className="summary-item"><span className="sum-label">Nama Kepala Keluarga</span><span className="sum-val">{selectedDetailData.nama_kepala_keluarga || selectedDetailData.nama_lengkap}</span></div>
               <div className="summary-item"><span className="sum-label">Nomor Kartu Keluarga (KK)</span><span className="sum-val">{selectedDetailData.no_kk}</span></div>
             </div>
             <div className="summary-col">
@@ -544,7 +553,7 @@ const handleExport = () => {
                   <div className="form-group-modal"><label>No. Kartu Keluarga*</label><input type="text" name="no_kk" value={formData.no_kk} onChange={(e) => setFormData({...formData, no_kk: e.target.value})} required maxLength="16" placeholder="Masukkan No KK 16 digit" /></div>
                 </div>
                 <div className="form-grid-2">
-                  <div className="form-group-modal"><label>Nama Kepala Keluarga (Sesuai KTP)*</label><input type="text" name="nama" value={formData.nama_lengkap} onChange={(e) => setFormData({...formData, nama_lengkap: e.target.value})} required placeholder="Masukkan Nama Kepala Keluarga" /></div>
+                  <div className="form-group-modal"><label>Nama Kepala Keluarga (Sesuai KTP)*</label><input type="text" name="nama_kepala_keluarga" value={formData.nama_kepala_keluarga} onChange={(e) => setFormData({...formData, nama_kepala_keluarga: e.target.value})} required placeholder="Masukkan Nama Kepala Keluarga" /></div>
                   <div className="form-group-modal"><label>Tanggal Pengusulan*</label><input type="date" name="tanggal" value={formData.tanggal_usulan || formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value, tanggal_usulan: e.target.value})} required /></div>
                 </div>
                 <div className="form-grid-2">

@@ -66,7 +66,7 @@ function ValidasiBansos({
             </div>
             
             <div className="filter-group-top">
-              <label>NIK / Nama Lengkap</label>
+              <label>NIK / Nama Kepala Keluarga</label>
               <input 
                 type="text" 
                 name="keyword" 
@@ -97,7 +97,7 @@ function ValidasiBansos({
                 <tbody>
                   {filteredUsulanList.length > 0 ? filteredUsulanList.map((item) => (
                     <tr key={item.id}>
-                      <td style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</td>
+                      <td style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_kepala_keluarga}</td>
                       <td>{item.nik}</td>
                       <td>{item.no_kk || "-"}</td>
                       <td>{item.kecamatan}</td>
@@ -141,7 +141,7 @@ function ValidasiBansos({
                 <tbody>
                   {riwayatList.length > 0 ? riwayatList.map((item) => (
                     <tr key={item.id}>
-                      <td style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_lengkap}</td>
+                      <td style={{ fontWeight: '600', color: '#1e293b' }}>{item.nama_kepala_keluarga}</td>
                       <td>{item.nik}</td>
                       <td>{item.no_kk || "-"}</td>
                       <td>{item.kecamatan}</td>

@@ -2,6 +2,7 @@
 import csv
 import io
 import re
+import datetime
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from config.database import supabase
@@ -30,7 +31,8 @@ HEADER_MAP = {
     "Kecamatan": "kecamatan", "Kelurahan": "kelurahan",
     # DTSN
     "NIK": "nik",
-    "Nama Lengkap": "nama_lengkap",
+    # "Nama Lengkap": "nama_lengkap",
+    "Nama Lengkap": "nama_kepala_keluarga",
     "Tanggal Lahir": "tanggal_lahir",
     "Jenis Kelamin": "jenis_kelamin",
     "Pekerjaan": "pekerjaan",
@@ -80,7 +82,75 @@ def sanitize_value(db_col: str, value):
         except ValueError:
             return None
 
-    # Biarkan tanggal, teks, dan nilai lainnya tetap sebagai string
+    # Tangani kolom tanggal: konversi berbagai format lokal ke ISO (YYYY-MM-DD)
+    if "tanggal" in db_col or db_col.endswith("_tgl") or db_col in {"tanggal_lahir", "tanggal_usulan", "tanggal_penemuan"}:
+        def try_parse_date(text):
+            txt = text.strip()
+            # Coba ISO first
+            try:
+                d = datetime.date.fromisoformat(txt)
+                return d.isoformat()
+            except Exception:
+                pass
+
+            # Common numeric formats
+            for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d.%m.%Y"):
+                try:
+                    d = datetime.datetime.strptime(txt, fmt).date()
+                    return d.isoformat()
+                except Exception:
+                    pass
+
+            # Indonesian month names (both full and common uppercase)
+            months = {
+                'januari': 1, 'jan': 1,
+                'februari': 2, 'feb': 2,
+                'maret': 3, 'mar': 3,
+                'april': 4, 'apr': 4,
+                'mei': 5, 'may': 5,
+                'juni': 6, 'jun': 6,
+                'juli': 7, 'jul': 7,
+                'agustus': 8, 'agu': 8, 'august': 8,
+                'september': 9, 'sep': 9,
+                'oktober': 10, 'okt': 10, 'oct': 10,
+                'november': 11, 'nov': 11,
+                'desember': 12, 'des': 12, 'dec': 12
+            }
+
+            # Pattern like '31 MEI 2026' or '31 Mei 2026'
+            m = re.match(r"^(\d{1,2})\s+([^\d,./-]+)\s+(\d{4})$", txt, flags=re.IGNORECASE)
+            if m:
+                day = int(m.group(1))
+                month_token = m.group(2).strip().lower()
+                month_token = re.sub(r"[^a-z]+", "", month_token)
+                year = int(m.group(3))
+                mon = months.get(month_token)
+                if mon:
+                    try:
+                        return datetime.date(year, mon, day).isoformat()
+                    except Exception:
+                        return None
+
+            # Fallback: try to extract day, month number and year from tokens
+            digits = re.findall(r"\d+", txt)
+            if len(digits) == 3:
+                d0, d1, d2 = digits
+                # heuristics: if first is year
+                try:
+                    if len(d0) == 4:
+                        year = int(d0); month = int(d1); day = int(d2)
+                    else:
+                        day = int(d0); month = int(d1); year = int(d2)
+                    return datetime.date(year, month, day).isoformat()
+                except Exception:
+                    return None
+
+            return None
+
+        parsed = try_parse_date(s)
+        return parsed if parsed is not None else s
+
+    # Biarkan teks dan nilai lainnya tetap sebagai string
     return s
 
 
@@ -114,6 +184,13 @@ CONFLICT_COLUMNS = {
     "bansos": "nik_penerima",
     "ppks": "nik",
     "pengusulan_bansos": "nik",
+}
+
+# Perkiraan kolom valid per tabel untuk membantu validasi header CSV sebelum insert/upsert.
+TABLE_EXPECTED_COLUMNS = {
+    "pengusulan_bansos": {"no_kk", "tanggal_usulan", "penginput", "catatan_verifikator_bansos", "alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan", "nama_kepala_keluarga", "jenis_bansos", "id"},
+    "keluarga": {"no_kk", "nama_kepala_keluarga", "alamat", "rt", "rw", "kecamatan", "kelurahan", "nik", "tanggal_lahir", "jenis_kelamin", "pekerjaan", "penghasilan", "kondisi_khusus", "id"},
+    "ppks": {"kategori_ppks", "lokasi_penemuan", "tanggal_penemuan", "catatan_verifikator", "nik", "id"}
 }
 
 def validate_table(table: str) -> str:
@@ -170,6 +247,23 @@ async def import_csv(table: str, file: UploadFile = File(...), credentials = Dep
         # ✅ 1. Auto Reverse Mapping (Header Rapi -> Kolom DB)
         mapped_rows = [normalize_row(row) for row in rows]
 
+        # ✅ 1.b Validasi: periksa apakah ada header/kolom hasil mapping yang tidak dikenali
+        all_keys = set()
+        for r in mapped_rows:
+            all_keys.update([k for k in r.keys() if k])
+        expected = TABLE_EXPECTED_COLUMNS.get(table, None)
+        if expected is not None:
+            unknown = sorted([k for k in all_keys if k not in expected])
+            if unknown:
+                # Kembalikan detail terstruktur agar FE dapat menampilkan alert yang spesifik
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "message": "Header CSV tidak dikenali atau tidak cocok dengan struktur tabel. Gunakan file Export sebagai template.",
+                        "invalid_columns": unknown
+                    }
+                )
+
         # Hapus baris yang tidak punya data setelah normalisasi
         mapped_rows = [row for row in mapped_rows if row and any(v is not None for v in row.values())]
 
@@ -180,7 +274,17 @@ async def import_csv(table: str, file: UploadFile = File(...), credentials = Dep
         # ✅ 3. Logika Upsert vs Insert
         first_row = mapped_rows[0] if mapped_rows else {}
         
+        # Hanya lakukan UPSERT jika CSV memang menyertakan kolom konflik dan
+        # setidaknya satu baris memiliki nilai non-empty untuk kolom tersebut.
+        should_try_upsert = False
         if conflict_col in first_row:
+            for r in mapped_rows:
+                val = r.get(conflict_col)
+                if val not in (None, "", []):
+                    should_try_upsert = True
+                    break
+
+        if should_try_upsert:
             # ✅ KOLOM UNIK ADA DI CSV -> Coba UPSERT
             try:
                 result = supabase.table(table).upsert(mapped_rows, on_conflict=conflict_col).execute()
@@ -193,18 +297,28 @@ async def import_csv(table: str, file: UploadFile = File(...), credentials = Dep
                     try:
                         result = supabase.table(table).insert(mapped_rows).execute()
                         mode = "INSERT (fallback from UPSERT)"
-                    except Exception as ins_err:
+                    except Exception:
                         raise
                 else:
                     # Re-raise untuk ditangani oleh blok error umum di bawah
                     raise
         else:
-            # ✅ KOLOM UNIK TIDAK ADA -> Fallback ke INSERT Murni (Hanya Tambah Baru)
-            print(f"⚠️ Kolom '{conflict_col}' tidak ditemukan. Menggunakan INSERT murni.")
+            # ✅ KOLOM UNIK TIDAK ADA ATAU KOSONG -> INSERT Murni (Hanya Tambah Baru)
+            print(f"⚠️ Kolom '{conflict_col}' tidak ditemukan atau kosong pada semua baris. Menggunakan INSERT murni.")
             result = supabase.table(table).insert(mapped_rows).execute()
             mode = "INSERT"
             
-        inserted = len(result.data) if result.data else 0
+        # Periksa respon Supabase secara eksplisit
+        # Beberapa driver mengembalikan object dengan atribut `data` dan `error`.
+        err = getattr(result, 'error', None) if result is not None else None
+        data = getattr(result, 'data', None) if result is not None else None
+        if err:
+            raise HTTPException(status_code=400, detail=f"Supabase error: {err}")
+
+        inserted = len(data) if data else 0
+        if inserted == 0:
+            return {"message": f"⚠️ Tidak ada baris yang ditambahkan atau diubah ({mode}). Periksa isi CSV dan kolom unik.", "count": 0}
+
         return {"message": f"✅ Berhasil proses {inserted} baris ({mode})", "count": inserted}
         
     except HTTPException:

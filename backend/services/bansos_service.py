@@ -11,14 +11,14 @@ def create_pengusulan(data: PengusulanCreate):
     result = supabase.table("pengusulan_bansos").insert({
         "no_kk": data.no_kk,
         "tanggal_usulan": data.tanggal_usulan,
-        "penginput": data.penginput,
+        # "penginput": data.penginput,
         "catatan_verifikator_bansos": data.catatan_verifikator_bansos,
         "alamat": data.alamat,
         "kecamatan": data.kecamatan,
         "kelurahan": data.kelurahan,
         "nik": data.nik,
         "status_pengusulan": "Belum",
-        "nama_lengkap": data.nama_lengkap,
+        "nama_kepala_keluarga": data.nama_kepala_keluarga,
         "jenis_bansos": data.jenis_bansos,
     }).execute()
 
@@ -29,18 +29,16 @@ def get_pengusulan_service():
 
     res = supabase.table("pengusulan_bansos") \
         .select("""
-         
+            id,
             no_kk,
-       
             tanggal_usulan,
             status_pengusulan,
-            penginput,
             catatan_verifikator_bansos,
             alamat,
             kecamatan,
             kelurahan,
             nik,
-            nama_lengkap,
+            nama_kepala_keluarga,
             jenis_bansos,
             keluarga (
                 kecamatan,
@@ -56,14 +54,15 @@ def get_pengusulan_service():
     for item in res.data:
         data.append({
             "id": item["id"],
-            "nama_lengkap": item["nama_lengkap"],  # mapping di sini
+            "nama_kepala_keluarga": item.get("nama_kepala_keluarga") or item.get("nama_lengkap"),
+            "nik": item.get("nik"),
+            "no_kk": item.get("no_kk"),
             "tanggal_usulan": item["tanggal_usulan"],
             "status_pengusulan": item["status_pengusulan"],
             "jenis_bansos": item["jenis_bansos"],
-
-            "alamat": item.get("keluarga", {}).get("alamat"),
-            "kecamatan": item.get("keluarga", {}).get("kecamatan"),
-            "kelurahan": item.get("keluarga", {}).get("kelurahan"),
+            "alamat": item.get("keluarga", {}).get("alamat") or item.get("alamat"),
+            "kecamatan": item.get("keluarga", {}).get("kecamatan") or item.get("kecamatan"),
+            "kelurahan": item.get("keluarga", {}).get("kelurahan") or item.get("kelurahan"),
             # "alamat": item["keluarga"]["alamat"] if item.get("keluarga") else None,
             # "kecamatan": item["keluarga"]["kecamatan"] if item.get("keluarga") else None,
             # "kelurahan": item["keluarga"]["kelurahan"] if item.get("keluarga") else None,

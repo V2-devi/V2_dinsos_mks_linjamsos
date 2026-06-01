@@ -6,7 +6,7 @@ const HEADER_LABELS = {
   rt: "RT", rw: "RW",
   desa_kelurahan: "Desa/Kelurahan",
   kecamatan: "Kecamatan", kabupaten_kota: "Kabupaten/Kota",
-  nik: "NIK", nama_lengkap: "Nama Lengkap",
+  nik: "NIK", nama_kepala_keluarga: "Nama Lengkap",
   tanggal_lahir: "Tanggal Lahir", jenis_kelamin: "Jenis Kelamin",
   pekerjaan: "Pekerjaan", penghasilan: "Penghasilan (Rp)",
   kondisi_khusus: "Kondisi Khusus",

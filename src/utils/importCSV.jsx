@@ -45,6 +45,7 @@ export const parseAndMapCSV = (text, tableHint = '') => {
 
   // ✅ Tentukan apakah ini tabel keluarga/dtsen atau bansos
   const isDtsen = t.includes('keluarga');
+  const isBansos = t.includes('pengusulan') || t.includes('bansos');
   const isPPKS = t.includes('ppks');
 
   const mappedKeys = rawHeaders.map(h => {
@@ -54,10 +55,10 @@ export const parseAndMapCSV = (text, tableHint = '') => {
     
     // ✅ Tangani "nama kepala keluarga" & "nama" berdasarkan tableHint
     if (n.includes('nama') && n.includes('kepala')) {
-      return isDtsen ? 'nama_kepala_keluarga' : 'nama_lengkap';
+      return isDtsen ? 'nama_kepala_keluarga' : (isBansos ? 'nama_kepala_keluarga' : 'nama_kepala_keluarga');
     }
     if (n === 'nama') {
-      return isDtsen ? 'nama_kepala_keluarga' : 'nama_lengkap';
+      return isDtsen ? 'nama_kepala_keluarga' : (isBansos ? 'nama_kepala_keluarga' : 'nama_kepala_keluarga');
     }
 
     // Cek headerKeyMap

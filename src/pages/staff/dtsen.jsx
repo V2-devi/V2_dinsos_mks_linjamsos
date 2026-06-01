@@ -162,7 +162,7 @@ const handleImportFile = async (e, tableName, onSuccess) => {
 
       // Default: Usulan Bansos
       return {
-        nama_lengkap:      rest.nama_lengkap || null,
+        nama_kepala_keluarga:      rest.nama_kepala_keluarga || null,
         nik:               rest.nik ? parseInt(String(rest.nik).replace(/\D/g, ''), 10) || null : null,
         no_kk:         rest.no_kk ? String(rest.no_kk).trim() || null : null,
         kecamatan:         rest.kecamatan || null,
