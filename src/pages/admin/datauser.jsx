@@ -197,7 +197,11 @@ const handleApprove = async (id) => {
       `http://127.0.0.1:8000/admin/update/${id}`,
 
       {
-        method: "PUT"
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status: "disetujui" })
       }
     );
 

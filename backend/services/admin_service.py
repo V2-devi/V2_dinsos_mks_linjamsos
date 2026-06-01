@@ -121,8 +121,7 @@ def update_user_service(user_id, data):
         # =====================================
         if hasattr(data, "dict"):
 
-            # ✅ FIX
-            payload = data.dict()
+            payload = data.dict(exclude_none=True)
 
         elif isinstance(data, dict):
 
@@ -157,6 +156,9 @@ def update_user_service(user_id, data):
 
         print("DEBUG FINAL PAYLOAD:", payload)
 
+        if not payload:
+            return {"error": "Tidak ada data untuk diupdate"}
+
         # =====================================
         # UPDATE DATABASE
         # =====================================
@@ -165,6 +167,7 @@ def update_user_service(user_id, data):
             .table("pengguna")
             .update(payload)
             .eq("id", str(user_id))
+            .select("*")
             .execute()
         )
 
@@ -174,10 +177,20 @@ def update_user_service(user_id, data):
         # CEK RESULT
         # =====================================
         if not result.data:
+            # Jika tidak ada data hasil update, cek apakah user memang ada
+            existing = (
+                supabase
+                .table("pengguna")
+                .select("*")
+                .eq("id", str(user_id))
+                .single()
+                .execute()
+            )
 
-            return {
-                "error": "Update gagal"
-            }
+            if not existing.data:
+                return {"error": "User tidak ditemukan"}
+
+            return {"error": "Update gagal, tidak ada perubahan yang diterapkan"}
 
         # =====================================
         # EMAIL APPROVAL
