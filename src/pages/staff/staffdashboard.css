@@ -400,3 +400,33 @@ body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', s
 
 .btn-import { color: #2563eb; border-color: #2563eb; }
 .btn-import:hover { background: #eff6ff; }
+
+/* Pastikan ini menimpa pengaturan lama */
+.notif-dropdown {
+    position: absolute !important;
+    top: 60px !important; 
+    right: 20px !important;
+    width: 350px !important;
+    background-color: white !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+    z-index: 99999 !important; /* DITINGKATKAN */
+    pointer-events: auto !important;
+}
+
+.notif-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99998 !important; /* HARUS LEBIH RENDAH DARI DROPDOWN */
+    background: transparent !important; /* Ubah ke transparent untuk tes klik */
+}
+
+.notif-item {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 100000 !important;
+    position: relative;
+}

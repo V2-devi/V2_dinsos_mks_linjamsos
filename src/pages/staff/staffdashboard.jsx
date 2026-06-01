@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./staffdashboard.css";
 
-// ✅ IMPORT LOGO SICADAS VERSI DASHBOARD (LATAR PUTIH)
+// ✅ IMPORT LOGO SICADAS VERSI DASHBOARD (LATAR PUTIH) KARENA NAVBAR ADMIN BERWARNA BIRU GELAP
 import logoSicadasDashboard from "../../assets/logo_sicadas_col.png";
 
 import { supabase } from "../../config/supabase";
@@ -15,41 +15,15 @@ function StaffDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // const token = localStorage.getItem("token");
-  // console.log(token);
-
-  //    const tableDtsenFiltered = dtsenData.filter(item => {
-  //    const matchKecamatan = filterDtsen.kecamatan === "" || item.kecamatan === filterDtsen.kecamatan;
-  //    const matchKelurahan = filterDtsen.kelurahan === "" || item.kelurahan === filterDtsen.kelurahan;
-  //    const matchKk = filterDtsen.no_kk === "" || (item.no_kk && String(item.no_kk).includes(filterDtsen.no_kk));
-  //    const matchNama = filterDtsen.nama_kepala_keluarga === "" || (item.nama_kepala_keluarga && String(item.nama_kepala_keluarga).toLowerCase().includes(filterDtsen.nama_kepala_keluarga.toLowerCase()));
-  //    return matchKecamatan && matchKelurahan && matchKk && matchNama;
-  // });
-
-  // FETCH DATA KELUARGA
-//    await fetch(
-//    "http://127.0.0.1:8000/keluarga",
-//    {
-//      method: "POST",
-//      headers: {
-//        "Content-Type": "application/json"
-//      },
-//      body: JSON.stringify(formData)
-//    }
-// );
-
-//    useEffect(() => {
-
-//    fetchKeluarga();
-
-// }, []);
-
   // ==========================================
   // 1. STATE UTAMA (MANGKUK DATA)
   // ==========================================
   const [usulanData, setUsulanData] = useState([]);
   const [dtsenData, setDtsenData] = useState([]);
   const [dummyPPKS, setDummyPPKS] = useState([]);
+  const [notifData, setNotifData] = useState([
+    { id: 1, title: "Sistem", date: "Hari ini", desc: "Data berhasil dimuat." }
+  ]);
 
   const [currentStaff, setCurrentStaff] = useState({
     nama: "Firliany",
@@ -59,8 +33,14 @@ function StaffDashboard() {
   const [activeMenu, setActiveMenu] = useState((location.state && location.state.activeMenu) ? location.state.activeMenu : "usulan_baru"); 
   const [activeTab, setActiveTab] = useState((location.state && location.state.activeTab) ? location.state.activeTab : "dashboard"); 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  const handleNotifClick = (notif) => {
+    if (notif.link) {
+      navigate(notif.link); // Arahkan ke halaman profil
+      setIsNotifOpen(false); // Tutup dropdown
+    }
+  };
 
   // =========================================
   // FETCH DATA KELUARGA
@@ -97,7 +77,6 @@ function StaffDashboard() {
             jenis_kelamin: item.jenis_kelamin,
             tanggal_lahir: item.tanggal_lahir,
 
-
             // kondisi_khusus: item.kondisi_khusus,
             
             // ✅ STANDARISASI KEY: Gunakan 'desil' agar konsisten di seluruh aplikasi
@@ -128,6 +107,27 @@ function StaffDashboard() {
   // =========================================
   useEffect(() => {
     fetchKeluarga();
+  }, []);
+
+  // ==========================================
+  // NOTIFIKASI SELAMAT DATANG
+  // ==========================================
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
+
+    if (!hasSeenWelcome) {
+      const welcomeNotif = {
+        id: "welcome-1",
+        title: "Selamat Datang di SICADAS!",
+        desc: "Akun Anda telah aktif. Silakan lengkapi profil Anda sekarang.",
+        link: "/staffprofile", // Rute menuju halaman profil
+        isWelcome: true,
+        date: "Baru saja"
+      };
+
+      setNotifData(prev => [welcomeNotif, ...prev]);
+      localStorage.setItem("hasSeenWelcome", "true");
+    }
   }, []);
 
   // ==========================================
@@ -193,7 +193,6 @@ function StaffDashboard() {
     fetchData();
   }, []);
 
-  const notifData = [{ id: 1, title: "Sistem", date: "Hari ini", desc: "Data berhasil dimuat." }];
   const showSuccess = () => { setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 2500); };
 
   const formatDateIndo = (dateStr) => { 
@@ -262,26 +261,43 @@ function StaffDashboard() {
            </h1>
           
           <div className="notif-wrapper">
-            <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
-              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-            </button>
-            {isNotifOpen && (
-              <div className="notif-dropdown">
+          <button className="nav-bell-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
+            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </button>
+          
+          {isNotifOpen && (
+            <>
+              {/* ✅ BACKDROP DIPINDAHKAN KE SINI (Di atas dropdown) */}
+              <div 
+                className="notif-backdrop" 
+                onClick={() => setIsNotifOpen(false)}
+                style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 900, cursor: 'default' }}
+              ></div>
+
+              <div className="notif-dropdown" style={{ zIndex: 999, position: 'absolute' }}>
                 <div className="notif-header"><h3>Pemberitahuan</h3></div>
                 <div className="notif-body">
                   {notifData.map((n) => (
-                    <div className="notif-item" key={n.id}>
-                      <div className="notif-title-row"><h4>{n.title}</h4><span>{n.date}</span></div>
+                    <div 
+                      className={`notif-item ${n.isWelcome ? 'welcome-notif-style' : ''}`} 
+                      key={n.id} 
+                      onClick={() => handleNotifClick(n)}
+                      style={n.isWelcome ? { backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', cursor: 'pointer' } : { cursor: 'pointer' }}
+                    >
+                      <div className="notif-title-row">
+                        <h4 style={n.isWelcome ? { color: '#1e40af' } : {}}>{n.title}</h4>
+                        <span>{n.date}</span>
+                      </div>
                       <p>{n.desc}</p>
+                      {n.isWelcome && <small style={{ color: '#2563eb', fontWeight: 'bold' }}>Klik untuk lengkapi profil &rarr;</small>}
                     </div>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
+        </div>
         </header>
-
-        {isNotifOpen && <div className="notif-backdrop" onClick={() => setIsNotifOpen(false)}></div>}
 
         {/* MENGGUNAKAN KOMPONEN ANAK YANG TELAH DIPISAH  */}
         <div className="content-body">
