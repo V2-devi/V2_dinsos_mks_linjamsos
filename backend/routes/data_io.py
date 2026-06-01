@@ -181,9 +181,23 @@ async def import_csv(table: str, file: UploadFile = File(...), credentials = Dep
         first_row = mapped_rows[0] if mapped_rows else {}
         
         if conflict_col in first_row:
-            # ✅ KOLOM UNIK ADA DI CSV -> Jalankan UPSERT (Bisa Update atau Insert)
-            result = supabase.table(table).upsert(mapped_rows, on_conflict=conflict_col).execute()
-            mode = "UPSERT"
+            # ✅ KOLOM UNIK ADA DI CSV -> Coba UPSERT
+            try:
+                result = supabase.table(table).upsert(mapped_rows, on_conflict=conflict_col).execute()
+                mode = "UPSERT"
+            except Exception as up_err:
+                up_msg = str(up_err)
+                # Jika Postgres menolak karena tidak ada unique constraint, fallback ke INSERT
+                if 'there is no unique or exclusion constraint matching' in up_msg.lower() or 'no unique or exclusion constraint matching' in up_msg.lower():
+                    print(f"⚠️ UPSERT gagal karena tidak ada constraint unik untuk '{conflict_col}'. Melakukan INSERT sebagai fallback.")
+                    try:
+                        result = supabase.table(table).insert(mapped_rows).execute()
+                        mode = "INSERT (fallback from UPSERT)"
+                    except Exception as ins_err:
+                        raise
+                else:
+                    # Re-raise untuk ditangani oleh blok error umum di bawah
+                    raise
         else:
             # ✅ KOLOM UNIK TIDAK ADA -> Fallback ke INSERT Murni (Hanya Tambah Baru)
             print(f"⚠️ Kolom '{conflict_col}' tidak ditemukan. Menggunakan INSERT murni.")
