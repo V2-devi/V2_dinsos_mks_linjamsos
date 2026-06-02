@@ -143,21 +143,22 @@ const handleImportFile = async (e, tableName, onSuccess) => {
           alamat:       rest.alamat || null,
           hasil_desil:  rest.hasil_desil || "Belum Dihitung",
           skor_pmt:     rest.skor_pmt ? parseFloat(rest.skor_pmt) || 0 : 0,
-          tanggal_hitung_desil: rest.tanggal_hitung_desil || new Date().toISOString(),
+          // tanggal_hitung_desil: rest.tanggal_hitung_desil || new Date().toISOString(),
 
         };
       }
 
       if (isPPKS) {
         return {
-          nama_lengkap:     rest.nama_lengkap || null,
-          nik:              rest.nik || null,
-          kategori_ppks:    rest.kategori_ppks || null,
-          kecamatan:        rest.kecamatan || null,
-          kelurahan:        rest.kelurahan || null,
-          lokasi_penemuan:  rest.lokasi_penemuan || null,
-          tanggal_penemuan: rest.tanggal_penemuan || null,
+          nama_lengkap:      rest.nama_lengkap || null,
+          nik:               rest.nik || null,
+          kategori_ppks:     rest.kategori_ppks || null,
+          kecamatan:         rest.kecamatan || null,
+          kelurahan:         rest.kelurahan || null,
+          lokasi_penemuan:   rest.lokasi_penemuan || null,
+          tanggal_penemuan:  rest.tanggal_penemuan || null,
           status_penanganan: rest.status_penanganan || "Menunggu Kelayakan",
+          catatan_verifikator: rest.catatan_verifikator || rest.keterangan || null,
         };
       }
 

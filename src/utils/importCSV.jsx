@@ -26,6 +26,8 @@ const headerKeyMap = {
   'desil': 'hasil_desil',
 
   // PPKS
+  'nama': 'nama_lengkap',
+  'nama lengkap': 'nama_lengkap',
   'kategori ppks': 'kategori_ppks',
   'lokasi penemuan': 'lokasi_penemuan',
   'tanggal laporan': 'tanggal_penemuan',
@@ -55,10 +57,10 @@ export const parseAndMapCSV = (text, tableHint = '') => {
     
     // ✅ Tangani "nama kepala keluarga" & "nama" berdasarkan tableHint
     if (n.includes('nama') && n.includes('kepala')) {
-      return isDtsen ? 'nama_kepala_keluarga' : (isBansos ? 'nama_kepala_keluarga' : 'nama_kepala_keluarga');
+      return 'nama_kepala_keluarga';
     }
     if (n === 'nama') {
-      return isDtsen ? 'nama_kepala_keluarga' : (isBansos ? 'nama_kepala_keluarga' : 'nama_kepala_keluarga');
+      return isPPKS ? 'nama_lengkap' : 'nama_kepala_keluarga';
     }
 
     // Cek headerKeyMap
