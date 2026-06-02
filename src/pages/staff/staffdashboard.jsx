@@ -182,7 +182,8 @@ function StaffDashboard() {
             lokasi_penemuan: item.lokasi_penemuan,
             tanggal_penemuan: item.tanggal_penemuan,
             status_penanganan: item.status_penanganan,
-            catatan_verifikator: item.catatan_verifikator
+            catatan_verifikator: item.catatan_verifikator,
+            bukti_foto_ppks: item.bukti_foto_ppks  // ✅ TAMBAHKAN FIELD INI
           }))
         );
       } catch (error) {

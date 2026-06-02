@@ -1089,8 +1089,27 @@ const handleEditAnggotaSubmit = async (e) => {
     const result = await res.json();
     console.log("✅ Data tersimpan dengan ID:", result.data.id);
     
+    // ✅ ADD TO STATE dengan semua field termasuk bukti_foto_ppks
+    const newPPKS = {
+      id: result.data.id,
+      nik: formPPKS.nik || null,
+      nama_lengkap: formPPKS.nama_lengkap || null,
+      kategori_ppks: formPPKS.kategori_ppks,
+      kecamatan: formPPKS.kecamatan,
+      kelurahan: formPPKS.kelurahan,
+      lokasi_penemuan: formPPKS.lokasi_penemuan,
+      tanggal_penemuan: formPPKS.tanggal_penemuan,
+      status_penanganan: "Kasus Aktif",
+      catatan_verifikator: "",
+      bukti_foto_ppks: fotoUrls  // ✅ Include photos!
+    };
+    
+    setDummyPPKS(prev => [newPPKS, ...prev]);
+    setFormPPKS({ nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] });
+    setFotoBuktiPPKS([]);
+    setIsAddPPKSModalOpen(false);
+    
     alert("✅ Laporan PPKS berhasil ditambahkan!");
-    // ... reset form & refresh ...
 
   } catch (error) {
     console.error("❌ Error:", error);
@@ -1228,21 +1247,41 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
 
           <div className="modal-section" style={{ marginTop: '20px' }}>
           <h3 className="section-subtitle">Bukti Foto Penemuan</h3>
-          {selectedPPKSData.foto_bukti_ppks ? (
+          {Array.isArray(selectedPPKSData?.bukti_foto_ppks) && selectedPPKSData?.bukti_foto_ppks.length > 0 ? (
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-              {selectedPPKSData.foto_bukti_ppks.split(",").map((namaFile, idx) => (
+              {selectedPPKSData.bukti_foto_ppks.map((fotoUrl, idx) => (
                 <img 
                   key={idx}
-                  // Ganti URL ini dengan URL dari bucket storage Supabase Anda
-                  src={`URL_STORAGE_SUPABASE_ANDA/${namaFile}`} 
+                  src={fotoUrl} 
                   alt={`Bukti ${idx + 1}`}
                   style={{ 
                     width: '120px', 
                     height: '120px', 
                     objectFit: 'cover', 
                     borderRadius: '8px',
-                    border: '1px solid #cbd5e1'
+                    border: '1px solid #cbd5e1',
+                    cursor: 'pointer'
                   }}
+                  onClick={() => window.open(fotoUrl, '_blank')}
+                />
+              ))}
+            </div>
+          ) : typeof selectedPPKSData?.bukti_foto_ppks === 'string' && selectedPPKSData?.bukti_foto_ppks.trim() !== "" ? (
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+              {selectedPPKSData.bukti_foto_ppks.split(",").map((fotoUrl, idx) => (
+                <img 
+                  key={idx}
+                  src={fotoUrl.trim()} 
+                  alt={`Bukti ${idx + 1}`}
+                  style={{ 
+                    width: '120px', 
+                    height: '120px', 
+                    objectFit: 'cover', 
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => window.open(fotoUrl.trim(), '_blank')}
                 />
               ))}
             </div>

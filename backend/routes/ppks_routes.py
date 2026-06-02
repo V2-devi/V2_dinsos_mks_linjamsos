@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, status
 from typing import List, Optional
 import time
+import uuid
 
 from config.database import supabase, SUPABASE_BUCKET
 from config.auth import security
@@ -45,14 +46,22 @@ def get_ppks_by_id(id: str):
 # ==============================
 @router.post("/")
 async def create_ppks(
-    data: PPKS,  # Pastikan schema PPKS punya field bukti_foto_ppks: Optional[List[str]]
+    data: PPKS,
     credentials = Depends(security)
 ):
     try:
-        # Validasi token → dapat user_id
+        # ✅ Ekstrak token & verifikasi user
         token = credentials.credentials
+        print(f"🔍 Token received: {token[:20]}...")
+        
         user_response = supabase.auth.get_user(token)
-        user_id = user_response.user.id if user_response and user_response.user else None
+        print(f"🔍 User response: {user_response}")
+        
+        if not user_response or not user_response.user:
+            raise HTTPException(status_code=401, detail="Token tidak valid atau user tidak ditemukan")
+        
+        user_id = str(user_response.user.id)
+        print(f"✅ User ID extracted: {user_id}")
         
         payload = {
             "kategori_ppks": data.kategori_ppks,
@@ -62,37 +71,64 @@ async def create_ppks(
             "kecamatan": data.kecamatan,
             "kelurahan": data.kelurahan,
             "lokasi_penemuan": data.lokasi_penemuan,
-            "status_penanganan": data.status_penanganan,
+            "status_penanganan": data.status_penanganan or "Kasus Aktif",
             "catatan_verifikator": data.catatan_verifikator,
-            "bukti_foto_ppks": data.bukti_foto_ppks or [],  # ✅ Array URL
-            "created_by": user_id
+            "bukti_foto_ppks": data.bukti_foto_ppks or [],
+            "created_by": user_id  # ✅ Wajib untuk RLS policy
         }
         
-        print(f"📦 Payload insert: {payload}")  # Debug log
+        print(f"📦 Payload insert: {payload}")
         
         res = supabase.table("ppks").insert(payload).execute()
         
+        print(f"📦 Insert response: {res}")
+        
         if res.data:
             print(f"✅ Tersimpan dengan ID: {res.data[0]['id']}")
-            print(f"📸 URL Foto: {res.data[0]['bukti_foto_ppks']}")
             return {"message": "Berhasil", "data": res.data[0]}
-            
-        raise HTTPException(status_code=400, detail="Gagal insert data")
         
+        raise HTTPException(status_code=400, detail="Gagal insert data PPKS")
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error: {type(e).__name__} - {e}")
         raise HTTPException(status_code=500, detail=str(e))
 # ==============================
 # UPDATE
 # ==============================
 @router.put("/{id}")
-def update_ppks(id: str, data: PPKS):
+def update_ppks(
+    id: str,
+    data: PPKS,
+    credentials = Depends(security)
+):
     try:
-        updated_data = update_ppks_service(id, data)
+        if not credentials:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        
+        # ✅ Ekstrak user_id dari token untuk RLS policy
+        token = credentials.credentials
+        user_response = supabase.auth.get_user(token)
+        
+        if not user_response or not user_response.user:
+            raise HTTPException(status_code=401, detail="Token tidak valid")
+        
+        user_id = str(user_response.user.id)
+        
+        # ✅ Convert data ke dict dan tambahkan user_id untuk RLS
+        payload = data.model_dump(exclude_unset=True)
+        payload.pop("id", None)
+        payload["updated_by"] = user_id  # ✅ Untuk audit trail
+        
+        updated_data = update_ppks_service(id, payload)
         if not updated_data:
             raise HTTPException(status_code=404, detail="Data tidak ditemukan")
         return updated_data
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Error: {type(e).__name__} - {e}")
         raise HTTPException(status_code=400, detail=f"Gagal update: {str(e)}")
 
 # ==============================
@@ -108,7 +144,7 @@ def delete_ppks(id: str):
 # ==============================
 # ✅ UPLOAD FOTO (PATH SINKRON DENGAN FRONTEND)
 # ==============================
-@router.post("/upload/foto-ppks")  # ✅ Final path: /ppks/upload/foto-ppks
+@router.post("/upload/foto-ppks")
 async def upload_foto_ppks(
     files: List[UploadFile] = File(...),
     credentials = Depends(security)
@@ -129,28 +165,42 @@ async def upload_foto_ppks(
     try:
         for file in files:
             if not file.content_type or not file.content_type.startswith("image/"):
+                print(f"⚠️ Skipping non-image file: {file.filename}")
                 continue
             
-            timestamp = int(time.time() * 1000)
-            # ✅ Gunakan timestamp atau ID sebagai folder/prefix
-            safe_filename = f"temp/{timestamp}-{file.filename.replace(' ', '_')}"
-            
+            # ✅ Baca file bytes terlebih dahulu
             file_bytes = await file.read()
             
-            supabase.storage.from_(SUPABASE_BUCKET).upload(
+            # ✅ Validasi ukuran
+            if len(file_bytes) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail=f"File {file.filename} terlalu besar (max 5MB)")
+            
+            import uuid
+            unique_id = uuid.uuid4().hex
+            safe_filename = f"ppks/{unique_id}-{file.filename.replace(' ', '_')}"
+            
+            print(f"📤 Uploading: {safe_filename}")
+            
+            upload_result = supabase.storage.from_(SUPABASE_BUCKET).upload(
                 safe_filename,
                 file_bytes,
                 {"content-type": file.content_type}
             )
             
+            print(f"✅ Upload result: {upload_result}")
+            
             public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(safe_filename)
             uploaded_urls.append(public_url)
+            print(f"✅ URL: {public_url}")
             
         return {"message": "Upload berhasil", "urls": uploaded_urls}
         
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"❌ Upload Error: {e}")
+        error_msg = str(e)
+        print(f"❌ Upload Error: {type(e).__name__} - {error_msg}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Gagal upload: {str(e)}"
+            detail=f"Gagal upload: {error_msg}"
         )

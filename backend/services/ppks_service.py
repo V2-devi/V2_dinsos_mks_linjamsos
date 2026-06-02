@@ -53,21 +53,21 @@ def create_ppks_service(data: PPKS):
 # ==============================
 # UPDATE PPKS
 # ==============================
-def update_ppks_service(ppks_id: str, data: PPKS):
-    # ✅ Convert Pydantic model ke dictionary
-    payload = data.model_dump(exclude_unset=True)
+def update_ppks_service(ppks_id: str, payload: dict):
+    """Update PPKS dengan payload yang sudah diproses (termasuk user context)"""
     
-    # Hapus ID dari payload jika terkirim, karena kita update berdasarkan ID di URL
-    payload.pop("id", None)
-
     if not payload:
         raise Exception("Tidak ada data untuk diupdate")
 
+    print(f"🔍 Updating PPKS {ppks_id} dengan payload: {payload}")
+    
     response = supabase.table("ppks") \
         .update(payload) \
         .eq("id", ppks_id) \
         .execute()
 
+    print(f"📦 Update response: {response}")
+    
     if not response.data:
         raise Exception(f"Data PPKS dengan ID {ppks_id} tidak ditemukan atau gagal diupdate")
 
