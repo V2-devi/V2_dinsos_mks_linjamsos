@@ -615,8 +615,14 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
                 
                 {/* 5. TOMBOL AKSI VERIFIKATOR */}
                 <div style={{ gap: '15px', display: 'flex', marginTop: '25px', paddingTop: '20px', borderTop: '2px solid #e2e8f0' }}>
-                   <button type="button" style={{ flex: 1, padding: '15px', backgroundColor: '#ef4444', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Ditolak")}>Tolak Laporan</button>
-                   <button type="button" style={{ flex: 1, padding: '15px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }} onClick={(e) => handleValidationPPKSAction(e, "Kasus Aktif")}>Setujui Laporan</button>
+                   <button 
+                     type="button" 
+                     style={{ flex: 1, padding: '15px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }} 
+                     // ✅ Ubah parameter status menjadi "Selesai Ditangani"
+                     onClick={(e) => handleValidationPPKSAction(e, "Selesai Ditangani")}
+                   >
+                     Selesaikan Laporan
+                   </button>
                 </div>
 
               </div>
