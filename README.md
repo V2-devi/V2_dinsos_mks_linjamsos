@@ -1,4 +1,4 @@
-# 📋 sicadas - Sistem cadangan data sosial
+# 📋 Sicadas - Sistem Cadangan Data Sosial
 
 Sistem informasi terpadu untuk manajemen data keluarga, Data Terpadu Kesejahteraan Sosial (DTSEN), Pengusulan Bansos, dan Penanganan PPKS (Penyandang Problema Kesejahteraan Sosial) berbasis web dengan dukungan real-time notifications dan fitur export/import data.
 
