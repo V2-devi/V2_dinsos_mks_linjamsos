@@ -459,15 +459,95 @@ const uploadSuratKematianToDB = async (no_kk, anggotaId, file) => {
   const [fotoBuktiPPKS, setFotoBuktiPPKS] = useState([]); // ✅ STATE BARU UNTUK FOTO
 
   // ✅ FUNGSI HANDLE UPLOAD FOTO
-  const handleFotoPPKSChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 3) {
-      alert("Maksimal hanya boleh mengunggah 3 foto bukti.");
-      e.target.value = ""; // Reset input
+const handleFotoPPKSChange = (e) => {
+  const files = Array.from(e.target.files || []);
+  
+  // ✅ 1. Validasi: Tidak ada file yang dipilih
+  if (files.length === 0) {
+    setFotoBuktiPPKS([]);
+    return;
+  }
+
+  // ✅ 2. Validasi: Jumlah file maksimal 3
+  if (files.length > 3) {
+    alert("⚠️ Maksimal hanya boleh mengunggah 3 foto bukti.");
+    e.target.value = "";
+    return;
+  }
+
+  // ✅ 3. Validasi: Tipe file HARUS gambar
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+  const invalidType = files.find(f => !allowedTypes.includes(f.type));
+  if (invalidType) {
+    alert(
+      `⚠️ File "${invalidType.name}" bukan format gambar yang didukung.\n\n` +
+      `Format yang diizinkan: JPG, PNG, WEBP`
+    );
+    e.target.value = "";
+    return;
+  }
+
+  // ✅ 4. Validasi: Ukuran per file maksimal 5MB
+  const maxSizePerFile = 5 * 1024 * 1024;
+  const oversized = files.find(f => f.size > maxSizePerFile);
+  if (oversized) {
+    const sizeMB = (oversized.size / (1024 * 1024)).toFixed(2);
+    alert(
+      `⚠️ File "${oversized.name}" terlalu besar (${sizeMB} MB).\n\n` +
+      `Ukuran maksimal per file: 5 MB`
+    );
+    e.target.value = "";
+    return;
+  }
+
+  // ✅ 5. Validasi: Total ukuran semua file maksimal 10MB
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  const maxTotalSize = 10 * 1024 * 1024;
+  if (totalSize > maxTotalSize) {
+    const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
+    alert(
+      `⚠️ Total ukuran semua foto terlalu besar (${totalMB} MB).\n\n` +
+      `Total maksimal: 10 MB`
+    );
+    e.target.value = "";
+    return;
+  }
+
+  // ✅ 6. Validasi: File tidak boleh kosong (0 bytes)
+  const emptyFile = files.find(f => f.size === 0);
+  if (emptyFile) {
+    alert(`⚠️ File "${emptyFile.name}" kosong (0 bytes).\nSilakan pilih file lain.`);
+    e.target.value = "";
+    return;
+  }
+
+  // ✅ 7. Validasi: Cek duplikasi file (nama + ukuran sama)
+  const uniqueFiles = [];
+  const seen = new Set();
+  for (const file of files) {
+    const key = `${file.name}-${file.size}`;
+    if (seen.has(key)) {
+      alert(`⚠️ File "${file.name}" terduplikasi. Silakan pilih file yang berbeda.`);
+      e.target.value = "";
       return;
     }
-    setFotoBuktiPPKS(files);
-  };
+    seen.add(key);
+    uniqueFiles.push(file);
+  }
+
+  // ✅ 8. Log untuk debugging (opsional)
+  console.log("📷 Foto PPKS dipilih:", {
+    count: uniqueFiles.length,
+    files: uniqueFiles.map(f => ({
+      name: f.name,
+      size: `${(f.size / 1024).toFixed(2)} KB`,
+      type: f.type
+    }))
+  });
+
+  // ✅ 9. Simpan ke state
+  setFotoBuktiPPKS(uniqueFiles);
+};
 
   const [formAset, setFormAset] = useState({
     no_kk: "", v01: "", v02: "", v03: "", v04: "", v05: "", v06: 0, v07: "", v08: "", v09: "", v10: "", v11: "", v12: "", v13: "", v14: "", v15: "", v16: "", v17: "", v18: "", v19: "",
