@@ -151,7 +151,7 @@ function VerifikatorDashboard() {
       if (errBansos) throw errBansos;
       setUsulanList(dataBansos);
 
-      const { data: dataRiwayat, error: errRiwayat } = await supabase.from('pengusulan_bansos').select('*').neq('status_pengusulan', 'Belum');
+      const { data: dataRiwayat, error: errRiwayat } = await supabase.from('pengusulan_bansos').select('*').neq('status_pengusulan', 'Selesai');
       if (errRiwayat) throw errRiwayat;
       setRiwayatList(dataRiwayat);
 
@@ -270,53 +270,86 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
 
 
 
+const handleValidationPPKSAction = async (e, statusKeputusan) => {
+  e.preventDefault();
+  
+  if (!selectedPPKSReview || !selectedPPKSReview.id) {
+    return alert("⚠️ Data tidak ditemukan. Silakan pilih data terlebih dahulu.");
+  }
 
-  const handleValidationPPKSAction = async (e, statusKeputusan) => {
-    e.preventDefault();
-    if (!selectedPPKSReview) return;
-    // Normalisasi status PPKS
-    const mapStatusPPKS = (s) => {
-      if (!s) return s;
-      const t = String(s).toLowerCase().trim();
-      if (t.includes('aktif')) return 'Kasus Aktif';
-      if (t.includes('selesai')) return 'Selesai Ditangani';
-      if (t.includes('tolak') || t.includes('ditolak')) return 'Ditolak';
-      return s.trim();
-    };
-    const statusFinal = mapStatusPPKS(statusKeputusan);
-    try {
-      const { error, data } = await supabase
-        .from('ppks')
-        .update({ status_penanganan: statusFinal, catatan_verifikator: catatanValidasi })
-        .eq('id', selectedPPKSReview.id)
-        .select();
-      if (error) throw error;
-      await fetchDataVerifikator();
-      setIsReviewPPKSModalOpen(false);
-      setSelectedPPKSReview(null);
-      setCatatanValidasi("");
-      const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "aktif";
-      setActiveTab(targetTab);
-      alert(`✅ Berhasil! Masuk ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
-    } catch (error) {
-      console.error("💥 Action Failed:", error);
-      alert("Gagal: " + error.message);
-    }
-  };
+  // 1. Normalisasi Status secara EKSAK (Hanya 2 Opsi)
+  const s = String(statusKeputusan || "").toLowerCase().trim();
+  let statusFinal = "Kasus Aktif"; // Default
+
+  if (s.includes("selesai") || s.includes("tutup")) {
+    statusFinal = "Selesai Ditangani";
+  } else if (s.includes("aktif") || s.includes("lanjut") || s.includes("menunggu")) {
+    statusFinal = "Kasus Aktif";
+  }
+
+  console.log("🔍 [PPKS] Update ID:", selectedPPKSReview.id, "ke status:", statusFinal);
+
+  try {
+    // 2. Eksekusi Update ke Supabase
+    const { error, data } = await supabase
+      .from('ppks')
+      .update({ 
+        status_penanganan: statusFinal, 
+        catatan_verifikator: catatanValidasi ? catatanValidasi.trim() : null 
+      })
+      .eq('id', selectedPPKSReview.id)
+      .select(); // .select() penting untuk memastikan data kembali
+
+    if (error) throw error;
+
+    console.log("✅ [PPKS] Update Berhasil:", data);
+
+    // 3. Refresh Data (Pastikan fungsi ini benar-benar mengambil data terbaru dari DB)
+    await fetchDataVerifikator();
+
+    // 4. Reset State Modal
+    setIsReviewPPKSModalOpen(false);
+    setSelectedPPKSReview(null);
+    setCatatanValidasi("");
+
+    // 5. Logika Pindah Tab SESUAI KLARIFIKASI ANDA
+    const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "menunggu";
+    setActiveTab(targetTab);
+    
+    alert(`✅ Berhasil! Status diubah menjadi "${statusFinal}".\nOtomatis pindah ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
+
+  } catch (error) {
+    console.error("💥 [PPKS] Action Failed:", error);
+    alert(`Gagal update: ${error.message}`);
+  }
+};
+
+const handleSelesaikanKasusPPKS = async (id) => {
+  console.log("🔍 [PPKS Quick Action] ID yang akan diupdate:", id);
+  if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
+  
+  try {
+    const { error, data } = await supabase
+      .from('ppks')
+      .update({ status_penanganan: "Selesai Ditangani" })
+      .eq('id', id)
+      .select();
+      
+    if (error) throw error;
+    
+    console.log("✅ [PPKS Quick Action] Berhasil:", data);
+    await fetchDataVerifikator(); 
+    
+    // Pindah ke tab riwayat setelah selesai
+    setActiveTab("riwayat");
+    alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
+  } catch (err) {
+    console.error("❌ [PPKS Quick Action] Gagal:", err);
+    alert("Gagal update status: " + err.message);
+  }
+};
 
 
-
-  const handleSelesaikanKasusPPKS = async (id) => {
-    if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
-    try {
-      const { error } = await supabase.from('ppks').update({ status_penanganan: "Selesai Ditangani" }).eq('id', id);
-      if (error) throw error;
-      await fetchDataVerifikator(); 
-      alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
-    } catch (err) {
-      alert("Gagal update status: " + err.message);
-    }
-  };
 
   const formatDateIndo = (dateStr) => { 
     if(!dateStr || dateStr === "-") return "-"; 
