@@ -176,6 +176,9 @@ def update_user_service(user_id, data):
         # =====================================
         # CEK RESULT
         # =====================================
+        if hasattr(result, 'error') and result.error:
+            return {"error": str(result.error)}
+
         if not result.data:
             # Jika tidak ada data hasil update, cek apakah user memang ada
             existing = (
@@ -190,7 +193,9 @@ def update_user_service(user_id, data):
             if not existing.data:
                 return {"error": "User tidak ditemukan"}
 
-            return {"error": "Update gagal, tidak ada perubahan yang diterapkan"}
+            # Update valid, tapi tidak ada perubahan baru untuk diterapkan.
+            # Kembalikan data user saat ini sebagai respons sukses.
+            return existing.data
 
         # =====================================
         # EMAIL APPROVAL
