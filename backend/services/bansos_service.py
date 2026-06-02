@@ -93,7 +93,7 @@ def approve_pengusulan_service(id: str):
         .execute()
 
     # insert ke penerima bansos
-    supabase.table("penerima_bansos").insert({
+    supabase.table("pengusulan_bansos").insert({
         "no_kk": item["no_kk"],
         "jenis_bansos": item.get("jenis_bansos", "default")
     }).execute()

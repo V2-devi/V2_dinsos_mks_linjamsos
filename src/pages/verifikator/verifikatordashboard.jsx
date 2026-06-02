@@ -199,24 +199,91 @@ function VerifikatorDashboard() {
     setActiveTab("review_ppks");
     };
 
-  const handleValidasiBansos = async (e, statusKeputusan) => {
-    e.preventDefault();
-    if (!selectedData) return;
-    try {
-      const { error } = await supabase.from('pengusulan_bansos').update({ status_pengusulan: statusKeputusan, catatan_verifikator: catatanValidasi }).eq('id', selectedData.id);
-      if (error) throw error;
-      await fetchDataVerifikator();
-      setIsValidateModalOpen(false); setSelectedData(null); setCatatanValidasi("");
-      setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 3000);
+
+
+const handleValidasiBansos = async (e, statusKeputusan) => {
+  e.preventDefault();
+  
+  if (!selectedData) {
+    return alert("⚠️ Pilih data terlebih dahulu.");
+  }
+
+  try {
+    // 1. DEBUG: Lihat apa yang sebenarnya diterima fungsi ini
+    console.log("🔍 Status yang diterima dari UI:", statusKeputusan);
+
+    // 2. Normalisasi Status yang BENAR (Urutan PENTING!)
+    const normalizedStatus = (() => {
+      if (!statusKeputusan) return "Menunggu Review";
+      
+      const s = String(statusKeputusan).toLowerCase().trim();
+      
+      // Cek "tidak" atau "tolak" DULU sebelum cek "layak"
+      if (s.includes('tidak') || s.includes('tolak') || s === 'tidak layak') {
+        return "Tidak Layak";
+      }
+      // Baru cek "layak" (agar "Tidak Layak" tidak tertangkap di sini)
+      if (s.includes('layak') && !s.includes('tidak')) {
+        return "Layak";
+      }
+      // Cek menunggu review
+      if (s.includes('menunggu') || s.includes('review') || s.includes('proses')) {
+        return "Menunggu Review";
+      }
+      
+      // Fallback: gunakan nilai asli yang sudah dibersihkan
+      return statusKeputusan.trim();
+    })();
+
+    console.log("✅ Status setelah normalisasi:", normalizedStatus);
+
+    // 3. Update ke Supabase
+    const { error } = await supabase
+      .from('pengusulan_bansos')
+      .update({ 
+        status_pengusulan: normalizedStatus, 
+        catatan_verifikator_bansos: catatanValidasi ? catatanValidasi.trim() : null 
+      })
+      .eq('id', selectedData.id);
+
+    if (error) throw error;
+
+    // 4. Refresh & Reset
+    await fetchDataVerifikator();
+    setIsValidateModalOpen(false); 
+    setSelectedData(null); 
+    setCatatanValidasi("");
+
+    // 5. Alert & Pindah Tab
+    alert(`✅ Data berhasil diperbarui menjadi: "${normalizedStatus}"`);
+    
+    if (normalizedStatus === "Layak" || normalizedStatus === "Tidak Layak") {
       setActiveTab("riwayat"); 
-      alert("✅ Data berhasil dipindah ke Riwayat!");
-    } catch (error) { console.error("Gagal update status:", error); alert("Gagal melakukan validasi."); }
-  };
+    }
+
+  } catch (error) { 
+    console.error("Gagal update status:", error); 
+    alert(`❌ Gagal melakukan validasi: ${error.message}`); 
+  }
+};
+
+
+
+
 
   const handleValidationPPKSAction = async (e, statusKeputusan) => {
     e.preventDefault();
     if (!selectedPPKSReview) return;
-    const statusFinal = statusKeputusan.trim();
+    // Normalisasi status PPKS
+    const mapStatusPPKS = (s) => {
+      if (!s) return s;
+      const t = String(s).toLowerCase().trim();
+      if (t.includes('aktif')) return 'Kasus Aktif';
+      if (t.includes('selesai')) return 'Selesai Ditangani';
+      if (t.includes('tolak') || t.includes('ditolak')) return 'Ditolak';
+      return s.trim();
+    };
+    const statusFinal = mapStatusPPKS(statusKeputusan);
     try {
       const { error, data } = await supabase
         .from('ppks')
@@ -236,6 +303,8 @@ function VerifikatorDashboard() {
       alert("Gagal: " + error.message);
     }
   };
+
+
 
   const handleSelesaikanKasusPPKS = async (id) => {
     if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
