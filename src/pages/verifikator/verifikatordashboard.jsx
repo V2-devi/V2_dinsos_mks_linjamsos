@@ -577,8 +577,8 @@ const handleSelesaikanKasusPPKS = async (id) => {
               <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', padding: '30px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
                 
                 {/* 1. STATUS BOX */}
-                <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Ditolak' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Ditolak' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
-                  <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Ditolak' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
+                <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
+                  <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
                   <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
                 </div>
 
