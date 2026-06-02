@@ -142,28 +142,26 @@ async def upload_surat_kematian(
 
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Hanya file PDF yang diperbolehkan")
-    
-    file.file.seek(0, 2)
-    size = file.file.tell()
-    file.file.seek(0)
-    if size > 5 * 1024 * 1024:
+
+    file_bytes = await file.read()
+    if len(file_bytes) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Ukuran file maksimal 5MB")
 
     try:
-        timestamp = int(time.time() * 1000)
+        unique_id = uuid.uuid4().hex
         sanitized_name = sanitize_storage_filename(file.filename)
-        safe_filename = f"{no_kk}/{anggota_id}/{timestamp}-{sanitized_name}"
+        safe_filename = f"{no_kk}/{anggota_id}/{unique_id}-{sanitized_name}"
         
-        file_bytes = await file.read()
-        
-        # 1. Upload ke Storage
-        supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).upload(
+        upload_result = supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).upload(
             safe_filename,
             file_bytes,
             {"content-type": "application/pdf"}
         )
 
+        print(f"🔍 Upload result: {upload_result}")
+
         public_url = supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).get_public_url(safe_filename)
+
         # 2. Update Database (WAJIB CEK HASILNYA)
         print(f"🔍 Updating DB: id={anggota_id}, url={public_url}")
         result = supabase.table("anggota_keluarga") \
@@ -179,5 +177,6 @@ async def upload_surat_kematian(
         return {"message": "Berhasil", "url": public_url}
         
     except Exception as e:
-        print(f"❌ Upload/DB Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = e.args[0] if e.args else str(e)
+        print(f"❌ Upload/DB Error: {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
