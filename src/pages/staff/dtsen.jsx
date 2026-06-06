@@ -458,95 +458,112 @@ const uploadSuratKematianToDB = async (no_kk, anggotaId, file) => {
 
   const [fotoBuktiPPKS, setFotoBuktiPPKS] = useState([]); // ✅ STATE BARU UNTUK FOTO
 
-  // ✅ FUNGSI HANDLE UPLOAD FOTO
-const handleFotoPPKSChange = (e) => {
+
+
+
+
+  // Tambahkan fungsi ini di dalam komponen Anda (di atas handleSubmitFotoPPKS)
+const handleFileChange = (e) => {
   const files = Array.from(e.target.files || []);
   
-  // ✅ 1. Validasi: Tidak ada file yang dipilih
   if (files.length === 0) {
     setFotoBuktiPPKS([]);
     return;
   }
 
-  // ✅ 2. Validasi: Jumlah file maksimal 3
   if (files.length > 3) {
-    alert("⚠️ Maksimal hanya boleh mengunggah 3 foto bukti.");
+    alert("⚠️ Maksimal 3 foto");
     e.target.value = "";
     return;
   }
 
-  // ✅ 3. Validasi: Tipe file HARUS gambar
-  const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
-  const invalidType = files.find(f => !allowedTypes.includes(f.type));
-  if (invalidType) {
-    alert(
-      `⚠️ File "${invalidType.name}" bukan format gambar yang didukung.\n\n` +
-      `Format yang diizinkan: JPG, PNG, WEBP`
-    );
-    e.target.value = "";
-    return;
-  }
-
-  // ✅ 4. Validasi: Ukuran per file maksimal 5MB
-  const maxSizePerFile = 5 * 1024 * 1024;
-  const oversized = files.find(f => f.size > maxSizePerFile);
+  const maxSize = 5 * 1024 * 1024;
+  const oversized = files.find(f => f.size > maxSize);
   if (oversized) {
-    const sizeMB = (oversized.size / (1024 * 1024)).toFixed(2);
-    alert(
-      `⚠️ File "${oversized.name}" terlalu besar (${sizeMB} MB).\n\n` +
-      `Ukuran maksimal per file: 5 MB`
-    );
+    alert(`⚠️ File "${oversized.name}" terlalu besar (max 5MB)`);
     e.target.value = "";
     return;
   }
 
-  // ✅ 5. Validasi: Total ukuran semua file maksimal 10MB
-  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-  const maxTotalSize = 10 * 1024 * 1024;
-  if (totalSize > maxTotalSize) {
-    const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
-    alert(
-      `⚠️ Total ukuran semua foto terlalu besar (${totalMB} MB).\n\n` +
-      `Total maksimal: 10 MB`
-    );
-    e.target.value = "";
-    return;
+  console.log("📷 File dipilih:", files.map(f => f.name));
+  setFotoBuktiPPKS(files);
+  // ❌ JANGAN reset e.target.value di sini!
+};
+
+
+
+  // ✅ FUNGSI HANDLE UPLOAD FOTO
+// ✅ VERSI BARU: Terima ID sebagai parameter
+const handleSubmitFotoPPKS = async (ppksId = null) => {
+  // Gunakan ID dari parameter, atau fallback ke state
+  const targetId = ppksId || selectedPPKSData?.id;
+  
+  console.log("🔍 ID yang akan diupload:", targetId);
+  console.log("🔍 selectedPPKSData:", selectedPPKSData);
+  
+  if (!targetId) {
+    return alert("⚠️ ID PPKS tidak ditemukan. Silakan buka detail data terlebih dahulu.");
   }
 
-  // ✅ 6. Validasi: File tidak boleh kosong (0 bytes)
-  const emptyFile = files.find(f => f.size === 0);
-  if (emptyFile) {
-    alert(`⚠️ File "${emptyFile.name}" kosong (0 bytes).\nSilakan pilih file lain.`);
-    e.target.value = "";
-    return;
+  if (!fotoBuktiPPKS || fotoBuktiPPKS.length === 0) {
+    return alert("⚠️ Pilih minimal 1 foto bukti.");
   }
 
-  // ✅ 7. Validasi: Cek duplikasi file (nama + ukuran sama)
-  const uniqueFiles = [];
-  const seen = new Set();
-  for (const file of files) {
-    const key = `${file.name}-${file.size}`;
-    if (seen.has(key)) {
-      alert(`⚠️ File "${file.name}" terduplikasi. Silakan pilih file yang berbeda.`);
-      e.target.value = "";
+  const token = localStorage.getItem("token");
+  if (!token) return alert("⚠️ Sesi login habis.");
+
+  try {
+    const formData = new FormData();
+    formData.append("ppks_id", targetId);
+    
+    fotoBuktiPPKS.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    console.log("📤 Upload untuk ID:", targetId);
+
+    const res = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("❌ Backend error:", data);
+      alert(`❌ ${data.detail || "Gagal upload"}`);
       return;
     }
-    seen.add(key);
-    uniqueFiles.push(file);
+
+    console.log("✅ Upload berhasil:", data);
+    alert(`✅ ${data.message}`);
+
+    // ✅ Update state jika data sedang dibuka
+    if (selectedPPKSData?.id === targetId) {
+      setSelectedPPKSData(prev => ({ 
+        ...prev, 
+        bukti_foto_ppks: data.urls.join(",") 
+      }));
+    }
+
+    // ✅ Update daftar PPKS
+    setDummyPPKS(prev => prev.map(item => 
+      item.id === targetId 
+        ? { ...item, bukti_foto_ppks: data.urls.join(",") }
+        : item
+    ));
+
+    // Reset & tutup modal
+    setFotoBuktiPPKS([]);
+    if (typeof setIsUploadFotoModalOpen === "function") {
+      setIsUploadFotoModalOpen(false);
+    }
+
+  } catch (err) {
+    console.error("❌ Error:", err);
+    alert(`❌ ${err.message}`);
   }
-
-  // ✅ 8. Log untuk debugging (opsional)
-  console.log("📷 Foto PPKS dipilih:", {
-    count: uniqueFiles.length,
-    files: uniqueFiles.map(f => ({
-      name: f.name,
-      size: `${(f.size / 1024).toFixed(2)} KB`,
-      type: f.type
-    }))
-  });
-
-  // ✅ 9. Simpan ke state
-  setFotoBuktiPPKS(uniqueFiles);
 };
 
   const [formAset, setFormAset] = useState({
@@ -1106,42 +1123,14 @@ const handleEditAnggotaSubmit = async (e) => {
 
 
 
-  const handleAddPPKSSubmit = async (e) => {
+ const handleAddPPKSSubmit = async (e) => {
   e.preventDefault();
   try {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Silakan login ulang.");
 
     // =====================================
-    // 1. UPLOAD FOTO DULU → DAPAT URL
-    // =====================================
-    let fotoUrls = [];
-    
-    if (fotoBuktiPPKS.length > 0) {
-      const formDataFoto = new FormData();
-      fotoBuktiPPKS.forEach(file => formDataFoto.append("files", file));
-
-      const uploadRes = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formDataFoto
-      });
-
-      if (!uploadRes.ok) {
-        const err = await uploadRes.json();
-        throw new Error(err.detail || "Gagal upload foto");
-      }
-
-      // ✅ PARSE RESPONSE & AMBIL ARRAY URL
-      const uploadData = await uploadRes.json();
-      fotoUrls = uploadData.urls; 
-      
-      console.log("✅ URLs dari upload:", fotoUrls);
-      // Output: ["https://.../foto1.jpg", "https://.../foto2.jpg"]
-    }
-
-    // =====================================
-    // 2. INSERT DATA PPKS (dengan URL foto)
+    // 1. INSERT DATA PPKS DULU — DAPAT ID
     // =====================================
     const res = await fetch("http://127.0.0.1:8000/ppks/", {
       method: "POST",
@@ -1157,46 +1146,84 @@ const handleEditAnggotaSubmit = async (e) => {
         kecamatan: formPPKS.kecamatan,
         kelurahan: formPPKS.kelurahan,
         lokasi_penemuan: formPPKS.lokasi_penemuan,
-        status_penanganan: "Kasus Aktif",
-        bukti_foto_ppks: fotoUrls // ✅ Kirim array URL ke backend
+        status_penanganan: "Kasus Aktif"
       })
     });
 
+    const result = await res.json();
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Gagal simpan data PPKS");
+      const detail = result?.detail || JSON.stringify(result);
+      throw new Error(detail);
     }
 
-    const result = await res.json();
-    console.log("✅ Data tersimpan dengan ID:", result.data.id);
-    
-    // ✅ ADD TO STATE dengan semua field termasuk bukti_foto_ppks
+    const newPPKSId = result?.data?.id;
+    console.log("✅ PPKS tersimpan, ID:", newPPKSId);
+
+    // =====================================
+    // 2. UPLOAD FOTO JIKA ADA — PAKAI ID
+    // =====================================
+    let fotoUrls = [];
+
+    if (fotoBuktiPPKS.length > 0 && newPPKSId) {
+      try {
+        const formDataFoto = new FormData();
+        formDataFoto.append("ppks_id", newPPKSId);
+        fotoBuktiPPKS.forEach(file => formDataFoto.append("files", file));
+
+        const uploadRes = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formDataFoto
+        });
+
+        const uploadData = await uploadRes.json();
+        console.log("📸 Upload response:", uploadData);
+
+        if (!uploadRes.ok) {
+          // Foto gagal tapi data PPKS sudah tersimpan — warning saja
+          alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadData?.detail || "Error tidak diketahui"}`);
+        } else {
+          fotoUrls = uploadData.urls || [];
+          console.log("✅ Foto terupload:", fotoUrls);
+        }
+      } catch (uploadErr) {
+        alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadErr.message}`);
+      }
+    }
+
+    // =====================================
+    // 3. UPDATE STATE FE
+    // =====================================
     const newPPKS = {
-      id: result.data.id,
-      nik: formPPKS.nik || null,
-      nama_lengkap: formPPKS.nama_lengkap || null,
+      id: newPPKSId,
       kategori_ppks: formPPKS.kategori_ppks,
+      tanggal_penemuan: formPPKS.tanggal_penemuan,
+      nik: formPPKS.nik || "Belum Diketahui",
+      nama_lengkap: formPPKS.nama_lengkap || "Tanpa Identitas",
       kecamatan: formPPKS.kecamatan,
       kelurahan: formPPKS.kelurahan,
       lokasi_penemuan: formPPKS.lokasi_penemuan,
-      tanggal_penemuan: formPPKS.tanggal_penemuan,
       status_penanganan: "Kasus Aktif",
-      catatan_verifikator: "",
-      bukti_foto_ppks: fotoUrls  // ✅ Include photos!
+      // ✅ Simpan sebagai array agar konsisten dengan tampilan
+      bukti_foto_ppks: fotoUrls
+
     };
-    
+
     setDummyPPKS(prev => [newPPKS, ...prev]);
-    setFormPPKS({ nik: "", nama_lengkap: "", kategori_ppks: "", kecamatan: "", kelurahan: "", lokasi_penemuan: "", tanggal_penemuan: "", bukti_foto_ppks: [] });
-    setFotoBuktiPPKS([]);
     setIsAddPPKSModalOpen(false);
-    
-    alert("✅ Laporan PPKS berhasil ditambahkan!");
+    setFormPPKS(initialFormPPKS);
+    setFotoBuktiPPKS([]);
+    showSuccess();
 
   } catch (error) {
     console.error("❌ Error:", error);
-    alert("Gagal: " + error.message);
+    alert("Terjadi kesalahan: " + error.message);
   }
 };
+
+
+
+
 // ==========================================
   // ✅ FUNGSI BUKA DETAIL PPKS (KEMBALIKAN FUNGSI INI)
   // ==========================================
@@ -1326,50 +1353,51 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
             </div>
           </div>
 
-          <div className="modal-section" style={{ marginTop: '20px' }}>
-          <h3 className="section-subtitle">Bukti Foto Penemuan</h3>
-          {Array.isArray(selectedPPKSData?.bukti_foto_ppks) && selectedPPKSData?.bukti_foto_ppks.length > 0 ? (
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-              {selectedPPKSData.bukti_foto_ppks.map((fotoUrl, idx) => (
-                <img 
-                  key={idx}
-                  src={fotoUrl} 
-                  alt={`Bukti ${idx + 1}`}
-                  style={{ 
-                    width: '120px', 
-                    height: '120px', 
-                    objectFit: 'cover', 
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => window.open(fotoUrl, '_blank')}
-                />
-              ))}
-            </div>
-          ) : typeof selectedPPKSData?.bukti_foto_ppks === 'string' && selectedPPKSData?.bukti_foto_ppks.trim() !== "" ? (
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-              {selectedPPKSData.bukti_foto_ppks.split(",").map((fotoUrl, idx) => (
-                <img 
-                  key={idx}
-                  src={fotoUrl.trim()} 
-                  alt={`Bukti ${idx + 1}`}
-                  style={{ 
-                    width: '120px', 
-                    height: '120px', 
-                    objectFit: 'cover', 
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => window.open(fotoUrl.trim(), '_blank')}
-                />
-              ))}
-            </div>
-          ) : (
-            <p style={{ fontSize: '13px', color: '#94a3b8' }}>Tidak ada bukti foto yang dilampirkan.</p>
-          )}
-        </div>
+
+
+    <div className="modal-section" style={{ marginTop: '20px' }}>
+  <h3 className="section-subtitle">Bukti Foto Penemuan</h3>
+  {(() => {
+    // ✅ Normalisasi: selalu jadikan array apapun formatnya dari BE
+    let fotoList = [];
+
+    if (Array.isArray(selectedPPKSData?.bukti_foto_ppks)) {
+      // Format array: ["url1", "url2"]
+      fotoList = selectedPPKSData.bukti_foto_ppks.filter(f => f && f.trim() !== "");
+    } else if (typeof selectedPPKSData?.bukti_foto_ppks === 'string' && selectedPPKSData.bukti_foto_ppks.trim() !== "") {
+      // Format string dipisah koma: "url1,url2"
+      fotoList = selectedPPKSData.bukti_foto_ppks.split(",").map(f => f.trim()).filter(f => f !== "");
+    }
+
+    if (fotoList.length === 0) {
+      return <p style={{ fontSize: '13px', color: '#94a3b8' }}>Tidak ada bukti foto yang dilampirkan.</p>;
+    }
+
+    return (
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+        {fotoList.map((fotoUrl, idx) => (
+          <img
+            key={idx}
+            src={fotoUrl}
+            alt={`Bukti ${idx + 1}`}
+            style={{
+              width: '120px', height: '120px',
+              objectFit: 'cover', borderRadius: '8px',
+              border: '1px solid #cbd5e1', cursor: 'pointer'
+            }}
+            onClick={() => window.open(fotoUrl, '_blank')}
+            onError={(e) => {
+              // ✅ Jika gambar gagal load, tampilkan placeholder
+              e.target.style.display = 'none';
+            }}
+          />
+        ))}
+      </div>
+    );
+  })()}
+</div>
+
+
 
           {/* ✅ [PERBAIKAN: AREA CATATAN DIBUAT READ-ONLY KHUSUS MENAMPILKAN PESAN VERIFIKATOR] */}
           <div className="modal-section" style={{ marginTop: '30px', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -2431,7 +2459,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       type="file" 
                       multiple 
                       accept="image/png, image/jpeg, image/jpg" 
-                      onChange={handleFotoPPKSChange} 
+                      onChange={handleSubmitFotoPPKS} 
                       required 
                       style={{ padding: '8px', border: '1px dashed #94a3b8', borderRadius: '6px', width: '100%' }}
                     />
