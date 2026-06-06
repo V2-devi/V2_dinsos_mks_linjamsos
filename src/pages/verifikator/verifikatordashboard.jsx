@@ -148,7 +148,7 @@ function VerifikatorDashboard() {
       if (errBansos) throw errBansos;
       setUsulanList(dataBansos);
 
-      const { data: dataRiwayat, error: errRiwayat } = await supabase.from('pengusulan_bansos').select('*').neq('status_pengusulan', 'Belum');
+      const { data: dataRiwayat, error: errRiwayat } = await supabase.from('pengusulan_bansos').select('*').neq('status_pengusulan', 'Selesai');
       if (errRiwayat) throw errRiwayat;
       setRiwayatList(dataRiwayat);
 
@@ -171,16 +171,45 @@ function VerifikatorDashboard() {
     }
   };
 
-  const openValidationModal = async (data) => {
-    setSelectedData(data);
-    setCatatanValidasi("");
-    setAsetKeluarga(null); 
+
+ const openValidationModal = async (data) => {
+  setSelectedData(data);
+  setCatatanValidasi("");
+  setAsetKeluarga(null);
+
+  // ✅ Fetch aset dari backend REST (bukan Supabase langsung)
+  if (data.no_kk) {
     try {
-      const { data: dataKeluarga, error } = await supabase.from('keluarga').select('aset, hasil_desil').or(`no_kk.eq.${data.no_kk},nik_kepala.eq.${data.nik}`).single();
-      if (!error && dataKeluarga) setAsetKeluarga({ hasil_desil: dataKeluarga.hasil_desil, detail: dataKeluarga.aset });
-    } catch (error) { console.log("Keluarga belum memiliki data aset 39 Variabel di DTSEN."); }
-    setIsValidateModalOpen(true);
-  };
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://127.0.0.1:8000/aset/${data.no_kk}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        // ✅ Normalize — backend bisa return { data: {...} } atau langsung {...}
+        const asetData = result?.data || result;
+        console.log("📦 Data aset diterima:", asetData);
+        // ✅ Cek tidak kosong sebelum set
+        if (asetData && Object.keys(asetData).length > 0) {
+          setAsetKeluarga(asetData);
+        } else {
+          setAsetKeluarga(null);
+        }
+      } else {
+        console.warn("Aset tidak ditemukan untuk no_kk:", data.no_kk);
+        setAsetKeluarga(null);
+      }
+    } catch (error) {
+      console.error("Gagal fetch aset:", error);
+      setAsetKeluarga(null);
+    }
+  }
+
+  setIsValidateModalOpen(true);
+};
+
+
 
   const openValidationPPKSModal = (data) => { 
     setSelectedPPKSReview(data); 
@@ -260,53 +289,86 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
 
 
 
+const handleValidationPPKSAction = async (e, statusKeputusan) => {
+  e.preventDefault();
+  
+  if (!selectedPPKSReview || !selectedPPKSReview.id) {
+    return alert("⚠️ Data tidak ditemukan. Silakan pilih data terlebih dahulu.");
+  }
 
-  const handleValidationPPKSAction = async (e, statusKeputusan) => {
-    e.preventDefault();
-    if (!selectedPPKSReview) return;
-    // Normalisasi status PPKS
-    const mapStatusPPKS = (s) => {
-      if (!s) return s;
-      const t = String(s).toLowerCase().trim();
-      if (t.includes('aktif')) return 'Kasus Aktif';
-      if (t.includes('selesai')) return 'Selesai Ditangani';
-      if (t.includes('tolak') || t.includes('ditolak')) return 'Ditolak';
-      return s.trim();
-    };
-    const statusFinal = mapStatusPPKS(statusKeputusan);
-    try {
-      const { error, data } = await supabase
-        .from('ppks')
-        .update({ status_penanganan: statusFinal, catatan_verifikator: catatanValidasi })
-        .eq('id', selectedPPKSReview.id)
-        .select();
-      if (error) throw error;
-      await fetchDataVerifikator();
-      setIsReviewPPKSModalOpen(false);
-      setSelectedPPKSReview(null);
-      setCatatanValidasi("");
-      const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "aktif";
-      setActiveTab(targetTab);
-      alert(`✅ Berhasil! Masuk ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
-    } catch (error) {
-      console.error("💥 Action Failed:", error);
-      alert("Gagal: " + error.message);
-    }
-  };
+  // 1. Normalisasi Status secara EKSAK (Hanya 2 Opsi)
+  const s = String(statusKeputusan || "").toLowerCase().trim();
+  let statusFinal = "Kasus Aktif"; // Default
+
+  if (s.includes("selesai") || s.includes("tutup")) {
+    statusFinal = "Selesai Ditangani";
+  } else if (s.includes("aktif") || s.includes("lanjut") || s.includes("menunggu")) {
+    statusFinal = "Kasus Aktif";
+  }
+
+  console.log("🔍 [PPKS] Update ID:", selectedPPKSReview.id, "ke status:", statusFinal);
+
+  try {
+    // 2. Eksekusi Update ke Supabase
+    const { error, data } = await supabase
+      .from('ppks')
+      .update({ 
+        status_penanganan: statusFinal, 
+        catatan_verifikator: catatanValidasi ? catatanValidasi.trim() : null 
+      })
+      .eq('id', selectedPPKSReview.id)
+      .select(); // .select() penting untuk memastikan data kembali
+
+    if (error) throw error;
+
+    console.log("✅ [PPKS] Update Berhasil:", data);
+
+    // 3. Refresh Data (Pastikan fungsi ini benar-benar mengambil data terbaru dari DB)
+    await fetchDataVerifikator();
+
+    // 4. Reset State Modal
+    setIsReviewPPKSModalOpen(false);
+    setSelectedPPKSReview(null);
+    setCatatanValidasi("");
+
+    // 5. Logika Pindah Tab SESUAI KLARIFIKASI ANDA
+    const targetTab = statusFinal === "Selesai Ditangani" ? "riwayat" : "menunggu";
+    setActiveTab(targetTab);
+    
+    alert(`✅ Berhasil! Status diubah menjadi "${statusFinal}".\nOtomatis pindah ke tab ${targetTab === "riwayat" ? "Riwayat" : "Menunggu"}.`);
+
+  } catch (error) {
+    console.error("💥 [PPKS] Action Failed:", error);
+    alert(`Gagal update: ${error.message}`);
+  }
+};
+
+const handleSelesaikanKasusPPKS = async (id) => {
+  console.log("🔍 [PPKS Quick Action] ID yang akan diupdate:", id);
+  if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
+  
+  try {
+    const { error, data } = await supabase
+      .from('ppks')
+      .update({ status_penanganan: "Selesai Ditangani" })
+      .eq('id', id)
+      .select();
+      
+    if (error) throw error;
+    
+    console.log("✅ [PPKS Quick Action] Berhasil:", data);
+    await fetchDataVerifikator(); 
+    
+    // Pindah ke tab riwayat setelah selesai
+    setActiveTab("riwayat");
+    alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
+  } catch (err) {
+    console.error("❌ [PPKS Quick Action] Gagal:", err);
+    alert("Gagal update status: " + err.message);
+  }
+};
 
 
-
-  const handleSelesaikanKasusPPKS = async (id) => {
-    if (!window.confirm("Yakin ingin mengubah status kasus ini menjadi 'Selesai Ditangani'?")) return;
-    try {
-      const { error } = await supabase.from('ppks').update({ status_penanganan: "Selesai Ditangani" }).eq('id', id);
-      if (error) throw error;
-      await fetchDataVerifikator(); 
-      alert("✅ Status berhasil diubah menjadi Selesai Ditangani!");
-    } catch (err) {
-      alert("Gagal update status: " + err.message);
-    }
-  };
 
   const formatDateIndo = (dateStr) => { 
     if(!dateStr || dateStr === "-") return "-"; 
@@ -314,6 +376,49 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
     const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; 
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`; 
   };
+
+
+// const [asetKeluarga, setAsetKeluarga] = useState(null);
+
+// ✅ Fungsi aman untuk mengambil data aset
+const fetchAsetKeluarga = async (no_kk) => {
+  if (!no_kk) return;
+  
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://127.0.0.1:8000/aset/${no_kk}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      // Supabase biasanya return { data: {...} }, kita ambil isinya
+      const dataAset = result.data || result; 
+      setAsetKeluarga(dataAset);
+    } else {
+      setAsetKeluarga(null); // Set null jika tidak ditemukan
+    }
+  } catch (error) {
+    console.error("Gagal fetch aset:", error);
+    setAsetKeluarga(null);
+  }
+};
+
+
+
+
+const handleOpenVerifikasi = (item) => {
+  setSelectedPengusulan(item);
+  setAsetKeluarga(null); // Reset state aset dulu agar tidak menampilkan data lama
+  
+  // ✅ Panggil fetch data aset berdasarkan No KK dari item yang dipilih
+  if (item.no_kk) {
+    fetchAsetKeluarga(item.no_kk);
+  }
+  
+  setIsVerifikasiModalOpen(true);
+};
+
 
   return (
     <div className="verifikator-layout relative">
@@ -497,8 +602,8 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
               <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', padding: '30px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
                 
                 {/* 1. STATUS BOX */}
-                <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Ditolak' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Ditolak' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
-                  <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Ditolak' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
+                <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
+                  <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
                   <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
                 </div>
 
@@ -615,7 +720,7 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
                 <div className="form-grid-2">
                   <div className="form-group-modal"><label>NIK</label><input type="text" value={selectedData.nik} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>No. KK</label><input type="text" value={selectedData.no_kk || "-"} readOnly className="input-readonly" /></div>
-                  <div className="form-group-modal"><label>Nama Kepala Keluarga</label><input type="text" value={selectedData.nama_kepala_keluarga} readOnly className="input-readonly" /></div>
+                  <div className="form-group-modal"><label>Nama Kepala Keluarga</label><input type="text" value={selectedData.nama_kepala_keluarga || selectedData.nama_kepala_keluarga} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Kecamatan</label><input type="text" value={selectedData.kecamatan} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Kelurahan</label><input type="text" value={selectedData.kelurahan} readOnly className="input-readonly" /></div>
                   <div className="form-group-modal"><label>Tingkat Desil Saat Ini</label><input type="text" value={asetKeluarga ? asetKeluarga.hasil_desil : "Belum Dihitung"} readOnly className="input-readonly" style={{ fontWeight: 'bold', color: '#b45309', backgroundColor: '#fffbeb' }} /></div>
@@ -623,24 +728,64 @@ const handleValidasiBansos = async (e, statusKeputusan) => {
                 </div>
               </div>
 
-              <div className="modal-section" style={{ marginTop: '20px' }}>
-                <h3 className="section-subtitle">Kondisi Aset & Perumahan (39 Variabel DTSEN)</h3>
-                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '15px' }}>Data di bawah ditarik langsung dari survei lapangan DTSEN.</p>
-                {asetKeluarga && asetKeluarga.detail ? (
-                  <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px', fontSize: '13px' }}>
-                     {Object.entries(asetKeluarga.detail).map(([key, value]) => (
-                        <div key={key} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px dashed #cbd5e1', paddingBottom: '5px' }}>
-                          <span style={{ color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11px' }}>Var: {key.toUpperCase()}</span>
-                          <span style={{ color: '#1e293b' }}>{value}</span>
-                        </div>
-                     ))}
-                  </div>
-                ) : (
-                  <div style={{ padding: '20px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px', textAlign: 'center', fontSize: '13px' }}>
-                    Keluarga ini belum melengkapi data 39 Variabel Aset di DTSEN. Disarankan untuk menolak usulan sampai staf melengkapi data tersebut.
-                  </div>
-                )}
-              </div>
+
+
+<div className="modal-section" style={{ marginTop: '20px' }}>
+  <h3 className="section-subtitle">Kondisi Aset & Perumahan (39 Variabel DTSEN)</h3>
+  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '15px' }}>
+    Data di bawah ditarik langsung dari survei lapangan DTSEN.
+  </p>
+
+  {/* 🛡️ PENGAMAN: Cek apakah asetKeluarga adalah object DAN tidak kosong */}
+{asetKeluarga && typeof asetKeluarga === 'object' && Object.keys(asetKeluarga).length > 0 ? (
+  <div style={{
+    backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px',
+    border: '1px solid #e2e8f0', display: 'grid',
+    gridTemplateColumns: '1fr 1fr', gap: '10px 20px', fontSize: '13px'
+  }}>
+      {Object.entries(asetKeluarga).map(([key, value]) => (
+        <div key={key} style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          borderBottom: '1px dashed #cbd5e1', 
+          paddingBottom: '5px' 
+        }}>
+          
+          <span style={{ color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11px' }}>
+           
+            {key.replace(/_/g, ' ')} {/* Mengganti underscore dengan spasi agar rapi */}
+          </span>
+
+          <span style={{ color: '#1e293b' }}>
+            {/* Tampilkan value, atau "-" jika null/undefined/kosong */}
+            {value !== null && value !== undefined && value !== "" ? String(value) : "-"}
+          </span>
+        </div>
+      ))}
+    </div>
+
+  ) : (
+    /* TAMPILAN JIKA DATA NULL, UNDEFINED, ATAU OBJEK KOSONG {} */
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: '#fee2e2', 
+      color: '#991b1b', 
+      borderRadius: '8px', 
+      textAlign: 'center', 
+      fontSize: '13px',
+      border: '1px solid #fecaca'
+    }}>
+      ⚠️ Keluarga ini belum melengkapi data 39 Variabel Aset di DTSEN. <br/>
+      Disarankan untuk menunda validasi sampai staf melengkapi data tersebut.
+    </div>
+  )}
+</div>
+
+
+
+
+
+
 
               <div style={{ marginTop: '30px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
                 <div className="form-group-modal" style={{ marginBottom: '20px' }}>
