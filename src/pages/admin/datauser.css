@@ -181,27 +181,33 @@ body {
 }
 .text-center { text-align: center; }
 
-/* =======================================================
-   7. NOTIFIKASI DROPDOWN
-   ======================================================= */
-.notif-wrapper { position: relative; display: inline-block; }
-.notif-dropdown {
-  position: absolute; top: 45px; right: 0; width: 350px;
-  background-color: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); border: 1px solid #e2e8f0; z-index: 10000;
-}
-.notif-header { padding: 15px 20px; background-color: #234a66; color: white; }
-.notif-header h3 { font-size: 16px; font-weight: 700; margin: 0; }
-.notif-body { max-height: 350px; overflow-y: auto; background-color: white; }
-.notif-item { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; cursor: pointer; }
-.notif-title-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-.notif-title-row h4 { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0; }
-.notif-title-row span { font-size: 11px; color: #94a3b8; }
-.notif-item p { font-size: 13px; color: #475569; margin: 0; }
-.notif-backdrop { position: fixed; inset: 0; z-index: 9999; }
-
-@media (max-width: 768px) {
-  .filter-search-box-white { flex-direction: column; gap: 15px; }
-  .custom-select-box, .custom-search-box { width: 100% !important; }
-  .form-grid-2 { grid-template-columns: 1fr; }
+/* Gaya dasar untuk tombol aksi modern */
+.btn-action-modern {
+  background-color: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
 }
 
+/* Warna khusus untuk tombol Edit (Biru) */
+.btn-edit-modern {
+  color: #64748b; /* Warna ikon default (abu-abu kebiruan) */
+}
+.btn-edit-modern:hover {
+  background-color: #eff6ff; /* Latar biru sangat muda saat di-hover */
+  color: #2563eb; /* Warna ikon menjadi biru terang */
+}
+
+/* Warna khusus untuk tombol Hapus (Merah) */
+.btn-delete-modern {
+  color: #64748b; /* Warna ikon default */
+}
+.btn-delete-modern:hover {
+  background-color: #fef2f2; /* Latar merah sangat muda saat di-hover */
+  color: #dc2626; /* Warna ikon menjadi merah terang */
+}
