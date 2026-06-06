@@ -482,7 +482,7 @@ const handleOpenVerifikasi = (item) => {
                   
                   {/* Tombol DTSEN */}
                   <a 
-                    href="/templates/template_import_dtsen.xlsx" download="Template_DTSEN.xlsx"
+                    href="/templates/template_import_dtsen.csv" download="Template_DTSEN.csv"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
                   >
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -491,7 +491,7 @@ const handleOpenVerifikasi = (item) => {
 
                   {/* Tombol PPKS */}
                   <a 
-                    href="/templates/template_import_ppks.xlsx" download="Template_PPKS.xlsx"
+                    href="/templates/template_import_ppks.csv" download="Template_PPKS.csv"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
                   >
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -500,7 +500,7 @@ const handleOpenVerifikasi = (item) => {
 
                   {/* Tombol BANSOS */}
                   <a 
-                    href="/templates/template_import_bansos.xlsx" download="Template_Bansos.xlsx"
+                    href="/templates/template_import_bansos.csv" download="Template_Bansos.csv"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
                   >
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
