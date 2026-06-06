@@ -118,7 +118,40 @@ def update_kondisi_khusus(id: int, data):
 
     return result.data
 
+# ✅ Pastikan import supabase yang pakai SERVICE_ROLE_KEY
+from config.database import supabase, SUPABASE_BUCKET_DOKUMEN
 
+def upload_surat_kematian(no_kk: str, anggota_id: str, file):
+    try:
+        import os, re, time, uuid
+
+        name, ext = os.path.splitext(file.filename or "surat.pdf")
+        clean_name = re.sub(r'[^\w\-]', '_', name).strip('_-')[:50]
+        timestamp = int(time.time() * 1000)
+        unique_id = uuid.uuid4().hex[:8]
+        safe_filename = f"surat_kematian/{no_kk}/{anggota_id}/{timestamp}-{unique_id}-{clean_name}{ext}"
+
+        file_content = file.file.read()
+
+        # ✅ Upload ke storage — pakai supabase yang SERVICE_ROLE_KEY
+        supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).upload(
+            safe_filename,
+            file_content,
+            {"content-type": file.content_type or "application/pdf"}
+        )
+
+        public_url = supabase.storage.from_(SUPABASE_BUCKET_DOKUMEN).get_public_url(safe_filename)
+
+        # ✅ Update DB
+        result = supabase.table("anggota_keluarga") \
+            .update({"surat_kematian": public_url}) \
+            .eq("id", anggota_id) \
+            .execute()
+
+        return public_url
+
+    except Exception as e:
+        raise Exception(f"Gagal upload surat kematian: {str(e)}")
 
 
 
