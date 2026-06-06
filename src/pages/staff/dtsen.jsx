@@ -105,11 +105,12 @@ const handleImportFile = async (e, tableName, onSuccess) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  if (!file.name.toLowerCase().endsWith('.csv')) {
-    alert("⚠️ Hanya file .CSV yang didukung");
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+    alert("⚠️ Hanya file .CSV dan Excel (.xlsx / .xls) yang didukung");
     e.target.value = "";
     return;
-  }
+ }
 
   setIsImporting(true);
   try {
@@ -2001,7 +2002,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
     )}
   </button>
 
-  <input type="file" accept=".csv" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "ppks", fetchKeluarga)} />
+  <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "ppks", fetchKeluarga)} />
 
   <button className="btn-add-staff" onClick={() => setIsAddPPKSModalOpen(true)}>
     <span className="plus-icon">+</span> Tambah Laporan PPKS
