@@ -1129,6 +1129,16 @@ const handleEditAnggotaSubmit = async (e) => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Silakan login ulang.");
 
+    // ✅ Validasi foto sebelum submit
+    if (fotoBuktiPPKS.length === 0) {
+      alert("⚠️ Minimal 1 foto bukti wajib diunggah.");
+      return;
+    }
+    if (fotoBuktiPPKS.length > 3) {
+      alert("⚠️ Maksimal 3 foto bukti.");
+      return;
+    }
+
     // =====================================
     // 1. INSERT DATA PPKS DULU — DAPAT ID
     // =====================================
@@ -1151,44 +1161,44 @@ const handleEditAnggotaSubmit = async (e) => {
     });
 
     const result = await res.json();
-    if (!res.ok) {
-      const detail = result?.detail || JSON.stringify(result);
-      throw new Error(detail);
-    }
+    if (!res.ok) throw new Error(result?.detail || JSON.stringify(result));
 
     const newPPKSId = result?.data?.id;
     console.log("✅ PPKS tersimpan, ID:", newPPKSId);
 
+    if (!newPPKSId) throw new Error("ID PPKS tidak ditemukan dari response backend.");
+
     // =====================================
-    // 2. UPLOAD FOTO JIKA ADA — PAKAI ID
+    // 2. UPLOAD FOTO — PAKAI fotoBuktiPPKS LANGSUNG
     // =====================================
     let fotoUrls = [];
 
-    if (fotoBuktiPPKS.length > 0 && newPPKSId) {
-      try {
-        const formDataFoto = new FormData();
-        formDataFoto.append("ppks_id", newPPKSId);
-        fotoBuktiPPKS.forEach(file => formDataFoto.append("files", file));
+    try {
+      const formDataFoto = new FormData();
+      formDataFoto.append("ppks_id", newPPKSId);
 
-        const uploadRes = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formDataFoto
-        });
+      // ✅ Ambil dari state fotoBuktiPPKS yang sudah diset oleh handleFileChange
+      fotoBuktiPPKS.forEach(file => formDataFoto.append("files", file));
 
-        const uploadData = await uploadRes.json();
-        console.log("📸 Upload response:", uploadData);
+      console.log("📸 Mengupload", fotoBuktiPPKS.length, "foto untuk ID:", newPPKSId);
 
-        if (!uploadRes.ok) {
-          // Foto gagal tapi data PPKS sudah tersimpan — warning saja
-          alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadData?.detail || "Error tidak diketahui"}`);
-        } else {
-          fotoUrls = uploadData.urls || [];
-          console.log("✅ Foto terupload:", fotoUrls);
-        }
-      } catch (uploadErr) {
-        alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadErr.message}`);
+      const uploadRes = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataFoto
+      });
+
+      const uploadData = await uploadRes.json();
+      console.log("📸 Upload response:", uploadData);
+
+      if (!uploadRes.ok) {
+        alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadData?.detail || "Error tidak diketahui"}`);
+      } else {
+        fotoUrls = uploadData.urls || [];
+        console.log("✅ Foto terupload:", fotoUrls);
       }
+    } catch (uploadErr) {
+      alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadErr.message}`);
     }
 
     // =====================================
@@ -1204,9 +1214,7 @@ const handleEditAnggotaSubmit = async (e) => {
       kelurahan: formPPKS.kelurahan,
       lokasi_penemuan: formPPKS.lokasi_penemuan,
       status_penanganan: "Kasus Aktif",
-      // ✅ Simpan sebagai array agar konsisten dengan tampilan
-      bukti_foto_ppks: fotoUrls
-
+      bukti_foto_ppks: fotoUrls  // ✅ array URL dari Supabase Storage
     };
 
     setDummyPPKS(prev => [newPPKS, ...prev]);
@@ -2459,7 +2467,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       type="file" 
                       multiple 
                       accept="image/png, image/jpeg, image/jpg" 
-                      onChange={handleSubmitFotoPPKS} 
+                      onChange={handleFileChange} 
                       required 
                       style={{ padding: '8px', border: '1px dashed #94a3b8', borderRadius: '6px', width: '100%' }}
                     />
