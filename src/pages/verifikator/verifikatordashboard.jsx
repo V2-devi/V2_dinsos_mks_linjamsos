@@ -743,7 +743,9 @@ const handleOpenVerifikasi = (item) => {
     border: '1px solid #e2e8f0', display: 'grid',
     gridTemplateColumns: '1fr 1fr', gap: '10px 20px', fontSize: '13px'
   }}>
-      {Object.entries(asetKeluarga).map(([key, value]) => (
+      {Object.entries(asetKeluarga)
+      .filter(([key]) => !['id', 'no_kk', 'created_at', 'updated_at', 'user_id'].includes(key))
+      .map(([key, value]) => (
         <div key={key} style={{ 
           display: 'flex', 
           flexDirection: 'column', 
