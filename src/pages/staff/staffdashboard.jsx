@@ -23,8 +23,8 @@ function StaffDashboard() {
   const [dummyPPKS, setDummyPPKS] = useState([]);
 
   const [currentStaff, setCurrentStaff] = useState({
-    nama: "Firliany",
-    nip: "12345678912131230"
+    // nama_lengkap: "Firliany",
+    // nip: "12345678912131230"
   });
 
   const [activeMenu, setActiveMenu] = useState((location.state && location.state.activeMenu) ? location.state.activeMenu : "usulan_baru"); 
@@ -123,22 +123,32 @@ function StaffDashboard() {
   // ==========================================
   // LIFECYCLE (USE EFFECT FETCH SUPABASE)
   // ==========================================
+  // ==========================================
+  // LIFECYCLE - LOAD DATA STAFF & FETCH DATA
+  // ==========================================
+  
+  // ✅ useEffect 1: Load data staff dari localStorage
   useEffect(() => {
-    const savedStaffData = localStorage.getItem("currentStaffUser");
+    const savedStaffData = localStorage.getItem("user");
     if (savedStaffData) {
-      const parsedData = JSON.parse(savedStaffData);
-      const namaDepan = parsedData.namaLengkap
-        ? parsedData.namaLengkap.split(' ')[0]
-        : "Firliany";
-      setCurrentStaff({
-        nama: namaDepan,
-        nip: parsedData.nip || "12345678912131230"
-      });
+      try {
+        const parsedData = JSON.parse(savedStaffData);
+        
+        setCurrentStaff({
+          nama_lengkap: parsedData.nama_lengkap || "Nama Staff",
+          nip: parsedData.nip || "NIP Staff"
+        });
+      } catch (error) {
+        console.error("Gagal membaca data staff:", error);
+      }
     }
+  }, []); // ✅ [] di sini, sebagai argumen kedua useEffect
 
+  // ✅ useEffect 2: Fetch data dari Supabase (terpisah)
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        // ✅ Usulan Bansos — tetap dari Supabase
+        // ✅ Usulan Bansos
         const { data: pengusulanData, error: pengusulanError } =
           await supabase.from('pengusulan_bansos').select('*');
         if (pengusulanError) throw pengusulanError;
@@ -157,7 +167,7 @@ function StaffDashboard() {
           }))
         );
 
-        // ✅ PPKS — tetap dari Supabase
+        // ✅ PPKS
         const { data: ppksData, error: ppksError } =
           await supabase.from('ppks').select('*');
         if (ppksError) throw ppksError;
@@ -173,7 +183,7 @@ function StaffDashboard() {
             tanggal_penemuan: item.tanggal_penemuan,
             status_penanganan: item.status_penanganan,
             catatan_verifikator: item.catatan_verifikator,
-            bukti_foto_ppks: item.bukti_foto_ppks  // ✅ TAMBAHKAN FIELD INI
+            bukti_foto_ppks: item.bukti_foto_ppks
           }))
         );
       } catch (error) {
@@ -182,7 +192,7 @@ function StaffDashboard() {
     };
 
     fetchData();
-  }, []);
+  }, []); // ✅ [] di sini, sebagai argumen kedua useEffect
 
   const showSuccess = () => { setIsSuccessModalOpen(true); setTimeout(() => setIsSuccessModalOpen(false), 2500); };
 
@@ -217,7 +227,7 @@ function StaffDashboard() {
         <div className="sidebar-profile" style={{ cursor: 'pointer' }} onClick={() => navigate("/staffprofile")} title="Lihat Profil">
           <div className="profile-avatar-small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 4-7 8-7s8 3 8 7"></path></svg></div>
           <div className="profile-info">
-            <span className="profile-name">{currentStaff.nama}</span>
+            <span className="profile-name">{currentStaff.nama_lengkap}</span>
             <span className="profile-nik">{currentStaff.nip}</span>
           </div>
         </div>

@@ -18,15 +18,15 @@ function VerifikatorDashboard() {
   const [dummyPPKS, setDummyPPKS] = useState([]);
   // Tambahkan ini di dekat state lainnya
   const [currentVerifikator, setCurrentVerifikator] = useState({
-    nama: "Verifikator",
-    nip: "-"
+    // nama: "Verifikator",
+    // nip: "-"
   });
 
   // ✅ DITAMBAHKAN: State untuk menyimpan daftar staff
   const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
-    const savedUserData = localStorage.getItem("currentStaffUser"); // atau key yang Anda gunakan
+    const savedUserData = localStorage.getItem("user"); // atau key yang Anda gunakan
     if (savedUserData) {
       const parsedData = JSON.parse(savedUserData);
       setCurrentVerifikator({
@@ -604,7 +604,7 @@ const handleOpenVerifikasi = (item) => {
                 {/* 1. STATUS BOX */}
                 <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
                   <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
-                  <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
+                  <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_penemuan)}</strong></div>
                 </div>
 
                 {/* 2. DATA TEMUAN LAPANGAN */}
@@ -612,11 +612,11 @@ const handleOpenVerifikasi = (item) => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div>
                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>NAMA</span>
-                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.nama || "-"}</div>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.nama_lengkap || "-"}</div>
                     </div>
                     <div>
                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>KATEGORI PPKS</span>
-                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.kategori || "-"}</div>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.kategori_ppks || "-"}</div>
                     </div>
                     <div>
                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>NOMOR NIK (JIKA ADA)</span>
