@@ -18,15 +18,15 @@ function VerifikatorDashboard() {
   const [dummyPPKS, setDummyPPKS] = useState([]);
   // Tambahkan ini di dekat state lainnya
   const [currentVerifikator, setCurrentVerifikator] = useState({
-    nama: "Verifikator",
-    nip: "-"
+    // nama: "Verifikator",
+    // nip: "-"
   });
 
   // ✅ DITAMBAHKAN: State untuk menyimpan daftar staff
   const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
-    const savedUserData = localStorage.getItem("currentStaffUser"); // atau key yang Anda gunakan
+    const savedUserData = localStorage.getItem("user"); // atau key yang Anda gunakan
     if (savedUserData) {
       const parsedData = JSON.parse(savedUserData);
       setCurrentVerifikator({
@@ -482,7 +482,7 @@ const handleOpenVerifikasi = (item) => {
                   
                   {/* Tombol DTSEN */}
                   <a 
-                    href="/templates/template_import_dtsen.xlsx" download="Template_DTSEN.xlsx"
+                    href="/templates/template_import_dtsen.csv" download="Template_DTSEN.csv"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
                   >
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -491,7 +491,7 @@ const handleOpenVerifikasi = (item) => {
 
                   {/* Tombol PPKS */}
                   <a 
-                    href="/templates/template_import_ppks.xlsx" download="Template_PPKS.xlsx"
+                    href="/templates/template_import_ppks.csv" download="Template_PPKS.csv"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
                   >
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -500,7 +500,7 @@ const handleOpenVerifikasi = (item) => {
 
                   {/* Tombol BANSOS */}
                   <a 
-                    href="/templates/template_import_bansos.xlsx" download="Template_Bansos.xlsx"
+                    href="/templates/template_import_bansos.csv" download="Template_Bansos.csv"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 15px', color: '#1e293b', border: '1px solid #cbd5e1', backgroundColor: '#f1f5f9', textDecoration: 'none', borderRadius: '6px', fontWeight: '600', transition: 'all 0.2s' }}
                   >
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -604,7 +604,7 @@ const handleOpenVerifikasi = (item) => {
                 {/* 1. STATUS BOX */}
                 <div className="alert-info-box" style={{ backgroundColor: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fee2e2' : '#f0fdf4', border: `1px solid ${selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#fca5a5' : '#bbf7d0'}`, padding: '15px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between' }}>
                   <div><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>STATUS PENANGANAN SAAT INI:</span><strong style={{ color: selectedPPKSReview.status_penanganan === 'Selesai Ditangani' ? '#991b1b' : '#166534' }}>{selectedPPKSReview.status_penanganan || "Menunggu Kelayakan"}</strong></div>
-                  <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_laporan)}</strong></div>
+                  <div style={{ textAlign: 'right' }}><span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 'bold' }}>TGL LAPORAN:</span><strong style={{ color: '#166534' }}>{formatDateIndo(selectedPPKSReview.tanggal_penemuan)}</strong></div>
                 </div>
 
                 {/* 2. DATA TEMUAN LAPANGAN */}
@@ -612,11 +612,11 @@ const handleOpenVerifikasi = (item) => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div>
                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>NAMA</span>
-                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.nama || "-"}</div>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.nama_lengkap || "-"}</div>
                     </div>
                     <div>
                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>KATEGORI PPKS</span>
-                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.kategori || "-"}</div>
+                      <div style={{ color: '#0f172a', fontWeight: '600', fontSize: '15px' }}>{selectedPPKSReview.kategori_ppks || "-"}</div>
                     </div>
                     <div>
                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>NOMOR NIK (JIKA ADA)</span>
