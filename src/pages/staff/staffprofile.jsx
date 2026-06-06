@@ -218,7 +218,7 @@ const handleOpenEdit = () => {
           {/* DATA KANAN */}
           <div className="profile-details-box">
             
-            <h2 className="profile-section-title">Data Staff</h2>
+            <h2 className="profile-section-title">Profile Staff</h2>
             <div className="profile-info-grid">
               <span className="grid-label">Nama Lengkap</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nama_lengkap}</span>
               <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nip}</span>

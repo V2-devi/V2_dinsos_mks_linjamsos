@@ -218,7 +218,7 @@ const handleOpenEdit = () => {
           {/* DATA KANAN */}
           <div className="profile-details-box">
             
-            <h2 className="profile-section-title">Data Staff</h2>
+            <h2 className="profile-section-title">Profile Admin</h2>
             <div className="profile-info-grid">
               <span className="grid-label">Nama Lengkap</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nama_lengkap}</span>
               <span className="grid-label">NIP</span><span className="grid-colon">:</span><span className="grid-value">{profileData.nip}</span>
@@ -267,7 +267,7 @@ const handleOpenEdit = () => {
               <form onSubmit={(e) => handleSubmit(e, "edit")}>
                 
                 <div className="modal-section">
-                  <h3 className="section-subtitle">Data Pribadi Staff</h3>
+                  <h3 className="section-subtitle">Data Pribadi Admin</h3>
                   <div className="form-grid-2">
                     <div className="form-group-modal"><label>Nama Lengkap</label><input type="text" name="nama_lengkap" value={profileData.nama_lengkap} onChange={handleInputChange} required /></div>
                     

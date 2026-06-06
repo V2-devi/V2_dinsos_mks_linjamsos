@@ -15,23 +15,6 @@ function AdminDashboard() {
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  // === DATA ANTREAN AKUN BARU (DARI NOTIFIKASI) ===
-  const [pendingAccounts, setPendingAccounts] = useState([
-    { 
-      id: 99, 
-      nip: "198012122005011001", // Ditambahkan NIP untuk kelengkapan data
-      nik: "1234567890123456", 
-      pass: "baru123", 
-      phone: "081122334455", 
-      name: "Staf Kecamatan Tallo", 
-      email: "tallo@gmail.com", 
-      address: "Kantor Kecamatan Tallo, Jl. AR Hakim", 
-      role: "Verifikator", 
-      status_akun: "Menunggu",
-      tanggal: "15/09"
-    }
-  ]);
-  
   // === STATE DATA PENGGUNA (DARI DATABASE) ===
   const [users, setUsers] = useState([]);
 
@@ -121,7 +104,7 @@ const fetchUsers = async () => {
         {/* ================= WELCOME BANNER ================= */}
         <div className="welcome-banner">
           <div className="banner-text">
-            <h2>SELAMAT DATANG FIRLIANY FIRDAUS</h2>
+            <h2>SELAMAT DATANG DI SISTEM ADMIN</h2>
             <button className="btn-light-outline" onClick={() => navigate("/adminprofile")}>
               Lihat Akun Anda &rarr;
             </button>
