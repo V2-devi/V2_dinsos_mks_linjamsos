@@ -12,32 +12,39 @@ function ForgotPassword() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // ✅ PANGGIL SUPABASE AUTH
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      // ✅ PANGGIL BACKEND API (BUKAN SUPABASE AUTH LANGSUNG)
+      const res = await fetch("http://127.0.0.1:8000/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
 
-      if (error) {
-        console.error("Reset password error:", error);
-        setError("Email tidak terdaftar atau terjadi kesalahan.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Jika backend mengembalikan status error (misal 400 Bad Request)
+        setError(data.detail || data.error || "Terjadi kesalahan pada server.");
         return;
       }
 
+      // ✅ Jika berhasil (200 OK), tampilkan halaman sukses
+      console.log("Respon Backend:", data);
       setIsSubmitted(true);
+
     } catch (err) {
-      console.error("Error:", err);
-      setError("Terjadi kesalahan. Silakan coba lagi.");
+      console.error("Network Error:", err);
+      setError("Gagal terhubung ke server. Periksa koneksi Anda.");
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="auth-container">
       {/* Left Side (Branding) */}

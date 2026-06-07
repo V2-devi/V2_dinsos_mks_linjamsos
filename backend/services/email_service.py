@@ -258,3 +258,74 @@ def send_staff_account_email(
     except Exception as e:
 
         print("EMAIL STAFF ERROR:", str(e))
+
+
+
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+def send_reset_email(to_email: str, reset_link: str):
+    """Kirim email reset password via Gmail SMTP dengan Error Handling Lengkap"""
+    
+    SENDER_EMAIL = os.getenv("EMAIL_ADDRESS")      # Ganti dengan email Anda
+    SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD")    # Ganti dengan App Password Gmail Anda
+    
+    subject = "Reset Password SICADAS - Dinas Sosial"
+    
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2 style="color: #234a66;">Reset Password SICADAS</h2>
+        <p>Halo,</p>
+        <p>Anda menerima email ini karena ada permintaan reset password untuk akun SICADAS Anda.</p>
+        <p>Klik tombol di bawah untuk reset password:</p>
+        <p style="margin: 20px 0;">
+            <a href="{reset_link}" 
+               style="background-color: #234a66; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block;">
+                Reset Password
+            </a>
+        </p>
+        <p style="color: #64748b; font-size: 12px;">{reset_link}</p>
+        <hr>
+        <p style="color: #999; font-size: 11px;">© 2026 SICADAS - Dinas Sosial</p>
+    </body>
+    </html>
+    """
+    
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
+    
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
+            
+        return {"success": True, "reason": "success", "message": "Email berhasil dikirim"}
+
+    except smtplib.SMTPAuthenticationError:
+        return {"success": False, "reason": "auth_error", "message": "Gagal login SMTP. Cek App Password Gmail Anda."}
+        
+    except smtplib.SMTPRecipientsRefused:
+        return {"success": False, "reason": "invalid_email", "message": "Alamat email tujuan tidak valid atau ditolak."}
+        
+    except smtplib.SMTPException as e:
+        error_msg = str(e).lower()
+        # Cek kata kunci khusus Gmail Rate Limit (Kode 421 atau 550)
+        if "limit" in error_msg or "421" in error_msg or "550" in error_msg or "throttl" in error_msg:
+            return {
+                "success": False, 
+                "reason": "rate_limit", 
+                "message": "⚠️ BATAS PENGIRIMAN HARIAN GMAIL TERCAPAI (Rate Limit). Email tidak terkirim."
+            }
+        else:
+            return {"success": False, "reason": "smtp_error", "message": f"Error SMTP: {str(e)}"}
+            
+    except Exception as e:
+        return {"success": False, "reason": "unknown", "message": f"Error tidak terduga: {str(e)}"}

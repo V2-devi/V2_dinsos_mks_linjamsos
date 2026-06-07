@@ -33,7 +33,7 @@ function Register() {
       setStep(5);
 
       // bersihkan URL
-      window.history.replaceState({}, document.title, "/register");
+      window.history.replaceState({}, document.title, "/auth/register");
     }
   }, []);
 

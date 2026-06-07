@@ -221,12 +221,11 @@ import secrets
 from datetime import datetime, timedelta
 
 
-def request_reset_password(email: str):
-    """Minta reset password - generate token dan simpan
+from services.email_service import send_reset_email
 
-    Cari user pada tabel `pengguna`, lalu simpan token pada tabel
-    `password_reset_tokens` dan tampilkan link reset (untuk development).
-    """
+
+def request_reset_password(email: str):
+    """Minta reset password - generate token, simpan, dan KIRIM EMAIL"""
 
     # 1) Cek apakah user ada pada tabel pengguna
     response = supabase.table("pengguna") \
@@ -235,7 +234,7 @@ def request_reset_password(email: str):
         .execute()
 
     if not response.data:
-        # Jangan ungkapkan apakah email terdaftar
+        # Jangan ungkapkan apakah email terdaftar (keamanan)
         return {"message": "Jika email terdaftar, link reset akan dikirim."}
 
     user = response.data[0]
@@ -253,16 +252,28 @@ def request_reset_password(email: str):
         "used": False
     }).execute()
 
-    # 4) Buat link reset (development)
+    # 4) Buat link reset
     reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
 
-    print(f"\n{'='*60}")
-    print(f"📧 RESET PASSWORD LINK untuk {email}:")
-    print(f"🔗 {reset_link}")
-    print(f"{'='*60}\n")
+    # 5) ✅ PANGGIL FUNGSI KIRIM EMAIL (yang sudah Anda buat di email_service.py)
+    email_status = send_reset_email(email, reset_link)
 
-    # TODO: kirim email via SMTP/Resend pada production
-    return {"message": "Link reset password telah dikirim ke email Anda.", "reset_token": reset_token}
+    # 6) Log ke terminal untuk debugging
+    print(f"\n{'='*70}")
+    print(f"📧 RESET PASSWORD untuk: {email}")
+    print(f"🔗 Link: {reset_link}")
+    
+    if email_status["success"]:
+        print(f"✅ STATUS: Email BERHASIL dikirim ke inbox!")
+    else:
+        print(f"❌ STATUS: Email GAGAL dikirim.")
+        print(f"⚠️ ALASAN: {email_status['reason']}")
+        print(f"📝 PESAN: {email_status['message']}")
+    
+    print(f"{'='*70}\n")
+
+    # 7) Return ke frontend (Pesan tetap sama demi keamanan)
+    return {"message": "Jika email terdaftar, link reset akan dikirim."}
 
 
 def verify_reset_token(token: str):
@@ -308,3 +319,7 @@ def reset_password_with_token(token: str, new_password: str):
     supabase.table("password_reset_tokens").update({"used": True}).eq("token", token).execute()
 
     return {"message": "Password berhasil diubah. Silakan login dengan password baru."}
+
+
+
+
