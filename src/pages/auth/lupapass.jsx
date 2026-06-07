@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabase"; // ✅ IMPORT SUPABASE
 import "./auth.css"; 
 import bgImage from "../../assets/image.png"; 
-import logoLinjamsos from "../../assets/logo_linjamsos.png"; 
+import logoSicadas from "../../assets/logo_sicadas.png"; 
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -40,13 +40,25 @@ function ForgotPassword() {
 
   return (
     <div className="auth-container">
+      {/* Left Side (Branding) */}
       <div className="auth-left" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="auth-overlay">
           <div className="auth-left-content">
-            <img src={logoLinjamsos} alt="Logo Linjamsos" className="auth-logo" />
-            <h1>SISTEM INFORMASI<br />PERLINDUNGAN DAN JAMINAN SOSIAL</h1>
-            <p>Melayani dengan hati, melindungi sepenuh jiwa.</p>
-            <span className="copyright">@2026 Linjamsos. Dinas Sosial.</span>
+            <img 
+              src={logoSicadas} 
+              alt="Logo SICADAS" 
+              className="auth-logo" 
+              style={{ width: '100%', maxWidth: '320px', height: 'auto', marginBottom: '5px' }}
+            />
+                  
+            <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
+              Melayani dengan hati, melindungi sepenuh jiwa. Akses Perlindungan
+              dan Jaminan Sosial dengan lebih mudah dan transparan.
+            </p>
+            
+            <span className="copyright">
+              @2026 Linjamsos. Dinas Sosial. Hak Cipta Dilindungi.
+            </span>
           </div>
         </div>
       </div>
@@ -70,7 +82,7 @@ function ForgotPassword() {
                   fontSize: '13px',
                   marginBottom: '15px'
                 }}>
-                  ❌ {error}
+                {error}
                 </div>
               )}
 
@@ -93,7 +105,7 @@ function ForgotPassword() {
                   style={{ marginTop: '15px' }}
                   disabled={loading}
                 >
-                  {loading ? "⏳ Mengirim..." : "Kirim Instruksi Reset"}
+                  {loading ? "Mengirim..." : "Kirim Instruksi Reset"}
                 </button>
               </form>
 

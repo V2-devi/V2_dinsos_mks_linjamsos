@@ -13,32 +13,17 @@ function ResetPassword() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [sessionValid, setSessionValid] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     const checkSession = async () => {
-      setCheckingSession(true);
-      setError("");
-
-      // Supabase password reset redirect usually returns session info in the URL.
-      const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
-
-      if (error) {
-        console.error("Supabase reset session error:", error);
-      }
-
-      const session = data?.session || (await supabase.auth.getSession()).data?.session;
-
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
         setError("Link reset tidak valid atau sudah kedaluwarsa.");
-        setSessionValid(false);
       } else {
         setSessionValid(true);
       }
-
-      setCheckingSession(false);
     };
-
     checkSession();
   }, []);
 
@@ -97,64 +82,56 @@ function ResetPassword() {
                 <p>Masukkan kata sandi baru yang aman.</p>
               </div>
 
-              {checkingSession ? (
-                <div style={{ marginBottom: '20px', color: '#475569' }}>
-                  Memeriksa link reset... Harap tunggu.
+              {error && (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  color: '#991b1b',
+                  fontSize: '13px',
+                  marginBottom: '15px'
+                }}>
+                  ❌ {error}
                 </div>
-              ) : (
-                <> 
-                  {error && (
-                    <div style={{
-                      padding: '12px',
-                      backgroundColor: '#fee2e2',
-                      border: '1px solid #fecaca',
-                      borderRadius: '8px',
-                      color: '#991b1b',
-                      fontSize: '13px',
-                      marginBottom: '15px'
-                    }}>
-                      ❌ {error}
-                    </div>
-                  )}
+              )}
 
-                  {sessionValid && (
-                    <form onSubmit={handleSubmit}>
-                      <div className="form-group">
-                        <label>Kata Sandi Baru*</label>
-                        <input 
-                          type="password" 
-                          placeholder="Minimal 6 karakter"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          minLength={6}
-                          disabled={loading}
-                        />
-                      </div>
+              {sessionValid && (
+                <form onSubmit={handleSubmit}>
+                  <div className="form-group">
+                    <label>Kata Sandi Baru*</label>
+                    <input 
+                      type="password" 
+                      placeholder="Minimal 6 karakter"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      disabled={loading}
+                    />
+                  </div>
 
-                      <div className="form-group">
-                        <label>Konfirmasi Kata Sandi*</label>
-                        <input 
-                          type="password" 
-                          placeholder="Ulangi kata sandi"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required
-                          minLength={6}
-                          disabled={loading}
-                        />
-                      </div>
+                  <div className="form-group">
+                    <label>Konfirmasi Kata Sandi*</label>
+                    <input 
+                      type="password" 
+                      placeholder="Ulangi kata sandi"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      disabled={loading}
+                    />
+                  </div>
 
-                      <button 
-                        type="submit" 
-                        className="btn-primary btn-block"
-                        disabled={loading}
-                      >
-                        {loading ? "⏳ Menyimpan..." : "🔒 Ubah Kata Sandi"}
-                      </button>
-                    </form>
-                  )}
-                </>
+                  <button 
+                    type="submit" 
+                    className="btn-primary btn-block"
+                    disabled={loading}
+                  >
+                    {loading ? "⏳ Menyimpan..." : "🔒 Ubah Kata Sandi"}
+                  </button>
+                </form>
               )}
             </>
           ) : (

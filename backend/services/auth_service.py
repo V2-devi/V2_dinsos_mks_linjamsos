@@ -217,31 +217,34 @@ def approve_user(user_id):
 
 
 from config.database import supabase
-import uuid
 import secrets
 from datetime import datetime, timedelta
 
+
 def request_reset_password(email: str):
-    """Minta reset password - generate token dan simpan"""
-    # 1. Cek apakah email ada di localUsers
-    response = supabase.table("password_reset_tokens") \
+    """Minta reset password - generate token dan simpan
+
+    Cari user pada tabel `pengguna`, lalu simpan token pada tabel
+    `password_reset_tokens` dan tampilkan link reset (untuk development).
+    """
+
+    # 1) Cek apakah user ada pada tabel pengguna
+    response = supabase.table("pengguna") \
         .select("id, email, nama_lengkap") \
         .eq("email", email) \
         .execute()
-    
+
     if not response.data:
-        # Untuk keamanan, tetap return success meski email tidak ada
-        # (agar hacker tidak bisa tahu email mana yang terdaftar)
+        # Jangan ungkapkan apakah email terdaftar
         return {"message": "Jika email terdaftar, link reset akan dikirim."}
-    
+
     user = response.data[0]
-    
-    # 2. Generate token reset (random 32 karakter)
+
+    # 2) Generate token dan expiry
     reset_token = secrets.token_urlsafe(32)
-    
-    # 3. Simpan token ke database dengan expiry 1 jam
     expiry = (datetime.utcnow() + timedelta(hours=1)).isoformat()
-    
+
+    # 3) Simpan token pada tabel password_reset_tokens
     supabase.table("password_reset_tokens").insert({
         "user_id": user["id"],
         "email": email,
@@ -249,24 +252,17 @@ def request_reset_password(email: str):
         "expires_at": expiry,
         "used": False
     }).execute()
-    
-    # 4. Kirim email (pakai service email Anda)
-    # Untuk sekarang, kita return token-nya agar bisa dites
-    # Nanti bisa diganti dengan kirim email via SMTP/Resend
+
+    # 4) Buat link reset (development)
     reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
-    
+
     print(f"\n{'='*60}")
     print(f"📧 RESET PASSWORD LINK untuk {email}:")
     print(f"🔗 {reset_link}")
     print(f"{'='*60}\n")
-    
-    # TODO: Ganti dengan kirim email asli via SMTP
-    # send_reset_email(email, user["nama_lengkap"], reset_link)
-    
-    return {
-        "message": "Link reset password telah dikirim ke email Anda.",
-        "reset_token": reset_token  # Hapus ini di production!
-    }
+
+    # TODO: kirim email via SMTP/Resend pada production
+    return {"message": "Link reset password telah dikirim ke email Anda.", "reset_token": reset_token}
 
 
 def verify_reset_token(token: str):
@@ -276,119 +272,39 @@ def verify_reset_token(token: str):
         .eq("token", token) \
         .eq("used", False) \
         .execute()
-    
+
     if not response.data:
         return {"valid": False, "message": "Token tidak valid atau sudah digunakan."}
-    
-    token_data = response.data[0]
-    
-    # Cek apakah token sudah expired
-    expires_at = datetime.fromisoformat(token_data["expires_at"])
-    if datetime.utcnow() > expires_at:
-        return {"valid": False, "message": "Token sudah kedaluwarsa."}
-    
-    return {
-        "valid": True, 
-        "user_id": token_data["user_id"],
-        "email": token_data["email"]
-    }
 
-
-
-from config.database import supabase
-import secrets
-from datetime import datetime, timedelta
-import hashlib
-
-def request_reset_password(email: str):
-    """Minta reset password - generate token dan simpan"""
-    # ✅ GANTI 'localUsers' DENGAN NAMA TABEL ASLI (huruf kecil semua)
-    # Cek di Supabase Table Editor untuk nama yang benar
-    response = supabase.table("password_reset_tokens") \
-        .select("id, email, nama_lengkap") \
-        .eq("email", email) \
-        .execute()
-    
-    if not response.data:
-        return {"message": "Jika email terdaftar, link reset akan dikirim."}
-    
-    user = response.data[0]
-    
-    # Generate token reset
-    reset_token = secrets.token_urlsafe(32)
-    expiry = (datetime.utcnow() + timedelta(hours=1)).isoformat()
-    
-    # Simpan token
-    supabase.table("password_reset_tokens").insert({
-        "user_id": user["id"],
-        "email": email,
-        "token": reset_token,
-        "expires_at": expiry,
-        "used": False
-    }).execute()
-    
-    # Buat link reset
-    reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
-    
-    print(f"\n{'='*60}")
-    print(f"📧 RESET PASSWORD LINK untuk {email}:")
-    print(f"🔗 {reset_link}")
-    print(f"{'='*60}\n")
-    
-    return {
-        "message": "Link reset password telah dikirim ke email Anda.",
-        "reset_token": reset_token  # Hapus ini di production!
-    }
-
-
-def verify_reset_token(token: str):
-    """Verifikasi token reset password"""
-    response = supabase.table("password_reset_tokens") \
-        .select("*") \
-        .eq("token", token) \
-        .eq("used", False) \
-        .execute()
-    
-    if not response.data:
-        return {"valid": False, "message": "Token tidak valid atau sudah digunakan."}
-    
     token_data = response.data[0]
     expires_at = datetime.fromisoformat(token_data["expires_at"])
-    
+
     if datetime.utcnow() > expires_at:
         return {"valid": False, "message": "Token sudah kedaluwarsa."}
-    
-    return {
-        "valid": True, 
-        "user_id": token_data["user_id"],
-        "email": token_data["email"]
-    }
+
+    return {"valid": True, "user_id": token_data["user_id"], "email": token_data["email"]}
 
 
 def reset_password_with_token(token: str, new_password: str):
-    """Reset password menggunakan token"""
+    """Reset password menggunakan token
+
+    Menggunakan Supabase Admin API untuk mengganti password user pada
+    Supabase Auth, kemudian menandai token sebagai telah digunakan.
+    """
     verify = verify_reset_token(token)
     if not verify["valid"]:
         raise Exception(verify["message"])
-    
+
     user_id = verify["user_id"]
-    
-    # Hash password (gunakan bcrypt untuk production)
-    hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
-    
-    # ✅ GANTI 'localUsers' DENGAN NAMA TABEL ASLI
-    result = supabase.table("password_reset_tokens") \
-        .update({"password": hashed_password}) \
-        .eq("id", user_id) \
-        .execute()
-    
-    if not result.data:
-        raise Exception("Gagal update password.")
-    
-    # Tandai token sebagai sudah digunakan
-    supabase.table("password_reset_tokens") \
-        .update({"used": True}) \
-        .eq("token", token) \
-        .execute()
-    
+
+    # Update password via Supabase Admin API
+    try:
+        # gotrue admin API: update_user_by_id(user_id, attributes)
+        result = supabase.auth.admin.update_user_by_id(str(user_id), {"password": new_password})
+    except Exception as e:
+        raise Exception(f"Gagal memperbarui password pada auth provider: {e}")
+
+    # Tandai token sudah digunakan
+    supabase.table("password_reset_tokens").update({"used": True}).eq("token", token).execute()
+
     return {"message": "Password berhasil diubah. Silakan login dengan password baru."}
