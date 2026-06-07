@@ -72,15 +72,6 @@ function VerifikatorDashboard() {
     }
   }, []);
 
-  const usulanMenunggu = usulanData.filter(i => i.status_pengusulan === "Belum").length;
-  const ppksMenunggu = dummyPPKS.filter(i => i.status_penanganan === "Kasus Aktif" || i.status_penanganan === "Kasus Aktif").length;
-  const totalDtsen = dtsenData.length;
-  const desil1 = dtsenData.filter(i => i.hasil_desil === "1").length;
-  const desil2 = dtsenData.filter(i => i.hasil_desil === "2").length;
-  const desil3 = dtsenData.filter(i => i.hasil_desil === "3").length;
-  const desil4 = dtsenData.filter(i => i.hasil_desil === "4").length;
-  const desil5 = dtsenData.filter(i => i.hasil_desil === "5").length;
-  const desil6_10 = dtsenData.filter(i => i.hasil_desil === "6-10").length;
   const navigate = useNavigate();
 
   const [activeMenu, setActiveMenu] = useState("dashboard"); 
@@ -106,6 +97,17 @@ function VerifikatorDashboard() {
 
   const [filterBansos, setFilterBansos] = useState({ kecamatan: "", kelurahan: "", keyword: "" });
 
+  const usulanMenunggu = usulanData.filter(i => i.status_pengusulan === "Belum").length;
+// ✅ Gunakan ppksList yang datanya sudah di-fetch khusus untuk "Kasus Aktif"
+const ppksMenunggu = ppksList.length;
+  const totalDtsen = dtsenData.length;
+  const desil1 = dtsenData.filter(i => i.hasil_desil === "1").length;
+  const desil2 = dtsenData.filter(i => i.hasil_desil === "2").length;
+  const desil3 = dtsenData.filter(i => i.hasil_desil === "3").length;
+  const desil4 = dtsenData.filter(i => i.hasil_desil === "4").length;
+  const desil5 = dtsenData.filter(i => i.hasil_desil === "5").length;
+  const desil6_10 = dtsenData.filter(i => i.hasil_desil === "6-10").length;
+
   const handleFilterBansosChange = (e) => {
     const { name, value } = e.target;
     setFilterBansos({ ...filterBansos, [name]: value });
@@ -128,15 +130,19 @@ function VerifikatorDashboard() {
     setFilterPPKS({ ...filterPPKS, [name]: value });
   };
 
-  const filteredPpksList = ppksList.filter(item => {
-    const matchKategori = filterPPKS.kategori_ppks === "" || item.kategori_ppks === filterPPKS.kategori_ppks;
-    const matchKecamatan = filterPPKS.kecamatan === "" || item.kecamatan === filterPPKS.kecamatan;
-    const keyword = filterPPKS.keyword.toLowerCase();
-    const matchKeyword = keyword === "" || 
+ const filteredPpksList = ppksList.filter(item => {
+  // ✅ TAMBAHAN: Pastikan hanya status "Kasus Aktif" yang lolos filter
+  const matchStatus = item.status_penanganan === "Kasus Aktif"; 
+  const matchKategori = filterPPKS.kategori_ppks === "" || item.kategori_ppks === filterPPKS.kategori_ppks;
+  const matchKecamatan = filterPPKS.kecamatan === "" || item.kecamatan === filterPPKS.kecamatan;
+  const keyword = filterPPKS.keyword.toLowerCase();
+  const matchKeyword = keyword === "" || 
                          (item.nik && String(item.nik).toLowerCase().includes(keyword)) || 
                          (item.nama_lengkap && String(item.nama_lengkap).toLowerCase().includes(keyword));
-    return matchKategori && matchKecamatan && matchKeyword;
-  });
+  
+  // ✅ TAMBAHKAN `matchStatus` ke dalam return
+  return matchStatus && matchKategori && matchKecamatan && matchKeyword; 
+});
 
   useEffect(() => {
     fetchDataVerifikator();
