@@ -66,15 +66,23 @@ async def create_anggota_keluarga_route(
         return {"message": "Berhasil", "data": result}
 
         
-
 @router.get("/{no_kk}/anggota")
-async def get_anggota_keluarga_route(
-    no_kk: str,
-    credentials=Depends(security)
-):
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Authorization header is required")
-    return get_anggota_keluarga(no_kk)
+async def get_anggota_keluarga(no_kk: str, credentials=Depends(security)):
+    try:
+        # ✅ PASTIKAN SELECT SEMUA FIELD termasuk surat_kematian
+        response = supabase.table("anggota_keluarga") \
+            .select("*") \
+            .eq("no_kk", no_kk) \
+            .execute()
+        
+        # Debug log
+        print(f"📦 Data anggota untuk {no_kk}: {response.data}")
+        
+        return response.data if response.data else []
+        
+    except Exception as e:
+        print(f"❌ Error GET anggota: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 

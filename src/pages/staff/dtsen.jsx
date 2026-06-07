@@ -694,7 +694,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 
 
 
- const fetchAnggota = async (no_kk) => {
+const fetchAnggota = async (no_kk) => {
   try {
     const token = localStorage.getItem("token");
     const response = await fetch(`http://127.0.0.1:8000/keluarga/${no_kk}/anggota`, {
@@ -703,31 +703,41 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
     });
     
     const data = await response.json();
+    console.log("📦 RAW DATA ANGGOTA:", data);
     
-    console.log("📦 RAW DATA ANGGOTA:", data); // 🔍 Debug: cek apakah kondisi_khusus ada
+    // Debug: Cek apakah surat_kematian ada
+    data.forEach((ang, idx) => {
+      console.log(`📄 Anggota ${idx + 1} (${ang.nama_anggota_keluarga}):`, {
+        id: ang.id,
+        surat_kematian: ang.surat_kematian || "KOSONG",
+        tipe: typeof ang.surat_kematian
+      });
+    });
     
-    // ✅ NORMALISASI DATA: Pastikan setiap anggota punya field kondisi_khusus
     const normalizedAnggota = data.map(anggota => ({
       ...anggota,
-      kondisi_khusus: anggota.kondisi_khusus || "" // ✅ Default ke empty string jika null/undefined
+      kondisi_khusus: anggota.kondisi_khusus || ""
     }));
 
-    // Update state dtsenData
+    // ✅ Update dtsenData dengan perbandingan String (anti type-mismatch)
     const updatedDtsen = dtsenData.map((item) => {
-      if (item.no_kk === no_kk) {
+      if (String(item.no_kk) === String(no_kk)) {
         return { ...item, anggota: normalizedAnggota };
       }
       return item;
     });
     setDtsenData(updatedDtsen);
 
-    // Update selectedDtsenData jika sedang dibuka
-    if (selectedDtsenData?.no_kk === no_kk) {
-      setSelectedDtsenData(prev => ({ 
-        ...prev, 
-        anggota: normalizedAnggota 
-      }));
-    }
+    // ✅ PERBAIKAN: Gunakan callback form untuk dapat state terbaru
+    // DAN gunakan String() untuk perbandingan yang aman
+    setSelectedDtsenData(prev => {
+      if (prev && String(prev.no_kk) === String(no_kk)) {
+        console.log("✅ Update selectedDtsenData dengan anggota:", normalizedAnggota.length, "orang");
+        return { ...prev, anggota: normalizedAnggota };
+      }
+      console.warn("⚠️ no_kk tidak cocok:", prev?.no_kk, "vs", no_kk);
+      return prev;
+    });
     
   } catch (error) {
     console.error("FETCH ANGGOTA ERROR:", error);
@@ -1820,39 +1830,64 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                               {ang.status_keadaan}
                             </span>
                           </td>
-                          <td style={{ textAlign: 'center' }}>
-                            {ang.status_keadaan === "Meninggal" ? (
-                              /* ✅ JIKA MENINGGAL: TOMBOL LIHAT SURAT KEMATIAN PDF */
-                              <button 
-                                type="button" 
-                                className="btn-search-outline" 
-                                title="Lihat Surat Kematian" 
-                                onClick={(e) => {
-                                    e.stopPropagation();
 
-                                    const pdfUrl = ang?.surat_kematian;
 
-                                    if (pdfUrl && typeof pdfUrl === "string" && pdfUrl.startsWith("http")) {
-                                      window.open(pdfUrl, "_blank", "noopener,noreferrer");
-                                    } else {
-                                      alert("❌ Surat kematian belum tersedia.");
-                                    }
-                                  }} 
-                                  disabled={!ang?.surat_kematian}
 
-                                
-                                style={{ padding: '6px 12px', fontSize: '11px', color: '#be123c', borderColor: '#fecdd3', backgroundColor: '#fff1f2', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                              >
-                                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                Surat Kematian
-                              </button>
-                            ) : (
-                              /* ✅ JIKA HIDUP: TOMBOL IKON MATA (DETAIL BIASA) */
-                              <button type="button" className="btn-icon-keterangan" title="Lihat Detail" onClick={() => handleOpenDetailAnggota(ang)}>
-                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                              </button>
-                            )}
-                          </td>
+
+             <td style={{ textAlign: 'center' }}>
+  {ang.status_keadaan === "Meninggal" ? (
+    <button
+      type="button"
+      className="btn-search-outline"
+      title="Lihat Surat Kematian"
+      onClick={(e) => {
+        e.stopPropagation();
+        const pdfUrl = ang?.surat_kematian;
+        
+        console.log("🔍 Klik surat kematian:", {
+          nama: ang.nama_anggota_keluarga,
+          url: pdfUrl,
+          tipe: typeof pdfUrl
+        });
+        
+        if (pdfUrl && typeof pdfUrl === "string" && pdfUrl.startsWith("http")) {
+          window.open(pdfUrl, "_blank", "noopener,noreferrer");
+        } else {
+          alert(`❌ Surat kematian belum tersedia.\n\nData: ${pdfUrl || 'KOSONG'}`);
+        }
+      }}
+      style={{ 
+        padding: '6px 12px', 
+        fontSize: '11px', 
+        color: ang?.surat_kematian ? '#be123c' : '#94a3b8',
+        borderColor: ang?.surat_kematian ? '#fecdd3' : '#e2e8f0',
+        backgroundColor: ang?.surat_kematian ? '#fff1f2' : '#f8fafc',
+        display: 'inline-flex', 
+        alignItems: 'center', 
+        gap: '5px',
+        cursor: 'pointer'
+      }}
+    >
+      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+      </svg>
+      Surat Kematian
+    </button>
+  ) : (
+    <button type="button" className="btn-icon-keterangan" title="Lihat Detail" onClick={(e) => { 
+      e.stopPropagation(); 
+      handleOpenDetailAnggota(ang); 
+    }}>
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+    </button>
+  )}
+</td>
+
+
+
                         </tr>
                       );
                     })}
