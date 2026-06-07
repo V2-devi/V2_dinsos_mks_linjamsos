@@ -570,9 +570,19 @@ const confirmDelete = async () => {
                         })()}
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <div className="action-buttons-table">
-                          <button className="action-btn-icon text-blue" title="Edit Profil" onClick={() => openEditModal(user)}>📝</button>
-                          <button className="action-btn-icon text-red" title="Hapus Akun" onClick={() => openDeleteModal(user)}>🗑️</button>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {/* TOMBOL EDIT */}
+                          <button onClick={() => openEditModal(user)} className="btn-action-modern btn-edit-modern" title="Edit Pegawai">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          {/* TOMBOL HAPUS */}
+                          <button onClick={() => openDeleteModal(user)} className="btn-action-modern btn-delete-modern" title="Hapus Pegawai">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -789,7 +799,7 @@ const confirmDelete = async () => {
         <div className="modal-overlay" onClick={() => setIsPassModalOpen(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-header-title"><span style={{ fontSize: '20px' }}>🔑</span><h2>Ganti Kata Sandi</h2></div>
+              <div className="modal-header-title"><span style={{ fontSize: '20px' }}></span><h2>Ganti Kata Sandi</h2></div>
             </div>
             <div className="modal-body">
               <form onSubmit={handlePassSubmit}>

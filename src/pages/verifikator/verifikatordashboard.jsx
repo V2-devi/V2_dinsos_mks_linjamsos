@@ -424,15 +424,25 @@ const handleOpenVerifikasi = (item) => {
     <div className="verifikator-layout relative">
       <aside className="sidebar">
         <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '15px 0' }}>
-          <img src={logoSicadasDashboard} alt="Logo SICADAS" className="sidebar-logo" style={{ width: "100%", maxWidth: "150px", height: "auto", margin: "0 auto" }} />
+          <img src={logoSicadasDashboard} alt="Logo SICADAS" 
+          className="sidebar-logo" 
+          style={{ width: "100%", maxWidth: "150px", height: "auto", margin: "0 auto" }} />
         </div>
+        
         <div className="sidebar-profile" style={{ cursor: 'pointer' }} onClick={() => navigate("/verifikatorprofile")} title="Lihat Profil">
-          <div className="profile-avatar-small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 4-7 8-7s8 3 8 7"></path></svg></div>
+          <div className="profile-avatar-small">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 20c0-4 4-7 8-7s8 3 8 7"></path>
+            </svg>
+          </div>
           <div className="profile-info">
+            {/* Pastikan variabel pemanggil nama dan NIK disesuaikan dengan state di Verifikator */}
             <span className="profile-name">{currentVerifikator.nama}</span>
-            <span className="profile-nip">{currentVerifikator.nip}</span>
+            <span className="profile-nik">{currentVerifikator.nip}</span>
           </div>
         </div>
+        
         <nav className="sidebar-menu">
           <button className={`menu-item ${activeMenu === "dashboard" ? "active" : ""}`} onClick={() => setActiveMenu("dashboard")}>
             <svg className="menu-icon" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Dashboard Utama
