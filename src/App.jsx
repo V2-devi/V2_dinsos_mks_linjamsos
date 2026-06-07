@@ -66,7 +66,6 @@ function AppRoutes() {
       <Route path="/verifikator" element={<VerifikatorDashboard />} />
       <Route path="/verifikatorprofile" element={<VerifikatorProfile />} />
 
-      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
     </Routes>
