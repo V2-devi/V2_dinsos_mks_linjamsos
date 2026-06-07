@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "r
 // Sesuaikan path import dengan struktur folder Anda
 import Login from "./pages/auth/login.jsx";
 import Register from "./pages/auth/register.jsx";
-import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
+// import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
 
 import Verify from "./pages/auth/verify.jsx";
 
@@ -16,6 +16,11 @@ import StaffDashboard from "./pages/staff/staffdashboard.jsx";
 import StaffProfile from "./pages/staff/StaffProfile";
 import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx"; 
 import VerifikatorProfile from "./pages/verifikator/verifikatorprofile.jsx";
+
+
+import ForgotPassword from "./pages/auth/lupapass.jsx";
+import ResetPassword from "./pages/auth/resetpass.jsx";
+
 
 
 function AppRoutes() {
@@ -60,6 +65,10 @@ function AppRoutes() {
 
       <Route path="/verifikator" element={<VerifikatorDashboard />} />
       <Route path="/verifikatorprofile" element={<VerifikatorProfile />} />
+
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
     </Routes>
   );
 }

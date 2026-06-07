@@ -46,3 +46,59 @@ def verify_email(email: str):
 # @router.options("/register")
 # def options_register():
 #     return {"message": "OK"}
+
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr
+from services.auth_service import (
+    request_reset_password,
+    verify_reset_token,
+    reset_password_with_token
+)
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyTokenRequest(BaseModel):
+    token: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """Minta link reset password"""
+    try:
+        result = request_reset_password(request.email)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/verify-reset-token")
+async def verify_token(request: VerifyTokenRequest):
+    """Verifikasi token masih valid"""
+    try:
+        result = verify_reset_token(request.token)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset password dengan token"""
+    try:
+        if len(request.new_password) < 6:
+            raise HTTPException(status_code=400, detail="Password minimal 6 karakter")
+        
+        result = reset_password_with_token(request.token, request.new_password)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
