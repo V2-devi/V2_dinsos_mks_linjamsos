@@ -770,22 +770,31 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
   };
 
   // const handleOpenDetailAnggota = (anggota) => { setSelectedAnggotaData(anggota); setIsDetailAnggotaModalOpen(true); };
-  const handleOpenDetailAnggota = (anggota) => {
-    const parsed = pisahKondisiKhusus(anggota.kondisi_khusus);
+const handleOpenDetailAnggota = (anggota) => {
+  console.log("🔍 Data anggota lengkap:", anggota);
+  console.log("📄 URL surat_kematian:", anggota.surat_kematian);
+  console.log("📊 Tipe URL:", 
+    !anggota.surat_kematian ? "KOSONG" :
+    anggota.surat_kematian.startsWith("http") ? "PERMANEN" :
+    anggota.surat_kematian.startsWith("blob:") ? "SEMENTARA (BLOB)" :
+    "TIDAK DIKETAHUI"
+  );
+  
+  const parsed = pisahKondisiKhusus(anggota.kondisi_khusus);
 
-    setSelectedAnggotaData({
-      ...anggota,
-      kehamilan: parsed.kehamilan,
-      disabilitas: parsed.disabilitas,
-      penyakit_kronis: parsed.penyakit_kronis
-    });
+  setSelectedAnggotaData({
+    ...anggota,
+    kehamilan: parsed.kehamilan,
+    disabilitas: parsed.disabilitas,
+    penyakit_kronis: parsed.penyakit_kronis
+  });
 
-    // ✅ Set preview URL dari data DB saat modal dibuka
-    setPreviewSuratKematianUrl(anggota.surat_kematian || "");
-    setNewSuratKematianFile(null); // ✅ Reset file baru
+  // ✅ Set preview URL
+  setPreviewSuratKematianUrl(anggota.surat_kematian || "");
+  setNewSuratKematianFile(null);
+  setIsDetailAnggotaModalOpen(true);
+};
 
-    setIsDetailAnggotaModalOpen(true);
-  };
 
 
 const handleAddAnggotaSubmit = async (e) => {
@@ -1760,6 +1769,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                               {ang.status_keadaan}
                             </span>
                           </td>
+
+
                           <td style={{ textAlign: 'center' }}>
                             {ang.status_keadaan === "Meninggal" ? (
                               /* ✅ JIKA MENINGGAL: TOMBOL LIHAT SURAT KEMATIAN PDF */
@@ -1793,6 +1804,9 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                               </button>
                             )}
                           </td>
+
+
+                          
                         </tr>
                       );
                     })}
@@ -2153,48 +2167,74 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                     <div className="form-group-modal"><label>Tanggal Lahir*</label><input type="date" name="tanggal_lahir" value={formAnggota.tanggal_lahir} onChange={(e) => setFormAnggota({...formAnggota, tanggal_lahir: e.target.value})} required /></div>
 
                     {/* ✅ JIKA STATUS MENINGGAL: MUNCUL FORM UPLOAD SURAT KEMATIAN */}
-                   {formAnggota.status_keadaan === "Meninggal" && (
-                    <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
-                      <label style={{ color: '#be123c', fontWeight: 'bold' }}>
-                        Unggah Surat Kematian (Format .pdf)*
-                      </label>
+         {/* ✅ JIKA STATUS MENINGGAL: MUNCUL FORM UPLOAD SURAT KEMATIAN */}
+{formAnggota.status_keadaan === "Meninggal" && (
+  <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
+    <label style={{ color: '#be123c', fontWeight: 'bold' }}>
+      Unggah Surat Kematian (Format .pdf)*
+    </label>
 
-                      {/* ✅ Preview PDF yang sudah tersimpan — hanya untuk modal EDIT */}
-                      {formAnggota.surat_kematian instanceof File && previewSuratKematianUrl && (
-                        <div style={{ marginBottom: '8px', marginTop: '8px' }}>
-                          <a
-                            href={previewSuratKematianUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#3b82f6', fontSize: '13px', textDecoration: 'underline' }}
-                          >
-                            📄 Lihat Surat Kematian yang Dipilih
-                          </a>
-                        </div>
-                      )}
+    {/* ✅ PREVIEW 1: Jika ada URL dari database (file yang sudah tersimpan) */}
+    {typeof formAnggota.surat_kematian === 'string' && formAnggota.surat_kematian.startsWith('http') && (
+      <div style={{ marginBottom: '10px', marginTop: '8px', padding: '10px', backgroundColor: '#dbeafe', border: '1px solid #93c5fd', borderRadius: '6px' }}>
+        <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#1e40af' }}>
+          📄 Surat kematian sudah tersimpan:
+        </p>
+        <a
+          href={formAnggota.surat_kematian}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            color: '#2563eb', 
+            fontSize: '13px', 
+            textDecoration: 'underline',
+            fontWeight: '500'
+          }}
+        >
+          🔗 Lihat Surat Kematian yang Tersimpan
+        </a>
+      </div>
+    )}
 
-                      {/* Input upload file */}
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={handleSuratKematianChange}
-                        required={!formAnggota.surat_kematian}
-                        style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }}
-                      />
+    {/* ✅ PREVIEW 2: Jika ada File object baru yang dipilih (belum tersimpan) */}
+    {formAnggota.surat_kematian instanceof File && previewSuratKematianUrl && (
+      <div style={{ marginBottom: '8px', marginTop: '8px' }}>
+        <a
+          href={previewSuratKematianUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#3b82f6', fontSize: '13px', textDecoration: 'underline' }}
+        >
+          📄 Lihat Surat Kematian yang Baru Dipilih
+        </a>
+      </div>
+    )}
 
-                      {/* ✅ Indikator file baru dipilih */}
-                      {formAnggota.surat_kematian instanceof File && (
-                        <div style={{ marginTop: '6px', padding: '6px 10px', backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: '6px', fontSize: '12px', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>✅</span>
-                          <span>File dipilih: <strong>{formAnggota.surat_kematian.name}</strong></span>
-                        </div>
-                      )}
+    {/* Input upload file */}
+    <input
+      type="file"
+      accept=".pdf"
+      onChange={handleSuratKematianChange}
+      required={!formAnggota.surat_kematian}
+      style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }}
+    />
 
-                      <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>
-                        Wajib melampirkan bukti surat keterangan kematian resmi. Maks 5MB.
-                      </small>
-                    </div>
-                  )}
+    {/* ✅ Indikator file baru dipilih */}
+    {formAnggota.surat_kematian instanceof File && (
+      <div style={{ marginTop: '6px', padding: '6px 10px', backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: '6px', fontSize: '12px', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>✅</span>
+        <span>File baru dipilih: <strong>{formAnggota.surat_kematian.name}</strong></span>
+      </div>
+    )}
+
+    <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>
+      Wajib melampirkan bukti surat keterangan kematian resmi. Maks 5MB.
+    </small>
+  </div>
+)}
               </div>  {/* ← TUTUP form-grid-2 */}
               </div>
 
@@ -2265,21 +2305,82 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                       <label>Estimasi Kategori Pendidikan/Usia (Otomatis dari Tanggal Lahir)</label>
                       <input type="text" value={getKategoriPendidikan(selectedAnggotaData.tanggal_lahir)} readOnly style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', fontWeight: 'bold' }} />
                     </div>
-
-                    
                     {/* ✅ TAMBAHAN: MUNCULKAN FORM UPLOAD JIKA STATUS DIUBAH KE MENINGGAL */}
-                    {selectedAnggotaData.status_keadaan === "Meninggal" && (
-                      <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3', marginTop: '10px' }}>
-                        <label style={{ color: '#be123c', fontWeight: 'bold' }}>Unggah Surat Kematian (Format .pdf)*</label>
-                        <input type="file" accept=".pdf" onChange={handleEditSuratKematianChange} required style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }} />
-                        <small style={{ color: '#f43f5e', display: 'block', marginTop: '5px' }}>Wajib melampirkan bukti surat keterangan kematian jika status diubah menjadi Meninggal.</small>
-                      </div>
+         {/* ✅ TAMBAHAN: MUNCULKAN FORM UPLOAD JIKA STATUS DIUBAH KE MENINGGAL */}
+{selectedAnggotaData.status_keadaan === "Meninggal" && (
+  <div className="form-group-modal" style={{ gridColumn: '1 / -1', backgroundColor: '#fff1f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecdd3', marginTop: '10px' }}>
+    <label style={{ color: '#be123c', fontWeight: 'bold' }}>
+      Surat Kematian (Format .pdf)
+    </label>
+
+    {/* ✅ Preview dari DB */}
+    {selectedAnggotaData?.surat_kematian &&
+     typeof selectedAnggotaData.surat_kematian === 'string' &&
+     selectedAnggotaData.surat_kematian.startsWith('http') && (
+      <div style={{ marginTop: '8px', marginBottom: '10px', padding: '10px', backgroundColor: '#dbeafe', border: '1px solid #93c5fd', borderRadius: '6px' }}>
+        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#1e40af', fontWeight: '600' }}>
+          📄 Surat kematian sudah tersimpan:
+        </p>
+        
+        {/* ✅ PERBAIKAN: Tag <a> ditambahkan di sini */}
+        <a
+          href={selectedAnggotaData.surat_kematian}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#2563eb', fontSize: '13px', textDecoration: 'underline', fontWeight: '500' }}
+        >
+          🔗 Buka Surat Kematian
+        </a>
+      </div>
+    )}
+
+    {/* ✅ Preview file baru yang dipilih */}
+    {newSuratKematianFile instanceof File && previewSuratKematianUrl && (
+      <div style={{ marginBottom: '8px' }}>
+        
+        {/* ✅ PERBAIKAN: Tag <a> ditambahkan di sini */}
+        <a
+          href={previewSuratKematianUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#3b82f6', fontSize: '13px', textDecoration: 'underline' }}
+        >
+          📄 Preview file baru: {newSuratKematianFile.name}
+        </a>
+      </div>
+    )}
+
+    <input
+      type="file"
+      accept=".pdf"
+      onChange={handleEditSuratKematianChange}
+      required={
+        !selectedAnggotaData?.surat_kematian &&
+        !(newSuratKematianFile instanceof File)
+      }
+      style={{ marginTop: '8px', padding: '8px', backgroundColor: '#ffffff', border: '1px dashed #fda4af', borderRadius: '6px', width: '100%' }}
+    />
+
+    {newSuratKematianFile instanceof File && (
+      <div style={{ marginTop: '6px', padding: '6px 10px', backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: '6px', fontSize: '12px', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>✅</span>
+        <span>File baru dipilih: <strong>{newSuratKematianFile.name}</strong></span>
+      </div>
+    )}
+
+    <small style={{ color: '#64748b', display: 'block', marginTop: '5px' }}>
+      {selectedAnggotaData?.surat_kematian
+        ? "Upload file baru hanya jika ingin mengganti. Maks 5MB."
+        : "Wajib melampirkan surat kematian. Maks 5MB."
+      }
+    </small>
+  </div>
+)}
 
 
-                    )}
                   </div>
                 </div>
-                
+    
                 <div className="modal-section" style={{ marginTop: '10px' }}>
                   <h3 className="section-subtitle" style={{ color: '#ef4444', borderColor: '#fca5a5' }}>Kondisi Khusus (Penting Untuk Bansos)</h3>
                   <div className="form-grid-2">

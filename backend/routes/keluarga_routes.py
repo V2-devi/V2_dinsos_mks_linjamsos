@@ -76,6 +76,8 @@ async def get_anggota_keluarga_route(
         raise HTTPException(status_code=401, detail="Authorization header is required")
     return get_anggota_keluarga(no_kk)
 
+
+
 # ✅ TAMBAHKAN ENDPOINT INI (YANG SEBELUMNYA HILANG)
 @router.put("/{no_kk}/anggota/{anggota_id}")
 async def update_anggota_route(
