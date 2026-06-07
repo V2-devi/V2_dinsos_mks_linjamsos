@@ -15,11 +15,13 @@ const AUTH_URL = "/auth";
 
 import { supabase } from "../config/supabase";
 
-// Fungsi login yang sudah ada
+// =========================================================
+// LOGIN
+// =========================================================
 export const login = async ({ email, password }) => {
   try {
-    // 1. Login via backend custom (seperti biasa)
-    const res = await fetch("http://127.0.0.1:8000/login", {
+    // ⚠️ PASTIKAN URL INI SESUAI (Cek apakah router Anda pakai prefix /auth atau tidak)
+    const res = await fetch("http://127.0.0.1:8000/auth/login", { 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
@@ -27,51 +29,28 @@ export const login = async ({ email, password }) => {
 
     const data = await res.json();
 
+    // Handle error dari backend
     if (!res.ok || data.error || data.detail) {
       return { error: data.detail || data.error || "Login gagal" };
     }
 
-    // 2. ✅ SINKRONISASI KE SUPABASE AUTH (BARU!)
-    // Coba sign in ke Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-
-    // Jika user belum ada di Supabase Auth, daftarkan sekarang
-    if (authError && authError.message.includes("Invalid login credentials")) {
-      console.log("🔄 User belum ada di Supabase Auth, mendaftarkan...");
-      
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: email,
-        password: password, // Password yang sama dengan backend
-        options: {
-          data: {
-            nama_lengkap: data.user.nama_lengkap,
-            nip: data.user.nip,
-            role: data.user.role
-          }
-        }
+    // ✅ SINKRONISASI SESSION SUPABASE DI FRONTEND (LEBIH EFISIEN!)
+    // Backend sudah login ke Supabase dan memberikan token. 
+    // Kita cukup tempel (set) token tersebut ke Supabase Client di frontend.
+    if (data.access_token && data.refresh_token) {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token
       });
 
-      if (signUpError) {
-        console.error("❌ Gagal daftar ke Supabase Auth:", signUpError);
+      if (sessionError) {
+        console.error("⚠️ Gagal sinkronisasi session Supabase:", sessionError);
       } else {
-        console.log("✅ User berhasil didaftarkan ke Supabase Auth");
-        
-        // Confirm email otomatis (untuk development)
-        // Di production, user harus konfirmasi email dulu
-        if (signUpData.user) {
-          // Sign in setelah sign up
-          await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-          });
-        }
+        console.log("✅ Session Supabase berhasil disinkronkan!");
       }
     }
 
-    // 3. Return data seperti biasa
+    // Return data ke komponen React (LoginPage)
     return data;
 
   } catch (error) {
@@ -80,36 +59,28 @@ export const login = async ({ email, password }) => {
   }
 };
 
-// Fungsi register (jika ada)
-export const register = async ({ email, password, nama_lengkap, nip, role }) => {
+// =========================================================
+// REGISTER
+// =========================================================
+export const register = async (userData) => {
   try {
-    // 1. Register via backend custom
-    const res = await fetch("http://127.0.0.1:8000/register", {
+    // ⚠️ PASTIKAN URL INI SESUAI (Cek apakah router Anda pakai prefix /auth atau tidak)
+    const res = await fetch("http://127.0.0.1:8000/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, nama_lengkap, nip, role })
+      body: JSON.stringify(userData)
     });
 
     const data = await res.json();
 
-    if (!res.ok) {
-      return { error: data.detail || "Registrasi gagal" };
+    if (!res.ok || data.error || data.detail) {
+      return { error: data.detail || data.error || "Registrasi gagal" };
     }
 
-    // 2. ✅ DAFTARKAN KE SUPABASE AUTH JUGA
-    const { error: authError } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: { nama_lengkap, nip, role }
-      }
-    });
-
-    if (authError) {
-      console.error("⚠️ Gagal daftar ke Supabase Auth:", authError);
-    } else {
-      console.log("✅ User terdaftar di Supabase Auth");
-    }
+    // ✅ TIDAK PERLU DAFTAR ULANG KE SUPABASE AUTH DI FRONTEND
+    // Karena service backend (auth_service.py) sudah memanggil supabase.auth.sign_up
+    // User otomatis sudah terdaftar di Supabase Auth.
+    console.log("✅ Registrasi berhasil di backend (User otomatis ada di Supabase Auth)");
 
     return data;
 
