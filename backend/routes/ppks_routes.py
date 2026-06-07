@@ -31,13 +31,35 @@ def get_all_ppks():
 # ==============================
 # GET DETAIL BY ID
 # ==============================
+# @router.get("/{id}")
+# def get_ppks_by_id(id: str):
+#     try:
+#         data = get_ppks_by_id_service(id)
+#         if not data:
+#             raise HTTPException(status_code=404, detail="Data PPKS tidak ditemukan")
+#         return data
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{id}")
-def get_ppks_by_id(id: str):
+async def get_ppks_by_id(id: str, credentials = Depends(security)):
     try:
-        data = get_ppks_by_id_service(id)
-        if not data:
+        # ✅ PASTIKAN .select() MENGAMBIL 'bukti_foto_ppks'
+        response = supabase.table("ppks") \
+            .select("*") \
+            .eq("id", id) \
+            .execute()
+        
+        print(f"📦 Data PPKS untuk ID {id}: {response.data}")
+        
+        if not response.data:
             raise HTTPException(status_code=404, detail="Data PPKS tidak ditemukan")
-        return data
+        
+        return response.data[0]
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -146,24 +168,30 @@ def delete_ppks(id: str):
 # ==============================
 from fastapi import Form  # ✅ Tambahkan import ini di atas
 
+
 @router.post("/upload/foto-ppks")
 async def upload_foto_ppks(
-    ppks_id: str = Form(...),  # ✅ TAMBAHKAN INI
+    ppks_id: str = Form(...),  # ✅ WAJIB ADA
     files: List[UploadFile] = File(...),
     credentials = Depends(security)
 ):
     if not credentials:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
+
     if not SUPABASE_BUCKET:
         raise HTTPException(status_code=500, detail="SUPABASE_BUCKET tidak terdefinisi")
 
-    print(f"\n🚀 Upload foto untuk PPKS ID: {ppks_id}")
+    print(f"\n{'='*60}")
+    print(f"📤 UPLOAD FOTO PPKS")
+    print(f"{'='*60}")
+    print(f"   PPKS ID: {ppks_id}")
+    print(f"   Jumlah file: {len(files)}")
+
     uploaded_urls = []
     
     try:
         # 1. Upload semua file ke Storage
-        for file in files:
+        for idx, file in enumerate(files, 1):
             if not file.content_type or not file.content_type.startswith("image/"):
                 continue
             
@@ -185,38 +213,120 @@ async def upload_foto_ppks(
             
             public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(safe_filename)
             uploaded_urls.append(public_url)
-            print(f"   ✅ Uploaded: {public_url[:80]}...")
+            print(f"   ✅ File {idx}: {public_url[:80]}...")
         
         if not uploaded_urls:
             raise HTTPException(status_code=400, detail="Tidak ada file gambar valid")
         
         # 2. ✅ GABUNGKAN URL & UPDATE DATABASE
         url_to_save = uploaded_urls[0] if len(uploaded_urls) == 1 else ",".join(uploaded_urls)
-        print(f"🔄 Updating DB: id={ppks_id}, url={url_to_save[:60]}...")
+        print(f"\n🔄 Updating database...")
+        print(f"   ID: {ppks_id}")
+        print(f"   URL: {url_to_save[:60]}...")
         
+        # ✅ UPDATE KOLOM bukti_foto_ppks DI DATABASE
         result = supabase.table("ppks") \
             .update({"bukti_foto_ppks": url_to_save}) \
             .eq("id", ppks_id) \
             .execute()
         
-        if not result.data:
-            print(f"⚠️ Update returned empty. Cek apakah ID {ppks_id} ada di tabel ppks")
-            raise HTTPException(
-                status_code=404, 
-                detail=f"Data PPKS dengan ID {ppks_id} tidak ditemukan"
-            )
+        print(f"\n📦 Hasil update:")
+        print(f"   Data: {result.data}")
         
-        print(f"✅ DB Updated! Rows affected: {len(result.data)}")
+        if not result.data:
+            print(f"   ⚠️ WARNING: Update tidak mengembalikan data")
+            # Cek apakah ID ada
+            check = supabase.table("ppks").select("id").eq("id", ppks_id).execute()
+            if not check.data:
+                raise HTTPException(status_code=404, detail=f"PPKS dengan ID {ppks_id} tidak ditemukan")
+        
+        print(f"{'='*60}\n")
         
         return {
             "message": f"Upload berhasil ({len(uploaded_urls)} foto)",
             "urls": uploaded_urls,
-            "saved_url": url_to_save,
-            "updated": True
+            "saved_url": url_to_save
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Gagal upload: {str(e)}")
+        print(f"\n❌ ERROR: {type(e).__name__}: {str(e)}\n")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+# @router.post("/upload/foto-ppks")
+# async def upload_foto_ppks(
+#     ppks_id: str = Form(...),  # ✅ TAMBAHKAN INI
+#     files: List[UploadFile] = File(...),
+#     credentials = Depends(security)
+# ):
+#     if not credentials:
+#         raise HTTPException(status_code=401, detail="Unauthorized")
+    
+#     if not SUPABASE_BUCKET:
+#         raise HTTPException(status_code=500, detail="SUPABASE_BUCKET tidak terdefinisi")
+
+#     print(f"\n🚀 Upload foto untuk PPKS ID: {ppks_id}")
+#     uploaded_urls = []
+    
+#     try:
+#         # 1. Upload semua file ke Storage
+#         for file in files:
+#             if not file.content_type or not file.content_type.startswith("image/"):
+#                 continue
+            
+#             file_bytes = await file.read()
+            
+#             if len(file_bytes) > 5 * 1024 * 1024:
+#                 raise HTTPException(status_code=400, detail=f"File {file.filename} terlalu besar (max 5MB)")
+            
+#             import uuid, time, os, re
+#             name, ext = os.path.splitext(file.filename or "image.jpg")
+#             clean_name = re.sub(r'[^\w\-]', '_', name)[:30]
+#             timestamp = int(time.time() * 1000)
+#             unique_id = uuid.uuid4().hex[:8]
+#             safe_filename = f"ppks/{ppks_id}/{timestamp}-{unique_id}-{clean_name}{ext}"
+            
+#             supabase.storage.from_(SUPABASE_BUCKET).upload(
+#                 safe_filename, file_bytes, {"content-type": file.content_type}
+#             )
+            
+#             public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(safe_filename)
+#             uploaded_urls.append(public_url)
+#             print(f"   ✅ Uploaded: {public_url[:80]}...")
+        
+#         if not uploaded_urls:
+#             raise HTTPException(status_code=400, detail="Tidak ada file gambar valid")
+        
+#         # 2. ✅ GABUNGKAN URL & UPDATE DATABASE
+#         url_to_save = uploaded_urls[0] if len(uploaded_urls) == 1 else ",".join(uploaded_urls)
+#         print(f"🔄 Updating DB: id={ppks_id}, url={url_to_save[:60]}...")
+        
+#         result = supabase.table("ppks") \
+#             .update({"bukti_foto_ppks": url_to_save}) \
+#             .eq("id", ppks_id) \
+#             .execute()
+        
+#         if not result.data:
+#             print(f"⚠️ Update returned empty. Cek apakah ID {ppks_id} ada di tabel ppks")
+#             raise HTTPException(
+#                 status_code=404, 
+#                 detail=f"Data PPKS dengan ID {ppks_id} tidak ditemukan"
+#             )
+        
+#         print(f"✅ DB Updated! Rows affected: {len(result.data)}")
+        
+#         return {
+#             "message": f"Upload berhasil ({len(uploaded_urls)} foto)",
+#             "urls": uploaded_urls,
+#             "saved_url": url_to_save,
+#             "updated": True
+#         }
+        
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         print(f"❌ Error: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Gagal upload: {str(e)}")

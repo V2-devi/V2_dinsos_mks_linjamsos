@@ -502,24 +502,23 @@ const handleFileChange = (e) => {
 
   // ✅ FUNGSI HANDLE UPLOAD FOTO
 // ✅ VERSI BARU: Terima ID sebagai parameter
+
 const handleSubmitFotoPPKS = async (ppksId = null) => {
-  // Gunakan ID dari parameter, atau fallback ke state
   const targetId = ppksId || selectedPPKSData?.id;
   
   console.log("🔍 ID yang akan diupload:", targetId);
-  console.log("🔍 selectedPPKSData:", selectedPPKSData);
   
   if (!targetId) {
-    return alert("⚠️ ID PPKS tidak ditemukan. Silakan buka detail data terlebih dahulu.");
+    return alert("⚠️ ID PPKS tidak ditemukan.");
   }
-
+  
   if (!fotoBuktiPPKS || fotoBuktiPPKS.length === 0) {
     return alert("⚠️ Pilih minimal 1 foto bukti.");
   }
-
+  
   const token = localStorage.getItem("token");
   if (!token) return alert("⚠️ Sesi login habis.");
-
+  
   try {
     const formData = new FormData();
     formData.append("ppks_id", targetId);
@@ -527,52 +526,130 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
     fotoBuktiPPKS.forEach((file) => {
       formData.append("files", file);
     });
-
+    
     console.log("📤 Upload untuk ID:", targetId);
-
+    
     const res = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData
     });
-
+    
     const data = await res.json();
-
+    
     if (!res.ok) {
       console.error("❌ Backend error:", data);
       alert(`❌ ${data.detail || "Gagal upload"}`);
       return;
     }
-
+    
     console.log("✅ Upload berhasil:", data);
     alert(`✅ ${data.message}`);
-
-    // ✅ Update state jika data sedang dibuka
-    if (selectedPPKSData?.id === targetId) {
-      setSelectedPPKSData(prev => ({ 
-        ...prev, 
-        bukti_foto_ppks: data.urls.join(",") 
-      }));
+    
+    // ✅ REFRESH DATA DARI BACKEND
+    const refreshRes = await fetch(`http://127.0.0.1:8000/ppks/${targetId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (refreshRes.ok) {
+      const updatedData = await refreshRes.json();
+      console.log("✅ Data terbaru dari backend:", updatedData);
+      
+      // Update state
+      if (selectedPPKSData?.id === targetId) {
+        setSelectedPPKSData(updatedData);
+      }
+      
+      // Update daftar PPKS
+      setDummyPPKS(prev => prev.map(item =>
+        item.id === targetId ? updatedData : item
+      ));
     }
-
-    // ✅ Update daftar PPKS
-    setDummyPPKS(prev => prev.map(item => 
-      item.id === targetId 
-        ? { ...item, bukti_foto_ppks: data.urls.join(",") }
-        : item
-    ));
-
+    
     // Reset & tutup modal
     setFotoBuktiPPKS([]);
     if (typeof setIsUploadFotoModalOpen === "function") {
       setIsUploadFotoModalOpen(false);
     }
-
+    
   } catch (err) {
     console.error("❌ Error:", err);
     alert(`❌ ${err.message}`);
   }
 };
+
+
+// const handleSubmitFotoPPKS = async (ppksId = null) => {
+//   // Gunakan ID dari parameter, atau fallback ke state
+//   const targetId = ppksId || selectedPPKSData?.id;
+  
+//   console.log("🔍 ID yang akan diupload:", targetId);
+//   console.log("🔍 selectedPPKSData:", selectedPPKSData);
+  
+//   if (!targetId) {
+//     return alert("⚠️ ID PPKS tidak ditemukan. Silakan buka detail data terlebih dahulu.");
+//   }
+
+//   if (!fotoBuktiPPKS || fotoBuktiPPKS.length === 0) {
+//     return alert("⚠️ Pilih minimal 1 foto bukti.");
+//   }
+
+//   const token = localStorage.getItem("token");
+//   if (!token) return alert("⚠️ Sesi login habis.");
+
+//   try {
+//     const formData = new FormData();
+//     formData.append("ppks_id", targetId);
+    
+//     fotoBuktiPPKS.forEach((file) => {
+//       formData.append("files", file);
+//     });
+
+//     console.log("📤 Upload untuk ID:", targetId);
+
+//     const res = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
+//       method: "POST",
+//       headers: { Authorization: `Bearer ${token}` },
+//       body: formData
+//     });
+
+//     const data = await res.json();
+
+//     if (!res.ok) {
+//       console.error("❌ Backend error:", data);
+//       alert(`❌ ${data.detail || "Gagal upload"}`);
+//       return;
+//     }
+
+//     console.log("✅ Upload berhasil:", data);
+//     alert(`✅ ${data.message}`);
+
+//     // ✅ Update state jika data sedang dibuka
+//     if (selectedPPKSData?.id === targetId) {
+//       setSelectedPPKSData(prev => ({ 
+//         ...prev, 
+//         bukti_foto_ppks: data.urls.join(",") 
+//       }));
+//     }
+
+//     // ✅ Update daftar PPKS
+//     setDummyPPKS(prev => prev.map(item => 
+//       item.id === targetId 
+//         ? { ...item, bukti_foto_ppks: data.urls.join(",") }
+//         : item
+//     ));
+
+//     // Reset & tutup modal
+//     setFotoBuktiPPKS([]);
+//     if (typeof setIsUploadFotoModalOpen === "function") {
+//       setIsUploadFotoModalOpen(false);
+//     }
+
+//   } catch (err) {
+//     console.error("❌ Error:", err);
+//     alert(`❌ ${err.message}`);
+//   }
+// };
 
   const [formAset, setFormAset] = useState({
     no_kk: "", v01: "", v02: "", v03: "", v04: "", v05: "", v06: 0, v07: "", v08: "", v09: "", v10: "", v11: "", v12: "", v13: "", v14: "", v15: "", v16: "", v17: "", v18: "", v19: "",
@@ -1417,6 +1494,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
                 )}
                 {/* ❌ Tombol Kuning dihapus dari sini */}
               </div>
+
+
             ) : (
               /* ✅ JIKA KASUS SUDAH AKTIF (FOTO SUDAH ADA) -> TAMPILKAN FOTONYA SEPERTI BIASA */
               (() => {
