@@ -63,15 +63,26 @@ function ResetPassword() {
   return (
     <div className="auth-container">
       <div className="auth-left" style={{ backgroundImage: `url(${bgImage})` }}>
-        <div className="auth-overlay">
-          <div className="auth-left-content">
-            <img src={logoLinjamsos} alt="Logo Linjamsos" className="auth-logo" />
-            <h1>SISTEM INFORMASI<br />PERLINDUNGAN DAN JAMINAN SOSIAL</h1>
-            <p>Atur kata sandi baru untuk akun Anda.</p>
-            <span className="copyright">@2026 Linjamsos. Dinas Sosial.</span>
-          </div>
-        </div>
-      </div>
+              <div className="auth-overlay">
+                <div className="auth-left-content">
+                  <img 
+                    src={logoSicadas} 
+                    alt="Logo SICADAS" 
+                    className="auth-logo" 
+                    style={{ width: '100%', maxWidth: '320px', height: 'auto', marginBottom: '5px' }}
+                  />
+                        
+                  <p style={{ fontSize: '1rem', lineHeight: '1.5' }}>
+                    Melayani dengan hati, melindungi sepenuh jiwa. Akses Perlindungan
+                    dan Jaminan Sosial dengan lebih mudah dan transparan.
+                  </p>
+                  
+                  <span className="copyright">
+                    @2026 Linjamsos. Dinas Sosial. Hak Cipta Dilindungi.
+                  </span>
+                </div>
+              </div>
+            </div>
 
       <div className="auth-right">
         <div className="auth-box">
@@ -92,7 +103,7 @@ function ResetPassword() {
                   fontSize: '13px',
                   marginBottom: '15px'
                 }}>
-                  ❌ {error}
+                {error}
                 </div>
               )}
 
@@ -129,7 +140,7 @@ function ResetPassword() {
                     className="btn-primary btn-block"
                     disabled={loading}
                   >
-                    {loading ? "⏳ Menyimpan..." : "🔒 Ubah Kata Sandi"}
+                    {loading ? "Menyimpan..." : "Ubah Kata Sandi"}
                   </button>
                 </form>
               )}
