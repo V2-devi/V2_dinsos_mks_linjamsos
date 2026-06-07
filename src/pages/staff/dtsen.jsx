@@ -503,10 +503,11 @@ const handleFileChange = (e) => {
   // ✅ FUNGSI HANDLE UPLOAD FOTO
 // ✅ VERSI BARU: Terima ID sebagai parameter
 
+// ✅ FUNGSI HANDLE UPLOAD FOTO (VERSI FINAL - UPDATE DATABASE JUGA)
 const handleSubmitFotoPPKS = async (ppksId = null) => {
-  const targetId = ppksId || selectedPPKSData?.id;
+  const targetId = ppksId || selectedPPKSData?.id || selectedPPKSForUpload;
   
-  console.log("🔍 ID yang akan diupload:", targetId);
+  console.log(" ID yang akan diupload:", targetId);
   
   if (!targetId) {
     return alert("⚠️ ID PPKS tidak ditemukan.");
@@ -520,14 +521,14 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
   if (!token) return alert("⚠️ Sesi login habis.");
   
   try {
+    // ==========================================
+    // STEP 1: Upload File ke Backend (Dapatkan URL)
+    // ==========================================
     const formData = new FormData();
     formData.append("ppks_id", targetId);
+    fotoBuktiPPKS.forEach((file) => formData.append("files", file));
     
-    fotoBuktiPPKS.forEach((file) => {
-      formData.append("files", file);
-    });
-    
-    console.log("📤 Upload untuk ID:", targetId);
+    console.log("📤 Step 1: Upload ke backend...");
     
     const res = await fetch("http://127.0.0.1:8000/ppks/upload/foto-ppks", {
       method: "POST",
@@ -539,45 +540,73 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
     
     if (!res.ok) {
       console.error("❌ Backend error:", data);
-      alert(`❌ ${data.detail || "Gagal upload"}`);
-      return;
+      return alert(`❌ ${data.detail || "Gagal upload"}`);
     }
     
-    console.log("✅ Upload berhasil:", data);
-    alert(`✅ ${data.message}`);
+    console.log("✅ Step 1 berhasil. URLs:", data.urls);
+    const finalUrl = data.urls.join(",");
     
-    // ✅ REFRESH DATA DARI BACKEND
-    const refreshRes = await fetch(`http://127.0.0.1:8000/ppks/${targetId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    // ==========================================
+    // STEP 2: ✅ UPDATE DATABASE LANGSUNG VIA SUPABASE
+    // (Update bukti_foto_ppks DAN status_penanganan sekaligus!)
+    // ==========================================
+    console.log("💾 Step 2: Update database...");
+    console.log("   ID:", targetId);
+    console.log("   URL:", finalUrl);
+    console.log("   Status: Kasus Aktif");
     
-    if (refreshRes.ok) {
-      const updatedData = await refreshRes.json();
-      console.log("✅ Data terbaru dari backend:", updatedData);
-      
-      // Update state
-      if (selectedPPKSData?.id === targetId) {
-        setSelectedPPKSData(updatedData);
-      }
-      
-      // Update daftar PPKS
-      setDummyPPKS(prev => prev.map(item =>
-        item.id === targetId ? updatedData : item
-      ));
+    const { data: updateResult, error: updateError } = await supabase
+      .from('ppks')
+      .update({ 
+        bukti_foto_ppks: finalUrl,
+        status_penanganan: "Kasus Aktif"  // ✅ UBAH STATUS OTOMATIS
+      })
+      .eq('id', targetId)
+      .select();
+    
+    if (updateError) {
+      console.error(" Gagal update database:", updateError);
+      return alert(`❌ Gagal simpan ke database: ${updateError.message}`);
     }
+    
+    if (!updateResult || updateResult.length === 0) {
+      console.error("❌ Database tidak menemukan ID:", targetId);
+      return alert("❌ Data PPKS tidak ditemukan di database.");
+    }
+    
+    console.log("✅ Step 2 berhasil! Database updated:", updateResult[0]);
+    
+    // ==========================================
+    // STEP 3: Update State Lokal
+    // ==========================================
+    const updatedData = { 
+      ...(selectedPPKSData || {}),
+      id: targetId,
+      bukti_foto_ppks: finalUrl,
+      status_penanganan: "Kasus Aktif"
+    };
+    
+    // Update state jika sedang membuka detail
+    if (selectedPPKSData?.id === targetId) {
+      setSelectedPPKSData(updatedData);
+    }
+    
+    // Update daftar PPKS di tabel
+    setDummyPPKS(prev => prev.map(item =>
+      item.id === targetId ? updatedData : item
+    ));
     
     // Reset & tutup modal
     setFotoBuktiPPKS([]);
-    if (typeof setIsUploadFotoModalOpen === "function") {
-      setIsUploadFotoModalOpen(false);
-    }
+    setIsUploadFotoModalOpen(false);
+    
+    alert(`✅ BERHASIL! ${data.urls.length} foto tersimpan dan status diubah menjadi "Kasus Aktif".`);
     
   } catch (err) {
     console.error("❌ Error:", err);
     alert(`❌ ${err.message}`);
   }
 };
-
 
 // const handleSubmitFotoPPKS = async (ppksId = null) => {
 //   // Gunakan ID dari parameter, atau fallback ke state
