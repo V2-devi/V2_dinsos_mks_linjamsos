@@ -173,6 +173,7 @@ const handleImportFile = async (e, tableName, onSuccess) => {
         tanggal_usulan:    rest.tanggal_usulan || null,
         alamat:            rest.alamat || null,
         status_pengusulan: rest.status_pengusulan || "Belum",
+        catatan_verifikator_bansos: rest.catatan_verifikator_bansos || null,
       };
     });
 

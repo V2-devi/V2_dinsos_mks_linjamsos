@@ -175,11 +175,7 @@ const handleExport = () => {
     "Tanggal Pengusulan",
     "Alamat",
     "Status",
-<<<<<<< HEAD
-    "Keterangan",
-=======
     "Keterangan"
->>>>>>> 944405c2758875118f246d7071096dd404677b0a
   ];
 
   const csvRows = [headers.map(h => `"${h}"`).join(",")];
@@ -194,11 +190,7 @@ const handleExport = () => {
       formatDateIndo(row.tanggal_usulan) || "",
       row.alamat || "",
       row.status_pengusulan || "",
-<<<<<<< HEAD
       row.catatan_verifikator_bansos || ""
-=======
-      row.catatan_verifikator || ""
->>>>>>> 944405c2758875118f246d7071096dd404677b0a
     ].map(val => {
       const escaped = String(val).replace(/"/g, '""');
       return `"${escaped}"`;
@@ -489,7 +481,7 @@ const handleExport = () => {
                         {item.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum</span>}
                       </td>
                       <td style={{ color: '#64748b', maxWidth: '200px', fontSize: '13px' }}>
-                        {item.catatan_verifikator_bansos ? item.catatan_verifikator_bansos : "-"}
+                        {item.catatan_verifikator_bansos ? item.catatan_verifikator_bansos: "-"}
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Riwayat" onClick={() => handleOpenDetailRiwayat(item)}>

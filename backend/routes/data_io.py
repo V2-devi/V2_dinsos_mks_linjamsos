@@ -73,7 +73,7 @@ HEADER_MAP = {
     "Nama Kepala Keluarga": "nama_kepala_keluarga",
     "Alamat Lengkap": "alamat",
     "Alamat": "alamat",
-    "Alamat": "alamat",
+
 
     "RT": "rt",
     "RW": "rw",
@@ -92,7 +92,7 @@ HEADER_MAP = {
     "Tanggal Pengusulan": "tanggal_usulan",
     "Status": "status_pengusulan",
     "Status Pengusulan": "status_pengusulan",
-     "Jenis Bansos": "jenis_bansos",
+    "Jenis Bansos": "jenis_bansos",
     # PPKS
     "Nama": "nama_lengkap",
     "Kategori PPKS": "kategori_ppks",
@@ -100,7 +100,7 @@ HEADER_MAP = {
     "Tanggal Laporan": "tanggal_penemuan",
     "Tanggal Penemuan": "tanggal_penemuan",
     "Keterangan": "catatan_verifikator",
-    "Keterangan": "catatan_verifikator_bansos",
+    
 }
 
 # Override khusus per tabel untuk header yang ambigu (misal: "Status")
@@ -110,7 +110,8 @@ TABLE_SPECIFIC_HEADER_MAPS = {
     },
     "pengusulan_bansos": {
         "status": "status_pengusulan",
-        "keterangan": "catatan_verifikator_bansos"
+        "keterangan": "catatan_verifikator_bansos",
+        "Nama kepala keluarga": "nama_kepala_keluarga",
     },
     "ppks": {
         "status": "status_penanganan"
@@ -141,7 +142,14 @@ TABLE_EXPECTED_COLUMNS = {
         "no_kk", "tanggal_usulan", "catatan_verifikator_bansos",
         "alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan",
         "nama_kepala_keluarga", "jenis_bansos", "id", "created_at",
-        "catatan_verifikator_bansos",
+        "catatan_verifikator",
+        "catatan_verifikator",
+        "tanggal_pengusulan",
+        "status",
+        "updated_at",
+        "user_id",
+        "nama_lengkap",
+        "nama",
     },
     "keluarga": {
         "no_kk", "nama_kepala_keluarga", "alamat", "kecamatan",
@@ -164,14 +172,9 @@ TABLE_EXPECTED_COLUMNS = {
 TABLE_DEFAULTS = {
     "keluarga": {
         "tanggal_hitung_desil": lambda: datetime.now().strftime("%Y-%m-%d"),
-
     },
-    "pengusulan_bansos": {
-        "created_at": lambda: datetime.now().isoformat(),
-    },
-    "ppks": {
-        "created_at": lambda: datetime.now().isoformat(),
-    },
+    "pengusulan_bansos": {},
+    "ppks": {},
 }
 
 
@@ -189,6 +192,8 @@ def apply_table_defaults(row: dict, table: str) -> dict:
             row[col] = generator()
 
     return row
+
+    
 
 
 # ==========================================
@@ -312,6 +317,8 @@ def try_parse_date(text: str):
 def normalize_row(row: dict, table: str) -> dict:
     """Terjemahkan header CSV menjadi nama kolom database."""
     normalized = {}
+    unmapped = []  # ✅ tracking kolom yang tidak ada di map
+    
     for key, value in row.items():
         if key is None:
             continue
@@ -322,11 +329,9 @@ def normalize_row(row: dict, table: str) -> dict:
 
         normalized_lower = normalized_key.lower()
 
-        # Skip kolom id
         if normalized_lower in {"id", "_id", "id_", "id .", "id.", "#", "no", "no."}:
             continue
 
-        # Override spesifik per tabel
         specific_map = TABLE_SPECIFIC_HEADER_MAPS.get(table, {})
         if normalized_lower in specific_map:
             db_col = specific_map[normalized_lower]
@@ -337,11 +342,17 @@ def normalize_row(row: dict, table: str) -> dict:
                 if fallback == "" or fallback in {"id", "_id", "no", "no_"}:
                     continue
                 db_col = fallback
+                unmapped.append(f"'{normalized_key}' → '{db_col}'")  # ✅ log ini
 
         if db_col == "":
             continue
 
         normalized[db_col] = sanitize_value(db_col, value)
+    
+    if unmapped:
+        print(f"⚠️ [{table}] Header tidak ada di HEADER_MAP (pakai fallback): {unmapped}")
+        
+    
     return normalized
 
 
@@ -411,11 +422,30 @@ async def import_csv(
         # ✅ 1.a Auto-Fill Kolom Wajib dengan Default Value
         mapped_rows = [apply_table_defaults(row, table) for row in mapped_rows]
 
+        # ✅ Filter kolom readonly
+        READONLY_COLUMNS = {"created_at", "updated_at", "id"}
+        mapped_rows = [
+            {k: v for k, v in row.items() if k not in READONLY_COLUMNS}
+            for row in mapped_rows
+        ]
+
         # ✅ 1.b Validasi: cek apakah ada header yang tidak dikenali
         # ✅ 1.b Validasi: cek apakah ada header yang tidak dikenali
         all_keys = set()
         for r in mapped_rows:
             all_keys.update([k for k in r.keys() if k])
+        # ✅ DEBUG — paste di dalam @router.post("/{table}/import"), sebelum: if expected is not None:
+        print(f"\n{'='*60}")
+        print(f"📋 TABLE: {table}")
+        all_keys_debug = set()
+        for r in mapped_rows:
+            all_keys_debug.update(r.keys())
+        expected_debug = TABLE_EXPECTED_COLUMNS.get(table, set())
+        unknown_debug = sorted([k for k in all_keys_debug if k not in expected_debug])
+        print(f"📥 Semua kolom hasil mapping : {sorted(all_keys_debug)}")
+        print(f"✅ Kolom expected            : {sorted(expected_debug)}")
+        print(f"❌ Kolom UNKNOWN             : {unknown_debug}")
+        print(f"{'='*60}\n")
 
         expected = TABLE_EXPECTED_COLUMNS.get(table, None)
         if expected is not None:
@@ -425,16 +455,13 @@ async def import_csv(
                 
                 raise HTTPException(
                     status_code=400,
-                    detail={
-                        "message": (
-                            f"⚠️ File CSV memiliki {len(unknown)} kolom yang tidak dikenali.\n\n"
-                            f"Kolom bermasalah: {', '.join(unknown)}\n\n"
-                            f"Gunakan file Export sebagai template atau sesuaikan header dengan kolom berikut:\n"
-                            f"{', '.join(expected_headers)}"
-                        ),
-                        "invalid_columns": unknown,
-                        "expected_columns": list(expected_headers)
-                    }
+                    detail=(
+                        f"⚠️ File CSV memiliki {len(unknown)} kolom yang tidak dikenali sistem.\n\n"
+                        f"❌ Kolom bermasalah: {', '.join(unknown)}\n\n"
+                        f"✅ Kolom yang diizinkan untuk tabel '{table}':\n"
+                        f"{', '.join(expected_headers)}\n\n"
+                        f"💡 Solusi: Gunakan file Export sebagai template, atau hapus kolom yang tidak dikenali dari CSV."
+                    )
                 )
 
         # ✅ 1.c Hapus baris kosong
