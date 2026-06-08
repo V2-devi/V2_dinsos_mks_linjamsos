@@ -71,6 +71,7 @@ HEADER_MAP = {
     "No. KK": "no_kk",
     "Nama Kepala Keluarga": "nama_kepala_keluarga",
     "Alamat Lengkap": "alamat",
+    "Alamat": "alamat",
     "RT": "rt",
     "RW": "rw",
     "Kecamatan": "kecamatan",
@@ -103,7 +104,8 @@ TABLE_SPECIFIC_HEADER_MAPS = {
         "status": "status_pengusulan"
     },
     "pengusulan_bansos": {
-        "status": "status_pengusulan"
+        "status": "status_pengusulan",
+        "keterangan": "catatan_verifikator_bansos"
     },
     "ppks": {
         "status": "status_penanganan"
@@ -133,6 +135,7 @@ TABLE_EXPECTED_COLUMNS = {
     "pengusulan_bansos": {
         "no_kk", "tanggal_usulan","alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan",
         "nama_kepala_keluarga", "jenis_bansos", "id", "created_at",
+        "catatan_verifikator_bansos",
     },
     "keluarga": {
         "no_kk", "nama_kepala_keluarga", "alamat", "kecamatan",
@@ -308,6 +311,9 @@ def normalize_row(row: dict, table: str) -> dict:
             continue
 
         normalized_key = str(key).strip().lstrip("\ufeff").strip()
+        if normalized_key == "":
+            continue
+
         normalized_lower = normalized_key.lower()
 
         # Skip kolom id
@@ -322,9 +328,12 @@ def normalize_row(row: dict, table: str) -> dict:
             db_col = NORMALIZED_HEADER_MAP.get(normalized_lower)
             if not db_col:
                 fallback = normalized_lower.replace(" ", "_").replace(".", "").replace("/", "_")
-                if fallback in {"id", "_id", "no", "no_"}:
+                if fallback == "" or fallback in {"id", "_id", "no", "no_"}:
                     continue
                 db_col = fallback
+
+        if db_col == "":
+            continue
 
         normalized[db_col] = sanitize_value(db_col, value)
     return normalized
