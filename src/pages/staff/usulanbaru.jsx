@@ -162,7 +162,7 @@ const handleExport = () => {
   const dataToExport = tableDataFiltered; // Gunakan data tabel terfilter yang sedang ditampilkan
 
   if (!dataToExport || dataToExport.length === 0) {
-    alert("⚠️ Tidak ada data untuk diekspor");
+    alert("Tidak ada data untuk diekspor");
     return;
   }
 
@@ -175,7 +175,11 @@ const handleExport = () => {
     "Tanggal Pengusulan",
     "Alamat",
     "Status",
+<<<<<<< HEAD
     "Keterangan",
+=======
+    "Keterangan"
+>>>>>>> 944405c2758875118f246d7071096dd404677b0a
   ];
 
   const csvRows = [headers.map(h => `"${h}"`).join(",")];
@@ -190,7 +194,11 @@ const handleExport = () => {
       formatDateIndo(row.tanggal_usulan) || "",
       row.alamat || "",
       row.status_pengusulan || "",
+<<<<<<< HEAD
       row.catatan_verifikator_bansos || ""
+=======
+      row.catatan_verifikator || ""
+>>>>>>> 944405c2758875118f246d7071096dd404677b0a
     ].map(val => {
       const escaped = String(val).replace(/"/g, '""');
       return `"${escaped}"`;
