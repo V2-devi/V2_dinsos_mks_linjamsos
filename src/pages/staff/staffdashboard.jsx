@@ -163,9 +163,11 @@ function StaffDashboard() {
             tanggal_usulan: item.tanggal_usulan,
             alamat: item.alamat,
             status_pengusulan: item.status_pengusulan,
-            jenis_bansos: item.jenis_bansos
+            jenis_bansos: item.jenis_bansos,
+            catatan_verifikator: item.catatan_verifikator_bansos || ""
           }))
         );
+        console.log("LOG MASUK - DATA BANSOS RAW:", pengusulanData);
 
         // ✅ PPKS
         const { data: ppksData, error: ppksError } =
@@ -182,7 +184,7 @@ function StaffDashboard() {
             lokasi_penemuan: item.lokasi_penemuan,
             tanggal_penemuan: item.tanggal_penemuan,
             status_penanganan: item.status_penanganan,
-            catatan_verifikator: item.catatan_verifikator,
+            catatan_verifikator: item.catatan_verifikator_ppks || "",
             bukti_foto_ppks: item.bukti_foto_ppks
           }))
         );

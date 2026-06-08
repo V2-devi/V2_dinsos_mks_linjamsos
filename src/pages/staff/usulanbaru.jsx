@@ -444,6 +444,7 @@ const handleExport = () => {
                     <th>Tanggal Pengusulan</th>
                     <th>Alamat</th>
                     <th style={{ textAlign: "center" }}>Status</th>
+                    <th>Keterangan</th>
                     <th style={{ textAlign: "center" }}>Aksi</th>
                   </tr>
                 </thead>
@@ -458,6 +459,9 @@ const handleExport = () => {
                         {item.status_pengusulan === "Layak" && <span className="status-badge badge-active">Layak</span>}
                         {item.status_pengusulan === "Tidak Layak" && <span className="status-badge badge-inactive">Tidak Layak</span>}
                         {item.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum</span>}
+                      </td>
+                      <td style={{ color: '#64748b', maxWidth: '200px', fontSize: '13px' }}>
+                        {item.catatan_verifikator ? item.catatan_verifikator : "-"}
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Riwayat" onClick={() => handleOpenDetailRiwayat(item)}>
