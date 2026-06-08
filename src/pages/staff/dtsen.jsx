@@ -373,7 +373,8 @@ const handleImportFile = async (e, tableName, onSuccess) => {
     jenis_kelamin: "",
     tanggal_lahir: "",
     // status_khusus: "",
-    status_keadaan: "",
+    status_keadaan: "Hidup",
+    urutan: 0,
     kehamilan: "",
     disabilitas: "",
     penyakit_kronis: "",
@@ -387,7 +388,7 @@ const handleImportFile = async (e, tableName, onSuccess) => {
       hubungan_keluarga: "",
       jenis_kelamin: "",
       tanggal_lahir: "",
-      status_keadaan: "",
+      status_keadaan: "Hidup",
       kehamilan: "",
       disabilitas: "",
       penyakit_kronis: "",
@@ -809,11 +810,11 @@ const fetchAnggota = async (no_kk) => {
     });
     
     const data = await response.json();
-    console.log("📦 RAW DATA ANGGOTA:", data);
+    console.log("RAW DATA ANGGOTA:", data);
     
     // Debug: Cek apakah surat_kematian ada
     data.forEach((ang, idx) => {
-      console.log(`📄 Anggota ${idx + 1} (${ang.nama_anggota_keluarga}):`, {
+      console.log(`Anggota ${idx + 1} (${ang.nama_anggota_keluarga}):`, {
         id: ang.id,
         surat_kematian: ang.surat_kematian || "KOSONG",
         tipe: typeof ang.surat_kematian
@@ -825,10 +826,27 @@ const fetchAnggota = async (no_kk) => {
       kondisi_khusus: anggota.kondisi_khusus || ""
     }));
 
+     // ✅ TAMBAHKAN SORTING YANG BENAR DI SINI
+      const sortedAnggota = [...normalizedAnggota].sort((a, b) => {
+      // 1. Kepala Keluarga selalu di atas
+      if (a.hubungan_keluarga === "Kepala Keluarga" && b.hubungan_keluarga !== "Kepala Keluarga") return -1;
+      if (a.hubungan_keluarga !== "Kepala Keluarga" && b.hubungan_keluarga === "Kepala Keluarga") return 1;
+      
+      // 2. Istri kedua
+      if (a.hubungan_keluarga === "Istri" && b.hubungan_keluarga !== "Istri") return -1;
+      if (a.hubungan_keluarga !== "Istri" && b.hubungan_keluarga === "Istri") return 1;
+      
+      // 3. Lainnya berdasarkan tanggal lahir (tertua dulu)
+      const dateA = new Date(a.tanggal_lahir || "1900-01-01");
+      const dateB = new Date(b.tanggal_lahir || "1900-01-01");
+      return dateA - dateB;
+    });
+
+
     // ✅ Update dtsenData dengan perbandingan String (anti type-mismatch)
     const updatedDtsen = dtsenData.map((item) => {
       if (String(item.no_kk) === String(no_kk)) {
-        return { ...item, anggota: normalizedAnggota };
+        return { ...item, anggota: sortedAnggota };
       }
       return item;
     });
@@ -838,8 +856,8 @@ const fetchAnggota = async (no_kk) => {
     // DAN gunakan String() untuk perbandingan yang aman
     setSelectedDtsenData(prev => {
       if (prev && String(prev.no_kk) === String(no_kk)) {
-        console.log("✅ Update selectedDtsenData dengan anggota:", normalizedAnggota.length, "orang");
-        return { ...prev, anggota: normalizedAnggota };
+        console.log("✅ Update selectedDtsenData dengan anggota:", sortedAnggota.length, "orang");
+        return { ...prev, anggota: sortedAnggota };
       }
       console.warn("⚠️ no_kk tidak cocok:", prev?.no_kk, "vs", no_kk);
       return prev;
@@ -925,6 +943,12 @@ const handleAddAnggotaSubmit = async (e) => {
       penyakit_kronis: formAnggota.penyakit_kronis
     });
 
+    // Hitung urutan tertinggi + 1
+    const maxUrutan = selectedDtsenData.anggota?.reduce(
+      (max, ang) => Math.max(max, ang.urutan || 0), 
+      -1
+    ) || 0;
+
     const payload = {
       nik: String(formAnggota.nik),
       nama_anggota_keluarga: formAnggota.nama_anggota_keluarga,
@@ -932,7 +956,8 @@ const handleAddAnggotaSubmit = async (e) => {
       jenis_kelamin: formAnggota.jenis_kelamin,
       tanggal_lahir: formAnggota.tanggal_lahir,
       status_keadaan: formAnggota.status_keadaan,
-      kondisi_khusus: kondisi_khusus_gabung
+      kondisi_khusus: kondisi_khusus_gabung,
+      urutan: maxUrutan + 1
     };
 
     console.log("📤 PAYLOAD ADD ANGGOTA:", payload);

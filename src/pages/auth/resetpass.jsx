@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../config/supabase";
 import "./auth.css";
 import bgImage from "../../assets/image.png";
-import logoLinjamsos from "../../assets/logo_linjamsos.png";
+import logoSicadas from "../../assets/logo_sicadas.png";
 
 function ResetPassword() {
   const navigate = useNavigate();

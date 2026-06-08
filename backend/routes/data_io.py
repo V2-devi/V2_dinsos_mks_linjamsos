@@ -57,9 +57,8 @@ EXPORT_COLUMNS = {
         ("Tanggal Pengusulan", "tanggal_usulan"),
         ("Kecamatan", "kecamatan"),
         ("Kelurahan", "kelurahan"),
-        ("Alamat Lengkap", "alamat"),
+        ("Alamat", "alamat"),
         ("Status", "status_pengusulan"),
-        ("Catatan Verifikator", "catatan_verifikator_bansos"),
     ],
 }
 
@@ -132,8 +131,7 @@ CONFLICT_COLUMNS = {
 
 TABLE_EXPECTED_COLUMNS = {
     "pengusulan_bansos": {
-        "no_kk", "tanggal_usulan", "catatan_verifikator_bansos",
-        "alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan",
+        "no_kk", "tanggal_usulan","alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan",
         "nama_kepala_keluarga", "jenis_bansos", "id", "created_at",
     },
     "keluarga": {
