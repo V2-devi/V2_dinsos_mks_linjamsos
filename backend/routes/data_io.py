@@ -59,6 +59,7 @@ EXPORT_COLUMNS = {
         ("Kelurahan", "kelurahan"),
         ("Alamat", "alamat"),
         ("Status", "status_pengusulan"),
+        ("Keterangan", "catatan_verifikator_bansos"),
     ],
 }
 
@@ -71,6 +72,8 @@ HEADER_MAP = {
     "No. KK": "no_kk",
     "Nama Kepala Keluarga": "nama_kepala_keluarga",
     "Alamat Lengkap": "alamat",
+    "Alamat": "alamat",
+
     "RT": "rt",
     "RW": "rw",
     "Kecamatan": "kecamatan",
@@ -88,6 +91,7 @@ HEADER_MAP = {
     "Tanggal Pengusulan": "tanggal_usulan",
     "Status": "status_pengusulan",
     "Status Pengusulan": "status_pengusulan",
+     "Jenis Bansos": "jenis_bansos",
     # PPKS
     "Nama": "nama_lengkap",
     "Kategori PPKS": "kategori_ppks",
@@ -95,6 +99,7 @@ HEADER_MAP = {
     "Tanggal Laporan": "tanggal_penemuan",
     "Tanggal Penemuan": "tanggal_penemuan",
     "Keterangan": "catatan_verifikator",
+    "Keterangan": "catatan_verifikator_bansos",
 }
 
 # Override khusus per tabel untuk header yang ambigu (misal: "Status")
@@ -131,7 +136,8 @@ CONFLICT_COLUMNS = {
 
 TABLE_EXPECTED_COLUMNS = {
     "pengusulan_bansos": {
-        "no_kk", "tanggal_usulan","alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan",
+        "no_kk", "tanggal_usulan", "catatan_verifikator_bansos",
+        "alamat", "kecamatan", "kelurahan", "nik", "status_pengusulan",
         "nama_kepala_keluarga", "jenis_bansos", "id", "created_at",
     },
     "keluarga": {
@@ -397,6 +403,7 @@ async def import_csv(
         mapped_rows = [apply_table_defaults(row, table) for row in mapped_rows]
 
         # ✅ 1.b Validasi: cek apakah ada header yang tidak dikenali
+        # ✅ 1.b Validasi: cek apakah ada header yang tidak dikenali
         all_keys = set()
         for r in mapped_rows:
             all_keys.update([k for k in r.keys() if k])
@@ -405,14 +412,19 @@ async def import_csv(
         if expected is not None:
             unknown = sorted([k for k in all_keys if k not in expected])
             if unknown:
+                expected_headers = sorted(list(expected))
+                
                 raise HTTPException(
                     status_code=400,
                     detail={
                         "message": (
-                            "Header CSV tidak dikenali atau tidak cocok dengan "
-                            "struktur tabel. Gunakan file Export sebagai template."
+                            f"⚠️ File CSV memiliki {len(unknown)} kolom yang tidak dikenali.\n\n"
+                            f"Kolom bermasalah: {', '.join(unknown)}\n\n"
+                            f"Gunakan file Export sebagai template atau sesuaikan header dengan kolom berikut:\n"
+                            f"{', '.join(expected_headers)}"
                         ),
-                        "invalid_columns": unknown
+                        "invalid_columns": unknown,
+                        "expected_columns": list(expected_headers)
                     }
                 )
 

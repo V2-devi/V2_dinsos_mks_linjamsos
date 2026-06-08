@@ -72,47 +72,65 @@ const handleImportFile = async (e, tableName, refreshFn) => {
     }
 
     if (!res.ok) {
-      const detail =
-        responseData?.detail ||
-        responseData?.message ||
-        responseText ||
-        'Tidak ada detail error';
+  const detail = responseData?.detail || responseData?.message || responseText || 'Tidak ada detail error';
+  
+  let pesanError = `❌ Gagal import (Status ${res.status})\n\n`;
 
-      let pesanError = `❌ Gagal import (Status ${res.status})\n\n`;
-
-      if (typeof detail === 'string') {
-        if (detail.includes('Header CSV tidak dikenali')) {
-          pesanError +=
-            `Header CSV tidak dikenali backend.\n\n` +
-            `Pastikan file yang diupload adalah hasil dari fitur Export.\n` +
-            `Header yang didukung:\n` +
-            `  • Pengusulan: Nama Kepala Keluarga, NIK, No. KK,\n` +
-            `    Kecamatan, Kelurahan, Tanggal Pengusulan, Alamat, Status\n` +
-            `  • Keluarga: No. KK, Nama Kepala Keluarga, NIK, dll\n` +
-            `  • PPKS: Kategori PPKS, Lokasi Penemuan, Tanggal Penemuan, dll`;
-        } else if (detail.includes('duplicate key') || detail.includes('unique constraint')) {
-          pesanError += `Data duplikat — NIK atau No. KK sudah ada di database.\n\nDetail: ${detail}`;
-        } else if (detail.includes('null value') || detail.includes('not-null')) {
-          pesanError += `Ada kolom wajib yang kosong di CSV.\n\nDetail: ${detail}`;
-        } else if (detail.includes('numerik') || detail.includes('numeric') || detail.includes('integer')) {
-          pesanError += `Format NIK atau No. KK tidak valid.\nPastikan hanya berisi angka.\n\nDetail: ${detail}`;
-        } else if (detail.includes('timestamp') || detail.includes('tanggal')) {
-          pesanError += `Format tanggal tidak valid.\nGunakan format YYYY-MM-DD.\n\nDetail: ${detail}`;
-        } else if (detail.includes('File CSV kosong')) {
-          pesanError += `File CSV yang diupload kosong atau tidak berisi data.`;
-        } else {
-          pesanError += `Detail: ${detail}`;
-        }
-      } else if (Array.isArray(detail)) {
-        pesanError += detail.map(d => `• ${d.loc?.join('.')} → ${d.msg}`).join('\n');
-      } else {
-        pesanError += JSON.stringify(detail, null, 2);
-      }
-
-      console.error('❌ Import error:', detail);
-      alert(pesanError);
-      return;
+  // ✅ PERBAIKAN: Handle detail yang berupa object dengan invalid_columns
+  if (typeof detail === 'object' && detail !== null) {
+    if (detail.message) {
+      pesanError += detail.message + '\n\n';
     }
+    if (detail.invalid_columns && Array.isArray(detail.invalid_columns)) {
+      pesanError += `🔴 Kolom yang bermasalah:\n`;
+      detail.invalid_columns.forEach(col => {
+        pesanError += `   • ${col}\n`;
+      });
+      pesanError += `\n`;
+    }
+    if (detail.expected_columns && Array.isArray(detail.expected_columns)) {
+      pesanError += `🟢 Kolom yang diharapkan:\n`;
+      detail.expected_columns.slice(0, 10).forEach(col => {
+        pesanError += `   • ${col}\n`;
+      });
+      if (detail.expected_columns.length > 10) {
+        pesanError += `   ... dan ${detail.expected_columns.length - 10} lainnya\n`;
+      }
+    }
+  } else if (typeof detail === 'string') {
+    // ... (kode existing Anda untuk string)
+    if (detail.includes('Header CSV tidak dikenali')) {
+      pesanError +=
+        `Header CSV tidak dikenali backend.\n\n` +
+        `Pastikan file yang diupload adalah hasil dari fitur Export.\n` +
+        `Header yang didukung:\n` +
+        `  • Pengusulan: Nama Kepala Keluarga, NIK, No. KK,\n` +
+        `    Kecamatan, Kelurahan, Tanggal Pengusulan, Alamat, Status\n` +
+        `  • Keluarga: No. KK, Nama Kepala Keluarga, NIK, dll\n` +
+        `  • PPKS: Kategori PPKS, Lokasi Penemuan, Tanggal Penemuan, dll`;
+    } else if (detail.includes('duplicate key') || detail.includes('unique constraint')) {
+      pesanError += `Data duplikat — NIK atau No. KK sudah ada di database.\n\nDetail: ${detail}`;
+    } else if (detail.includes('null value') || detail.includes('not-null')) {
+      pesanError += `Ada kolom wajib yang kosong di CSV.\n\nDetail: ${detail}`;
+    } else if (detail.includes('numerik') || detail.includes('numeric') || detail.includes('integer')) {
+      pesanError += `Format NIK atau No. KK tidak valid.\nPastikan hanya berisi angka.\n\nDetail: ${detail}`;
+    } else if (detail.includes('timestamp') || detail.includes('tanggal')) {
+      pesanError += `Format tanggal tidak valid.\nGunakan format YYYY-MM-DD.\n\nDetail: ${detail}`;
+    } else if (detail.includes('File CSV kosong')) {
+      pesanError += `File CSV yang diupload kosong atau tidak berisi data.`;
+    } else {
+      pesanError += `Detail: ${detail}`;
+    }
+  } else if (Array.isArray(detail)) {
+    pesanError += detail.map(d => `• ${d.loc?.join('.')} → ${d.msg}`).join('\n');
+  } else {
+    pesanError += JSON.stringify(detail, null, 2);
+  }
+
+  console.error('❌ Import error:', detail);
+  alert(pesanError);
+  return;
+}
 
     // ✅ Sukses
     const pesanSukses = responseData?.message || `Berhasil import data dari "${file.name}"!`;
@@ -156,7 +174,8 @@ const handleExport = () => {
     "Kelurahan",
     "Tanggal Pengusulan",
     "Alamat",
-    "Status"
+    "Status",
+    "Keterangan",
   ];
 
   const csvRows = [headers.map(h => `"${h}"`).join(",")];
@@ -170,7 +189,8 @@ const handleExport = () => {
       row.kelurahan || "",
       formatDateIndo(row.tanggal_usulan) || "",
       row.alamat || "",
-      row.status_pengusulan || ""
+      row.status_pengusulan || "",
+      row.catatan_verifikator_bansos || ""
     ].map(val => {
       const escaped = String(val).replace(/"/g, '""');
       return `"${escaped}"`;
@@ -461,7 +481,7 @@ const handleExport = () => {
                         {item.status_pengusulan === "Belum" && <span className="status-badge" style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>Belum</span>}
                       </td>
                       <td style={{ color: '#64748b', maxWidth: '200px', fontSize: '13px' }}>
-                        {item.catatan_verifikator ? item.catatan_verifikator : "-"}
+                        {item.catatan_verifikator_bansos ? item.catatan_verifikator_bansos : "-"}
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <button className="btn-icon-keterangan" title="Lihat Riwayat" onClick={() => handleOpenDetailRiwayat(item)}>
