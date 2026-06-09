@@ -198,7 +198,7 @@ const handleOpenEdit = () => {
           </div>
         </div>
         <div className="navbar-right">
-          <button className="nav-btn-plain" onClick={() => setIsPassModalOpen(true)}>Ganti Kata Sandi</button>
+          {/* <button className="nav-btn-plain" onClick={() => setIsPassModalOpen(true)}>Ganti Kata Sandi</button> */}
           <button className="nav-btn-plain active-link" onClick={handleOpenEdit}>Edit Profile</button>
         </div>
       </nav>
@@ -329,7 +329,7 @@ const handleOpenEdit = () => {
       {isPassModalOpen && (
         <div className="modal-overlay" onClick={() => setIsPassModalOpen(false)}>
           <div className="modal-content modal-small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px' }}></span><h2>Ganti Kata Sandi</h2></div></div>
+            {/* <div className="modal-header"><div className="modal-header-title"><span style={{ fontSize: '20px' }}></span><h2>Ganti Kata Sandi</h2></div></div> */}
             <div className="modal-body">
               <form onSubmit={(e) => handleSubmit(e, "pass")}>
                 <div className="form-group-modal" style={{ marginBottom: '15px' }}><label>Kata Sandi Lama</label><input type="password" required /></div>
