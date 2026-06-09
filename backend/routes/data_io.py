@@ -130,7 +130,7 @@ CONFLICT_COLUMNS = {
     "dtsen": "nik",
     "bansos": "nik_penerima",
     "ppks": "nik",
-    "pengusulan_bansos": "nik",
+    "pengusulan_bansos": "no_kk",  # ✅ pakai no_kk
 }
 
 # ==========================================
