@@ -14,6 +14,8 @@ function UsulanBaru({
   getQuarter
 }) {
  
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const importInputRef = useRef(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -50,7 +52,7 @@ const handleImportFile = async (e, tableName, refreshFn) => {
 
     console.log(`📤 Mengirim file "${file.name}" ke tabel "${tableName}"...`);
 
-    const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/data/${tableName}/import`, {
+    const res = await fetch(`${API_URL}data/${tableName}/import`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -217,7 +219,7 @@ const handleExport = () => {
 //     const token = localStorage.getItem("token");
 //     if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
 
-//     const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/data/${tableName}/export`, {
+//     const res = await fetch(`${API_URL}data/${tableName}/export`, {
 //       headers: { Authorization: `Bearer ${token}` }
 //     });
 

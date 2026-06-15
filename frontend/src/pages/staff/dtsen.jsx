@@ -21,6 +21,7 @@ function Dtsen({
 
 
   
+const API_URL = import.meta.env.VITE_API_URL;
 
 const [isExporting, setIsExporting] = useState(false);
 
@@ -64,7 +65,7 @@ const handleExport = async (tableName) => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
 
-    const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/data/${tableName}/export`, {
+    const res = await fetch(`${API_URL}data/${tableName}/export`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -212,7 +213,7 @@ const handleImportFile = async (e, tableName, onSuccess) => {
     const formData = new FormData();
     formData.append('file', mappedFile);
 
-    const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/data/${tableName}/import`, {
+    const res = await fetch(`${API_URL}data/${tableName}/import`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -532,7 +533,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
     
     console.log("📤 Step 1: Upload ke backend...");
     
-    const res = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/ppks/upload/foto-ppks", {
+    const res = await fetch("${API_URL}ppks/upload/foto-ppks", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -638,7 +639,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 
 //     console.log("📤 Upload untuk ID:", targetId);
 
-//     const res = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/ppks/upload/foto-ppks", {
+//     const res = await fetch("${API_URL}ppks/upload/foto-ppks", {
 //       method: "POST",
 //       headers: { Authorization: `Bearer ${token}` },
 //       body: formData
@@ -771,7 +772,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 
       console.log("PAYLOAD DIKIRIM:", payload);
 
-      const response = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/keluarga", {
+      const response = await fetch("${API_URL}keluarga", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -882,7 +883,7 @@ const fetchAnggota = async (no_kk) => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/aset/${data.no_kk}`, {
+      const res = await fetch(`${API_URL}aset/${data.no_kk}`, {
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
@@ -1230,7 +1231,7 @@ const handleEditAnggotaSubmit = async (e) => {
       if (!no_kk) throw new Error("No KK tidak ditemukan");
 
       const payload = { ...formAset };
-      const response = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/aset/${no_kk}`, {
+      const response = await fetch(`${API_URL}aset/${no_kk}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -1296,7 +1297,7 @@ const handleEditAnggotaSubmit = async (e) => {
     // =====================================
     // 1. INSERT DATA PPKS DULU — DAPAT ID
     // =====================================
-    const res = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/ppks/", {
+    const res = await fetch("${API_URL}ppks/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1336,7 +1337,7 @@ const handleEditAnggotaSubmit = async (e) => {
 
       console.log("📸 Mengupload", fotoBuktiPPKS.length, "foto untuk ID:", newPPKSId);
 
-      const uploadRes = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/ppks/upload/foto-ppks", {
+      const uploadRes = await fetch("${API_URL}ppks/upload/foto-ppks", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formDataFoto
@@ -1402,7 +1403,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
     const token = localStorage.getItem("token");
 
     // ✅ Update via backend REST (konsisten dengan sumber data)
-    const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/ppks/${selectedPPKSData.id}`, {
+    const res = await fetch(`${API_URL}ppks/${selectedPPKSData.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -1629,7 +1630,7 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
 
                   // 2. Ubah status otomatis menjadi "Kasus Aktif" ke Backend
                   const token = localStorage.getItem("token");
-                  await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/ppks/${selectedPPKSData.id}`, {
+                  await fetch(`${API_URL}ppks/${selectedPPKSData.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ status_penanganan: "Kasus Aktif", catatan: "" })

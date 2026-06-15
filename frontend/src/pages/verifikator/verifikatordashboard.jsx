@@ -13,6 +13,9 @@ import ValidasiBansos from "./validasibansos";
 import ValidasiPPKS from "./validasippks";
 
 function VerifikatorDashboard() {
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [usulanData, setUsulanData] = useState([]);
   const [dtsenData, setDtsenData] = useState([]);
   const [dummyPPKS, setDummyPPKS] = useState([]);
@@ -187,7 +190,7 @@ const ppksMenunggu = ppksList.length;
   if (data.no_kk) {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/aset/${data.no_kk}`, {
+      const res = await fetch(`${API_URL}aset/${data.no_kk}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -392,7 +395,7 @@ const fetchAsetKeluarga = async (no_kk) => {
   
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/aset/${no_kk}`, {
+    const res = await fetch(`${API_URL}aset/${no_kk}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 

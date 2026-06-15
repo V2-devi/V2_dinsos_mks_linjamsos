@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from dotenv import load_dotenv
+
+
 from routes.auth_routes import router as auth_router
 from routes.profile_routes import router as profile_router
 from routes.admin_routes import router as admin_router
@@ -13,6 +17,7 @@ from routes.data_io import router as data_io_router
 
 
 app = FastAPI()
+load_dotenv()
 
 @app.get("/")
 def root():
@@ -24,7 +29,7 @@ app.add_middleware(
      allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://sicadas-frontend.vercel.app/login"
+        os.getenv("FRONTEND_URL")
     ],
     allow_credentials=True,
     allow_methods=["*"],

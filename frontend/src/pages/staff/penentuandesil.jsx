@@ -16,6 +16,7 @@ function PenentuanDesil({
   const [isCalculated, setIsCalculated] = useState(false);
   const [hasilKalkulasi, setHasilKalkulasi] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // ✅ [PERBAIKAN: KAMUS DATA KECAMATAN & KELURAHAN]
   const daftarWilayah = {
@@ -125,7 +126,7 @@ function PenentuanDesil({
       //   - /desil/hitung/{no_kk}
       //   - /penentuan-desil/{no_kk}
       // -----------------------------------------------
-      const url = `https://backend-fastapi-linjamsos-mks.vercel.app/desil/kalkulasi/${selectedKalkulasi.no_kk}`;
+      const url = `${API_URL}desil/kalkulasi/${selectedKalkulasi.no_kk}`;
 
       const res = await fetch(url, {
         method: "POST",

@@ -12,6 +12,7 @@ import UsulanBaru from "./usulanbaru";
 import Dtsen from "./dtsen";
 
 function StaffDashboard() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -37,7 +38,7 @@ function StaffDashboard() {
   const fetchKeluarga = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/keluarga", {
+      const response = await fetch("${API_URL}keluarga", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

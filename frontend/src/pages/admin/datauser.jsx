@@ -7,6 +7,7 @@ import logoSicadas from "../../assets/logo_sicadas.png";
 
 import axios from "axios";
 
+
 // TESTING
 // function DataUser() {
 //   return <h1>HALAMAN USER</h1>;
@@ -16,6 +17,8 @@ import axios from "axios";
 // TESTING
 
 function DataUser() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const navigate = useNavigate();
   const location = useLocation();
   // const status = String(user.status_akun || user.status || "").toLowerCase();
@@ -30,7 +33,7 @@ function DataUser() {
 const handleUpdateStatus = async () => {
   try {
     const res = await fetch(
-      `https://backend-fastapi-linjamsos-mks.vercel.app/admin/update/${selectedUser.id}`,
+      `${API_URL}admin/update/${selectedUser.id}`,
       {
         method: "PUT",
         headers: {
@@ -75,7 +78,7 @@ const handleUpdateStatus = async () => {
 // const handleAddStaff = async () => {
 //   try {
 //     const res = await fetch(
-//       "https://backend-fastapi-linjamsos-mks.vercel.app/staff",
+//       "${API_URL}staff",
 
 //       {
 //         method: "POST",
@@ -106,7 +109,7 @@ const [formData, setFormData] = useState({
 const fetchUsers = async () => {
   setIsInitialLoad(true);
   try {
-    const res = await axios.get("https://backend-fastapi-linjamsos-mks.vercel.app/admin/users");
+    const res = await axios.get("${API_URL}admin/users");
     setUsers(res.data);
     const data = Array.isArray(res.data)
       ? res.data
@@ -134,7 +137,7 @@ useEffect(() => {
 
 const handleAddStaff = async () => {
   try {
-    await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/admin/users", {
+    await fetch("${API_URL}admin/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -191,7 +194,7 @@ const handleApprove = async (id) => {
 
     const res = await fetch(
 
-      `https://backend-fastapi-linjamsos-mks.vercel.app/admin/update/${id}`,
+      `${API_URL}admin/update/${id}`,
 
       {
         method: "PUT",
@@ -283,7 +286,7 @@ const handleApprove = async (id) => {
     };
 
     try {
-      const response = await axios.post("https://backend-fastapi-linjamsos-mks.vercel.app/admin/users", newUserPayload, { headers: { "Content-Type": "application/json" } });
+      const response = await axios.post("${API_URL}admin/users", newUserPayload, { headers: { "Content-Type": "application/json" } });
       const createdUser = response.data && response.data[0] ? response.data[0] : null;
 
       if (!createdUser) {
@@ -351,7 +354,7 @@ const handleApprove = async (id) => {
       console.log("Payload dikirim:", payload);
       
       const response = await axios.put(
-        `https://backend-fastapi-linjamsos-mks.vercel.app/admin/update/${formData.id}`,
+        `${API_URL}admin/update/${formData.id}`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -415,7 +418,7 @@ const confirmDelete = async () => {
     console.log("DELETE USER:", userToDelete);
 
     const response = await axios.delete(
-      `https://backend-fastapi-linjamsos-mks.vercel.app/admin/delete/${userToDelete.id}`
+      `${API_URL}admin/delete/${userToDelete.id}`
     );
 
     console.log("DELETE RESPONSE:", response.data);

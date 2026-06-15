@@ -4,6 +4,9 @@ import "./staffprofile.css";
 import logoLinjamsos from "../../assets/logo_sicadas.png";
 
 function StaffProfile() {
+  
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const navigate = useNavigate();
 
  // =================================================
@@ -40,7 +43,7 @@ function StaffProfile() {
     try {
 
       const res = await fetch(
-        `https://backend-fastapi-linjamsos-mks.vercel.app/profile/${user.id}`
+        `${API_URL}profile/${user.id}`
       );
 
       const data = await res.json();
@@ -116,7 +119,7 @@ const handleOpenEdit = () => {
   const handleUpdateProfile = async () => {
     try {
       const res = await fetch(
-        `https://backend-fastapi-linjamsos-mks.vercel.app/profile/${user.id}`,
+        `${API_URL}profile/${user.id}`,
         {
           method: "PUT",
           headers: {

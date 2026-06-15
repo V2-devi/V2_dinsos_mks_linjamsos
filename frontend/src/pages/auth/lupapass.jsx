@@ -11,6 +11,8 @@ function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const API_URL = import.meta.env.VITE_API_URL;
+
 
     const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ function ForgotPassword() {
 
     try {
       // ✅ PANGGIL BACKEND API (BUKAN SUPABASE AUTH LANGSUNG)
-      const res = await fetch("https://backend-fastapi-linjamsos-mks.vercel.app/auth/forgot-password", {
+      const res = await fetch("${API_URL}auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
