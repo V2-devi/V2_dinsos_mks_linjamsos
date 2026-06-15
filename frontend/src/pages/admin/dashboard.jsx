@@ -25,7 +25,7 @@ function AdminDashboard() {
 const fetchUsers = async () => {
     try {
       // Coba fetch dari API dulu
-      const res = await axios.get("http://localhost:8000/admin/users");
+      const res = await axios.get("${API_URL}/admin/users");
       const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : null;
       if (data) {
         setUsers(data);

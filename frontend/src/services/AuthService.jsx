@@ -21,7 +21,7 @@ import { supabase } from "../config/supabase";
 export const login = async ({ email, password }) => {
   try {
     // ⚠️ PASTIKAN URL INI SESUAI (Cek apakah router Anda pakai prefix /auth atau tidak)
-    const res = await fetch("https://backend-fastapi-ruby.vercel.app/auth/login", { 
+    const res = await fetch("${API_URL}/auth/login", { 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
