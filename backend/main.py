@@ -14,6 +14,10 @@ from routes.data_io import router as data_io_router
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"message": "Backend is running"}
+
 app.add_middleware(
     CORSMiddleware,
     # allow_origins=["*"],
@@ -36,3 +40,4 @@ app.include_router(aset_router)
 app.include_router(desil_router) 
 app.include_router(data_io_router)
 # app.include_router(anggota_router)
+
