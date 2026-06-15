@@ -13,7 +13,7 @@ import Admin from "./pages/admin/dashboard.jsx";
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
 import StaffDashboard from "./pages/staff/staffdashboard.jsx"; 
-import StaffProfile from "./pages/staff/StaffProfile";
+import StaffProfile from "./pages/staff/staffprofile";
 import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx"; 
 import VerifikatorProfile from "./pages/verifikator/verifikatorprofile.jsx";
 
