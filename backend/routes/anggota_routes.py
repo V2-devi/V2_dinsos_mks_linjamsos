@@ -18,7 +18,7 @@ router = APIRouter(prefix="/anggota", tags=["Anggota"])
 # 📂 backend/routes/keluarga_routes.py
 
 
-@router.post("/{no_kk}/anggota")
+@router.post("/{no_kk}")
 async def create_anggota_keluarga_route(
     no_kk: str,
     data: Anggota,
@@ -43,7 +43,7 @@ async def create_anggota_keluarga_route(
         return {"message": "Berhasil", "data": result}
 
         
-@router.get("/{no_kk}/anggota")
+@router.get("/{no_kk}")
 async def get_anggota_keluarga(no_kk: str, credentials=Depends(security)):
     try:
         # ✅ PASTIKAN SELECT SEMUA FIELD termasuk surat_kematian
@@ -64,7 +64,7 @@ async def get_anggota_keluarga(no_kk: str, credentials=Depends(security)):
 
 
 # ✅ TAMBAHKAN ENDPOINT INI (YANG SEBELUMNYA HILANG)
-@router.put("/{no_kk}/anggota/{anggota_id}")
+@router.put("/{no_kk}/{anggota_id}")
 async def update_anggota_route(
     no_kk: str,
     anggota_id: int,
@@ -107,7 +107,7 @@ def sanitize_storage_filename(filename: str) -> str:
 # ==========================================
 # UPLOAD SURAT KEMATIAN (Disesuaikan dengan pola /keluarga/{no_kk}/anggota/{id})
 # ==========================================
-@router.post("/{no_kk}/anggota/{anggota_id}/upload-surat-kematian")
+@router.post("/{no_kk}/{anggota_id}/upload-surat-kematian")
 async def upload_surat_kematian(
     no_kk: str,
     anggota_id: str,
