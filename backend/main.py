@@ -8,7 +8,7 @@ from routes.keluarga_routes import router as keluarga_router
 from routes.ppks_routes import router as ppks_router
 from routes.aset_routes import router as aset_router
 from routes.desil_routes import router as desil_router
-# from routes.anggota_routes import router as anggota_router
+from routes.anggota_routes import router as anggota_router
 from routes.data_io import router as data_io_router
 
 
@@ -39,5 +39,5 @@ app.include_router(ppks_router)
 app.include_router(aset_router)
 app.include_router(desil_router) 
 app.include_router(data_io_router)
-# app.include_router(anggota_router)
+app.include_router(anggota_router)
 
