@@ -125,7 +125,7 @@ function PenentuanDesil({
       //   - /desil/hitung/{no_kk}
       //   - /penentuan-desil/{no_kk}
       // -----------------------------------------------
-      const url = `https://backend-fastapi-ruby.vercel.app/desil/kalkulasi/${selectedKalkulasi.no_kk}`;
+      const url = `https://backend-fastapi-linjamsos-mks.vercel.app/desil/kalkulasi/${selectedKalkulasi.no_kk}`;
 
       const res = await fetch(url, {
         method: "POST",

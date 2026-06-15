@@ -187,7 +187,7 @@ const ppksMenunggu = ppksList.length;
   if (data.no_kk) {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`https://backend-fastapi-ruby.vercel.app/aset/${data.no_kk}`, {
+      const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/aset/${data.no_kk}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -392,7 +392,7 @@ const fetchAsetKeluarga = async (no_kk) => {
   
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(`https://backend-fastapi-ruby.vercel.app/aset/${no_kk}`, {
+    const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/aset/${no_kk}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 

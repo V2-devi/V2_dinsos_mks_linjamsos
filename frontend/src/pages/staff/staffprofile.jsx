@@ -40,7 +40,7 @@ function StaffProfile() {
     try {
 
       const res = await fetch(
-        `https://backend-fastapi-ruby.vercel.app/profile/${user.id}`
+        `https://backend-fastapi-linjamsos-mks.vercel.app/profile/${user.id}`
       );
 
       const data = await res.json();
@@ -116,7 +116,7 @@ const handleOpenEdit = () => {
   const handleUpdateProfile = async () => {
     try {
       const res = await fetch(
-        `https://backend-fastapi-ruby.vercel.app/profile/${user.id}`,
+        `https://backend-fastapi-linjamsos-mks.vercel.app/profile/${user.id}`,
         {
           method: "PUT",
           headers: {
