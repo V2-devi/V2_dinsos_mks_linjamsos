@@ -65,7 +65,7 @@ const handleExport = async (tableName) => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
 
-    const res = await fetch(`${API_URL}data/${tableName}/export`, {
+    const res = await fetch(`${API_URL}/data/${tableName}/export`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -443,7 +443,7 @@ const uploadSuratKematianToDB = async (no_kk, anggotaId, file) => {
 
   console.log("📤 Mengirim upload ke backend...");
   const res = await fetch(
-    `http://127.0.0.1:8000/anggota/${no_kk}/${anggotaId}/upload-surat-kematian`,
+    `${API_URL}/anggota/${no_kk}/${anggotaId}/upload-surat-kematian`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -772,7 +772,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 
       console.log("PAYLOAD DIKIRIM:", payload);
 
-      const response = await fetch("${API_URL}keluarga", {
+      const response = await fetch("${API_URL}/keluarga", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -806,7 +806,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 const fetchAnggota = async (no_kk) => {
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://127.0.0.1:8000/anggota/${no_kk}`, {
+    const response = await fetch(`${API_URL}/anggota/${no_kk}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -967,7 +967,7 @@ const handleAddAnggotaSubmit = async (e) => {
     // =====================================
     // 1. INSERT DATA ANGGOTA
     // =====================================
-    const response = await fetch(`http://127.0.0.1:8000/anggota/${selectedDtsenData.no_kk}`, {
+    const response = await fetch(`${API_URL}/anggota/${selectedDtsenData.no_kk}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
@@ -1001,7 +1001,7 @@ const handleAddAnggotaSubmit = async (e) => {
           formDataPDF.append("file", formAnggota.surat_kematian);
 
           const uploadRes = await fetch(
-            `http://127.0.0.1:8000/anggota/${selectedDtsenData.no_kk}/${newAnggotaId}/upload-surat-kematian`,
+            `${API_URL}/anggota/${selectedDtsenData.no_kk}/${newAnggotaId}/upload-surat-kematian`,
             {
               method: "POST",
               headers: { Authorization: `Bearer ${token}` },
@@ -1123,7 +1123,7 @@ const handleEditAnggotaSubmit = async (e) => {
       kondisi_khusus: kondisi_khusus_gabung
     };
 
-    const endpoint = `http://127.0.0.1:8000/anggota/${selectedDtsenData.no_kk}/${selectedAnggotaData.id}`;
+    const endpoint = `${API_URL}/anggota/${selectedDtsenData.no_kk}/${selectedAnggotaData.id}`;
 
     const res = await fetch(endpoint, {
       method: "PUT",
@@ -1146,7 +1146,7 @@ const handleEditAnggotaSubmit = async (e) => {
         formDataPDF.append("file", newSuratKematianFile);
 
         const uploadRes = await fetch(
-          `http://127.0.0.1:8000/anggota/${selectedDtsenData.no_kk}/${selectedAnggotaData.id}/upload-surat-kematian`,
+          `${API_URL}/anggota/${selectedDtsenData.no_kk}/${selectedAnggotaData.id}/upload-surat-kematian`,
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
