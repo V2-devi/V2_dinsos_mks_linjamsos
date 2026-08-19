@@ -38,7 +38,7 @@ function StaffDashboard() {
   const fetchKeluarga = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("${API_URL}keluarga", {
+      const response = await fetch(`${API_URL}keluarga`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

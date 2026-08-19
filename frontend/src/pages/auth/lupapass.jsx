@@ -21,7 +21,7 @@ function ForgotPassword() {
 
     try {
       // ✅ PANGGIL BACKEND API (BUKAN SUPABASE AUTH LANGSUNG)
-      const res = await fetch("${API_URL}auth/forgot-password", {
+      const res = await fetch(`${API_URL}auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

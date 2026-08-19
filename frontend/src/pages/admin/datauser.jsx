@@ -109,7 +109,7 @@ const [formData, setFormData] = useState({
 const fetchUsers = async () => {
   setIsInitialLoad(true);
   try {
-    const res = await axios.get("${API_URL}admin/users");
+    const res = await axios.get(`${API_URL}admin/users`);
     setUsers(res.data);
     const data = Array.isArray(res.data)
       ? res.data
@@ -137,7 +137,7 @@ useEffect(() => {
 
 const handleAddStaff = async () => {
   try {
-    await fetch("${API_URL}admin/users", {
+    await fetch(`${API_URL}admin/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -286,7 +286,7 @@ const handleApprove = async (id) => {
     };
 
     try {
-      const response = await axios.post("${API_URL}admin/users", newUserPayload, { headers: { "Content-Type": "application/json" } });
+      const response = await axios.post(`${API_URL}admin/users`, newUserPayload, { headers: { "Content-Type": "application/json" } });
       const createdUser = response.data && response.data[0] ? response.data[0] : null;
 
       if (!createdUser) {

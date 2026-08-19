@@ -8,6 +8,7 @@ import logoSicadas from "../../assets/logo_sicadas.png";
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // === STATE NOTIFIKASI & MODAL PERSETUJUAN ===
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -25,7 +26,7 @@ function AdminDashboard() {
 const fetchUsers = async () => {
     try {
       // Coba fetch dari API dulu
-      const res = await axios.get("${API_URL}/admin/users");
+      const res = await axios.get(`${API_URL}/admin/users`);
       const data = Array.isArray(res.data) ? res.data : Array.isArray(res.data?.data) ? res.data.data : null;
       if (data) {
         setUsers(data);

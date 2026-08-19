@@ -1,6 +1,7 @@
 import API from "../api/api";
 
 const AUTH_URL = "/auth";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // export const register = async (data) => {
 //   const res = await API.post(`${AUTH_URL}/register`, data);
@@ -21,7 +22,7 @@ import { supabase } from "../config/supabase";
 export const login = async ({ email, password }) => {
   try {
     // ⚠️ PASTIKAN URL INI SESUAI (Cek apakah router Anda pakai prefix /auth atau tidak)
-    const res = await fetch("${API_URL}/auth/login", { 
+    const res = await fetch(`${API_URL}/auth/login`, { 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })

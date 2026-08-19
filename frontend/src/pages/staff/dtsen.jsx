@@ -533,7 +533,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
     
     console.log("📤 Step 1: Upload ke backend...");
     
-    const res = await fetch("${API_URL}ppks/upload/foto-ppks", {
+    const res = await fetch(`${API_URL}ppks/upload/foto-ppks`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -639,7 +639,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 
 //     console.log("📤 Upload untuk ID:", targetId);
 
-//     const res = await fetch("${API_URL}ppks/upload/foto-ppks", {
+  //     const res = await fetch(`${API_URL}ppks/upload/foto-ppks`, {
 //       method: "POST",
 //       headers: { Authorization: `Bearer ${token}` },
 //       body: formData
@@ -772,7 +772,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
 
       console.log("PAYLOAD DIKIRIM:", payload);
 
-      const response = await fetch("${API_URL}/keluarga", {
+      const response = await fetch(`${API_URL}/keluarga`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1297,7 +1297,7 @@ const handleEditAnggotaSubmit = async (e) => {
     // =====================================
     // 1. INSERT DATA PPKS DULU — DAPAT ID
     // =====================================
-    const res = await fetch("${API_URL}ppks/", {
+    const res = await fetch(`${API_URL}ppks/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1337,7 +1337,7 @@ const handleEditAnggotaSubmit = async (e) => {
 
       console.log("📸 Mengupload", fotoBuktiPPKS.length, "foto untuk ID:", newPPKSId);
 
-      const uploadRes = await fetch("${API_URL}ppks/upload/foto-ppks", {
+      const uploadRes = await fetch(`${API_URL}ppks/upload/foto-ppks`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formDataFoto

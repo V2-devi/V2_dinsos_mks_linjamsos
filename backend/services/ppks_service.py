@@ -44,8 +44,14 @@ def create_ppks_service(data: PPKS):
         .insert(payload) \
         .execute()
 
+    # Debug: tampilkan error detail jika insert gagal
     if not response.data:
-        raise Exception("Gagal menyimpan data PPKS ke Supabase")
+        err_detail = None
+        try:
+            err_detail = response.error or getattr(response, 'status_code', None) or str(response)
+        except Exception:
+            err_detail = str(response)
+        raise Exception(f"Gagal menyimpan data PPKS ke Supabase: {err_detail}")
 
     return response.data[0]
 
