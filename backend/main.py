@@ -23,14 +23,20 @@ load_dotenv()
 def root():
     return {"message": "Backend is running"}
 
+frontend_url = os.getenv("FRONTEND_URL")
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://sicadas-frontend.vercel.app",
+]
+
+if frontend_url and frontend_url not in origins:
+    origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["*"],
-     allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        os.getenv("FRONTEND_URL")
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

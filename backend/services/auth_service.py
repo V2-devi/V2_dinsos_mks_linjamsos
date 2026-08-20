@@ -1,10 +1,14 @@
 ﻿from config.auth import sign_in
 from services.profile_service import insert_user_profile, update_user_profile, get_user_by_email
 from config.database import supabase
+import os
+from dotenv import load_dotenv
 
 # =========================================================
 # REGISTER
 # =========================================================
+load_dotenv()
+
 def register_user(data):
 
     try:
@@ -31,8 +35,7 @@ def register_user(data):
                     "role": data.role,
                 },
 
-                "email_redirect_to":
-                "http://localhost:5173/verify"
+                "email_redirect_to": f"{os.getenv('FRONTEND_URL')}/verify"
 
             }
         })
@@ -108,12 +111,9 @@ def login_user(data):
         auth_user = auth.user
 
         # =====================================
-        # CEK EMAIL VERIFIED
+        # CEK EMAIL VERIFIED (tidak memblokir login — hanya flag)
         # =====================================
-        if not auth_user.email_confirmed_at:
-            return {
-                "error": "Email belum diverifikasi"
-            }
+        email_verified = bool(getattr(auth_user, "email_confirmed_at", None))
 
         # =====================================
         # AMBIL PROFILE PENGGUNA
@@ -131,36 +131,47 @@ def login_user(data):
         # =====================================
         if not profile.data:
 
-            insert_user_profile({
-
+            payload = {
                 "id": str(auth_user.id),
-
-                "email": auth_user.email,
-
-                "nama_lengkap": auth_user.user_metadata.get("nama_lengkap"),
-
-                "nik": auth_user.user_metadata.get("nik"),
-
-                "nip": auth_user.user_metadata.get("nip"),
-
-                "role": auth_user.user_metadata.get("role"),
-
-                "alamat": auth_user.user_metadata.get("alamat"),
-
-                "no_hp": auth_user.user_metadata.get("no_hp"),
-
-                "wilayah_kerja": auth_user.user_metadata.get("wilayah_kerja"),
-
+                "email": getattr(auth_user, "email", data.email),
+                "nama_lengkap": None,
+                "nik": None,
+                "nip": None,
+                "role": None,
+                "alamat": None,
+                "no_hp": None,
+                "wilayah_kerja": None,
                 "status": "menunggu",
-
                 "is_active": False
-            })
+            }
 
-            # ambil ulang
+            # try to read from user_metadata if available (may be dict or None)
+            user_meta = getattr(auth_user, "user_metadata", None) or {}
+            if isinstance(user_meta, dict):
+                payload.update({
+                    "nama_lengkap": user_meta.get("nama_lengkap"),
+                    "nik": user_meta.get("nik"),
+                    "nip": user_meta.get("nip"),
+                    "role": user_meta.get("role"),
+                    "alamat": user_meta.get("alamat"),
+                    "no_hp": user_meta.get("no_hp"),
+                    "wilayah_kerja": user_meta.get("wilayah_kerja"),
+                })
+
+            print("INSERTING PROFILE PAYLOAD:", payload)
+            insert_res = insert_user_profile(payload)
+            print("INSERT RESULT:", insert_res)
+
+            # ambil ulang berdasarkan id terlebih dahulu, fallback ke email
             profile = supabase.table("pengguna") \
                 .select("*") \
-                .eq("email", data.email) \
+                .eq("id", str(auth_user.id)) \
                 .execute()
+            if not profile.data:
+                profile = supabase.table("pengguna") \
+                    .select("*") \
+                    .eq("email", data.email) \
+                    .execute()
 
         # =====================================
         # AMBIL USER
@@ -170,24 +181,19 @@ def login_user(data):
         print("USER:", user)
 
         # =====================================
-        # CEK APPROVAL ADMIN
+        # Status akun dari profil
         # =====================================
-        if user["is_active"] is not True:
-
-            return {
-                "error": "Akun belum disetujui admin"
-            }
+        is_active = user.get("is_active", False)
 
         # =====================================
-        # LOGIN BERHASIL
+        # LOGIN BERHASIL — kembalikan token + user + flags
         # =====================================
         return {
-
             "access_token": auth.session.access_token,
-
             "refresh_token": auth.session.refresh_token,
-
-            "user": user
+            "user": user,
+            "email_verified": email_verified,
+            "is_active": is_active
         }
 
     except Exception as e:
