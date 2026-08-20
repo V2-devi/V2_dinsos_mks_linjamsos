@@ -109,7 +109,7 @@ yang telah Anda buat saat registrasi.
 Terima kasih.
 
 Link Login:
-http://localhost:5173/login
+https://sicadas-frontend.vercel.app/login
 
 Sistem Informasi Perlindungan dan Jaminan Sosial
 """
@@ -208,7 +208,7 @@ def send_staff_account_email(
         Silakan login melalui link berikut:
         </p>
 
-        <a href="http://localhost:5173/login">
+        <a href="https://sicadas-frontend.vercel.app/login">
             Login Sekarang
         </a>
 

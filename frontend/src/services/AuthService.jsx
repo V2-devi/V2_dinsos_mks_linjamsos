@@ -72,7 +72,15 @@ export const register = async (userData) => {
       body: JSON.stringify(userData)
     });
 
-    const data = await res.json();
+    let data = {};
+    try {
+      // hanya parse JSON jika ada body
+      const text = await res.text();
+      data = text ? JSON.parse(text) : {};
+    } catch (e) {
+      // parsing gagal (mungkin response kosong atau non-json)
+      data = { error: res.statusText || `HTTP ${res.status}` };
+    }
 
     if (!res.ok || data.error || data.detail) {
       return { error: data.detail || data.error || "Registrasi gagal" };
