@@ -190,7 +190,7 @@ const ppksMenunggu = ppksList.length;
   if (data.no_kk) {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}aset/${data.no_kk}`, {
+      const res = await fetch(`${API_URL}/aset/${data.no_kk}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

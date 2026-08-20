@@ -126,7 +126,7 @@ function PenentuanDesil({
       //   - /desil/hitung/{no_kk}
       //   - /penentuan-desil/{no_kk}
       // -----------------------------------------------
-      const url = `${API_URL}desil/kalkulasi/${selectedKalkulasi.no_kk}`;
+      const url = `${API_URL}/desil/kalkulasi/${selectedKalkulasi.no_kk}`;
 
       const res = await fetch(url, {
         method: "POST",

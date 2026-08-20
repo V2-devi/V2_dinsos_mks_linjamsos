@@ -883,7 +883,7 @@ const fetchAnggota = async (no_kk) => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}aset/${data.no_kk}`, {
+      const res = await fetch(`${API_URL}/aset/${data.no_kk}`, {
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
@@ -1231,7 +1231,7 @@ const handleEditAnggotaSubmit = async (e) => {
       if (!no_kk) throw new Error("No KK tidak ditemukan");
 
       const payload = { ...formAset };
-      const response = await fetch(`${API_URL}aset/${no_kk}`, {
+      const response = await fetch(`${API_URL}/aset/${no_kk}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
