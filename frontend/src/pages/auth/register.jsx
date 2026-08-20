@@ -81,8 +81,8 @@ function Register() {
     
     try {
       // PANGGILAN API ASLI (Tinggal buka komentar jika API sudah siap)
-      
-      await register({
+
+      const registerResult = await register({
         email: formData.email,
         password: formData.password,
         nama_lengkap: formData.nama_lengkap,
@@ -93,13 +93,16 @@ function Register() {
         alamat: formData.alamat,
         wilayah_kerja: formData.wilayah_kerja, // ✅ DITAMBAHKAN: Dikirim ke backend
       });
-      
 
-      // Simulasi loading selama 1.5 detik agar terlihat prosesnya
-      // await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      // Jika backend mengembalikan error, tampilkan dan jangan lanjut ke layar sukses
+      if (registerResult && registerResult.error) {
+        alert(registerResult.error);
+        setLoading(false);
+        return;
+      }
+
       // Pindahkan ke step 4 (Layar Sukses Daftar)
-      setStep(4); 
+      setStep(4);
 
     } catch (error) {
         console.log("FULL ERROR:", error);

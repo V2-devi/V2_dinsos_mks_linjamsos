@@ -66,7 +66,7 @@ export const login = async ({ email, password }) => {
 export const register = async (userData) => {
   try {
     // ⚠️ PASTIKAN URL INI SESUAI (Cek apakah router Anda pakai prefix /auth atau tidak)
-    const res = await fetch("https://backend-fastapi-ruby.vercel.app/auth/register", {
+    const res = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData)

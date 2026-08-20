@@ -6,7 +6,7 @@ export const ExportButton = ({ table, label = "📥 Export CSV", onExport, class
   const handleExport = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`https://backend-fastapi-ruby.vercel.app/data/${table}/export`, {
+      const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/data/${table}/export`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error((await res.json()).detail || "Gagal export");
@@ -45,7 +45,7 @@ export const ImportButton = ({ table, label = " Import CSV", onImport, className
     formData.append("file", file);
 
     try {
-      const res = await fetch(`https://backend-fastapi-ruby.vercel.app/data/${table}/import`, {
+      const res = await fetch(`https://backend-fastapi-linjamsos-mks.vercel.app/data/${table}/import`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData

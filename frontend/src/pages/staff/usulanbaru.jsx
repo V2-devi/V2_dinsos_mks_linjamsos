@@ -145,7 +145,7 @@ const handleImportFile = async (e, tableName, refreshFn) => {
     alert(
       `❌ Gagal import.\n\n` +
       `Kemungkinan penyebab:\n` +
-      `• Backend tidak berjalan (cek https://backend-fastapi-ruby.vercel.app)\n` +
+      `• Backend tidak berjalan (cek https://backend-fastapi-linjamsos-mks.vercel.app)\n` +
       `• Koneksi terputus\n\n` +
       `Detail: ${err.message}`
     );
