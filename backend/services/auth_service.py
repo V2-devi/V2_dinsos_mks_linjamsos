@@ -8,7 +8,15 @@ from dotenv import load_dotenv
 # REGISTER
 # =========================================================
 load_dotenv()
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://sicadas-frontend.vercel.app").rstrip("/")
+
+DEFAULT_FRONTEND_URL = "https://sicadas-frontend.vercel.app"
+configured_frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+
+# Never generate production email links back to a local development server.
+if configured_frontend_url.startswith(("http://localhost", "http://127.0.0.1")):
+    FRONTEND_URL = DEFAULT_FRONTEND_URL
+else:
+    FRONTEND_URL = configured_frontend_url or DEFAULT_FRONTEND_URL
 
 def register_user(data):
 
