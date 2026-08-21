@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 # REGISTER
 # =========================================================
 load_dotenv()
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://sicadas-frontend.vercel.app").rstrip("/")
 
 def register_user(data):
 
@@ -35,7 +36,7 @@ def register_user(data):
                     "role": data.role,
                 },
 
-                "email_redirect_to": f"{os.getenv('FRONTEND_URL')}/verify"
+                "email_redirect_to": f"{FRONTEND_URL}/verify"
 
             }
         })
@@ -259,7 +260,7 @@ def request_reset_password(email: str):
     }).execute()
 
     # 4) Buat link reset
-    reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
+    reset_link = f"https://sicadas-frontend.vercel.app/reset-password?token={reset_token}"
 
     # 5) ✅ PANGGIL FUNGSI KIRIM EMAIL (yang sudah Anda buat di email_service.py)
     email_status = send_reset_email(email, reset_link)
