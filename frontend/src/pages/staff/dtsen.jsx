@@ -213,7 +213,7 @@ const handleImportFile = async (e, tableName, onSuccess) => {
     const formData = new FormData();
     formData.append('file', mappedFile);
 
-    const res = await fetch(`${API_URL}data/${tableName}/import`, {
+    const res = await fetch(`${API_URL}/data/${tableName}/import`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData
@@ -1278,6 +1278,37 @@ const handleEditAnggotaSubmit = async (e) => {
 
 
 
+ const getApiErrorMessage = (payload) => {
+  if (!payload) return "Terjadi kesalahan yang tidak diketahui.";
+  if (typeof payload === "string") return payload;
+  if (Array.isArray(payload)) {
+    const messages = payload
+      .map(item => {
+        if (typeof item === "string") return item;
+        if (item?.msg) return item.msg;
+        if (item?.detail) return item.detail;
+        if (item?.error) return item.error;
+        return JSON.stringify(item);
+      })
+      .filter(Boolean);
+
+    if (messages.length) return messages.join("; ");
+  }
+
+  if (typeof payload === "object") {
+    if (payload.detail) return getApiErrorMessage(payload.detail);
+    if (payload.message) return payload.message;
+    if (payload.error) return getApiErrorMessage(payload.error);
+    try {
+      return JSON.stringify(payload);
+    } catch {
+      return "Terjadi kesalahan server.";
+    }
+  }
+
+  return String(payload);
+};
+
  const handleAddPPKSSubmit = async (e) => {
   e.preventDefault();
   try {
@@ -1297,7 +1328,7 @@ const handleEditAnggotaSubmit = async (e) => {
     // =====================================
     // 1. INSERT DATA PPKS DULU — DAPAT ID
     // =====================================
-    const res = await fetch(`${API_URL}ppks/`, {
+    const res = await fetch(`${API_URL}/ppks/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1315,8 +1346,10 @@ const handleEditAnggotaSubmit = async (e) => {
       })
     });
 
-    const result = await res.json();
-    if (!res.ok) throw new Error(result?.detail || JSON.stringify(result));
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(getApiErrorMessage(result));
+    }
 
     const newPPKSId = result?.data?.id;
     console.log("✅ PPKS tersimpan, ID:", newPPKSId);
@@ -1337,23 +1370,23 @@ const handleEditAnggotaSubmit = async (e) => {
 
       console.log("📸 Mengupload", fotoBuktiPPKS.length, "foto untuk ID:", newPPKSId);
 
-      const uploadRes = await fetch(`${API_URL}ppks/upload/foto-ppks`, {
+      const uploadRes = await fetch(`${API_URL}/ppks/upload/foto-ppks`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formDataFoto
       });
 
-      const uploadData = await uploadRes.json();
+      const uploadData = await uploadRes.json().catch(() => ({}));
       console.log("📸 Upload response:", uploadData);
 
       if (!uploadRes.ok) {
-        alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadData?.detail || "Error tidak diketahui"}`);
+        alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${getApiErrorMessage(uploadData)}`);
       } else {
         fotoUrls = uploadData.urls || [];
         console.log("✅ Foto terupload:", fotoUrls);
       }
     } catch (uploadErr) {
-      alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${uploadErr.message}`);
+      alert(`⚠️ Data PPKS tersimpan tapi upload foto gagal: ${getApiErrorMessage(uploadErr)}`);
     }
 
     // =====================================
@@ -1380,7 +1413,7 @@ const handleEditAnggotaSubmit = async (e) => {
 
   } catch (error) {
     console.error("❌ Error:", error);
-    alert("Terjadi kesalahan: " + error.message);
+    alert("Terjadi kesalahan: " + getApiErrorMessage(error));
   }
 };
 
