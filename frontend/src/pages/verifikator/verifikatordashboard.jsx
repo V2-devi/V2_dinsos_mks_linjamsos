@@ -27,6 +27,9 @@ function VerifikatorDashboard() {
 
   // ✅ DITAMBAHKAN: State untuk menyimpan daftar staff
   const [staffList, setStaffList] = useState([]);
+  const [notifData, setNotifData] = useState([]);
+  const [selectedPengusulan, setSelectedPengusulan] = useState(null);
+  const [isVerifikasiModalOpen, setIsVerifikasiModalOpen] = useState(false);
 
   useEffect(() => {
     const savedUserData = localStorage.getItem("user"); // atau key yang Anda gunakan
