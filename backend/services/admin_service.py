@@ -45,6 +45,21 @@ def generate_password(length=8):
 def create_staff(data):
 
     try:
+        email = str(data.email).strip().lower()
+
+        if not email:
+            return {"error": "Email tidak boleh kosong."}
+
+        existing_user = (
+            supabase.table("pengguna")
+            .select("id, email")
+            .eq("email", email)
+            .limit(1)
+            .execute()
+        )
+
+        if getattr(existing_user, "data", None):
+            return {"error": "Email sudah terdaftar di sistem. Gunakan email lain."}
 
         # ====================================
         # GENERATE PASSWORD RANDOM
@@ -57,13 +72,13 @@ def create_staff(data):
         # BUAT USER AUTH
         # ====================================
         auth_user = supabase.auth.admin.create_user({
-            "email": data.email,
+            "email": email,
             "password": temporary_password,
             "email_confirm": True
         })
 
         if hasattr(auth_user, "error") and auth_user.error:
-            return {"error": auth_user.error.message}
+            return {"error": getattr(auth_user.error, "message", "Gagal membuat akun auth di Supabase")}
 
         user = auth_user.user
 
@@ -75,7 +90,7 @@ def create_staff(data):
         # ====================================
         result = insert_user_profile({
             "id": str(user.id),
-            "email": data.email,
+            "email": email,
             "nama_lengkap": data.nama_lengkap,
             "nik": data.nik,
             "nip": data.nip,
@@ -87,22 +102,29 @@ def create_staff(data):
             "is_active": True
         })
 
+        if isinstance(result, dict) and result.get("error"):
+            return {"error": result["error"]}
+
         if not result:
             return {"error": "Gagal menyimpan profil pengguna"}
 
         # ====================================
-        # KIRIM EMAIL
+        # KIRIM EMAIL (TIDAK BOLEH MEMBLOCK CREATE USER)
         # ====================================
-        send_staff_account_email(
-            data.email,
-            data.nama_lengkap,
-            temporary_password,
-            data.role
-        )
+        try:
+            send_staff_account_email(
+                email,
+                data.nama_lengkap,
+                temporary_password,
+                data.role
+            )
+        except Exception as email_error:
+            print("CREATE STAFF EMAIL WARNING:", str(email_error))
 
         return result
 
     except Exception as e:
+        print("CREATE STAFF ERROR:", str(e))
         return {"error": str(e)}
 
 
