@@ -45,23 +45,6 @@ const handleExport = async (tableName) => {
       return;
     }
 
-    if (tableName === "ppks") {
-      const dataToExport = tabelPPKSFiltered;
-      const csvData = dataToExport.map((item) => ({
-        "NIK": item.nik || "",
-        "Nama": item.nama_lengkap || "",
-        "Kategori PPKS": item.kategori_ppks || "",
-        "Kecamatan": item.kecamatan || "",
-        "Kelurahan": item.kelurahan || "",
-        "Lokasi Penemuan": item.lokasi_penemuan || "",
-        "Tanggal Laporan": item.tanggal_penemuan || "",
-        "Status": item.status_penanganan || "",
-        "Keterangan": item.catatan_verifikator || item.keterangan || ""
-      }));
-      exportToCSV(csvData, "Data_PPKS");
-      return;
-    }
-
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Sesi login habis. Silakan login ulang.");
 
@@ -126,7 +109,6 @@ const handleImportFile = async (e, tableName, onSuccess) => {
     // ✅ Tentukan tabel untuk cleaning
     const isDtsen = tableName?.toLowerCase().includes('keluarga') ||
                     tableName?.toLowerCase().includes('dtsen');
-    const isPPKS  = tableName?.toLowerCase().includes('ppks');
 
     // ✅ Bersihkan rows — hapus id, konversi tipe, isi default
     const cleanedRows = mappedRows.map(row => {
@@ -147,20 +129,6 @@ const handleImportFile = async (e, tableName, onSuccess) => {
           skor_pmt:     rest.skor_pmt ? parseFloat(rest.skor_pmt) || 0 : 0,
           // tanggal_hitung_desil: rest.tanggal_hitung_desil || new Date().toISOString(),
 
-        };
-      }
-
-      if (isPPKS) {
-        return {
-          nama_lengkap:      rest.nama_lengkap || null,
-          nik:               rest.nik || null,
-          kategori_ppks:     rest.kategori_ppks || null,
-          kecamatan:         rest.kecamatan || null,
-          kelurahan:         rest.kelurahan || null,
-          lokasi_penemuan:   rest.lokasi_penemuan || null,
-          tanggal_penemuan:  rest.tanggal_penemuan || null,
-          status_penanganan: rest.status_penanganan || "Menunggu Foto Bukti",
-          catatan_verifikator: rest.catatan_verifikator || rest.keterangan || null,
         };
       }
 
@@ -2217,32 +2185,6 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
           
           <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
   
-  {/* TOMBOL EXPORT */}
-  <button className="btn-action-data btn-export" onClick={() => handleExport("ppks")} disabled={isExporting}>
-    {isExporting ? "⏳ Exporting..." : (
-      <>
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-        </svg>
-        Export
-      </>
-    )}
-  </button>
-
-  {/* TOMBOL IMPORT */}
-  <button className="btn-action-data btn-import" onClick={handleImportClick} disabled={isImporting}>
-    {isImporting ? "⏳ Importing..." : (
-      <>
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
-        Import
-      </>
-    )}
-  </button>
-
-  <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "ppks", fetchKeluarga)} />
-
   <button className="btn-add-staff" onClick={() => setIsAddPPKSModalOpen(true)}>
     <span className="plus-icon">+</span> Tambah Laporan PPKS
   </button>
