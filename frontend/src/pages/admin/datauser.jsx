@@ -30,30 +30,37 @@ function DataUser() {
   const [users, setUsers] = useState([]);
 
 // Update status akun
-const handleUpdateStatus = async () => {
+const handleUpdateStatus = async (userId, nextStatus) => {
+  if (!userId) return;
+
   try {
+    const normalizedStatus = nextStatus === "disetujui" ? "disetujui" : "menunggu";
+
     const res = await fetch(
-      `${API_URL}admin/update/${selectedUser.id}`,
+      `${API_URL}admin/update/${userId}`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
         },
-
-        // 👇 INI TEMPATNYA
         body: JSON.stringify({
-          // status: "disetujui"
-          status: formData.status
+          status: normalizedStatus,
+          is_active: normalizedStatus === "disetujui"
         })
       }
     );
 
-    await res.json();
-    fetchUsers();
-    alert("Status berhasil diupdate");
+    const data = await res.json();
 
+    if (!res.ok) {
+      throw new Error(data?.detail || data?.error || "Gagal update status user");
+    }
+
+    await fetchUsers();
+    showSuccess();
   } catch (error) {
-    console.error(error);
+    console.error("Update status error:", error);
+    alert(error.message || "Gagal mengubah status user");
   }
 };
 
@@ -189,36 +196,7 @@ const initialFormState = {
 
 // email approve akun
 const handleApprove = async (id) => {
-
-  try {
-
-    const res = await fetch(
-
-      `${API_URL}admin/update/${id}`,
-
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ status: "disetujui" })
-      }
-    );
-
-    const data = await res.json();
-
-    console.log(data);
-
-    alert("User berhasil disetujui");
-
-    fetchUsers();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert("Gagal approve user");
-  }
+  await handleUpdateStatus(id, "disetujui");
 };
 
 
@@ -232,6 +210,7 @@ const handleApprove = async (id) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -345,7 +324,8 @@ const handleApprove = async (id) => {
         no_hp: formData.no_hp,
         alamat: formData.alamat,
         role: formData.role,
-        status: formData.status,
+        status: formData.status || "menunggu",
+        is_active: (formData.status || "menunggu") === "disetujui",
         nip: formData.nip || null,
         nik: formData.nik || null,
         wilayah_kerja: formData.wilayah_kerja,
@@ -354,7 +334,7 @@ const handleApprove = async (id) => {
       console.log("Payload dikirim:", payload);
       
       const response = await axios.put(
-        `${API_URL}admin/update/${formData.id}`,
+        `${API_URL}/admin/update/${formData.id}`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -549,47 +529,51 @@ const confirmDelete = async () => {
               </thead>
               <tbody>
                 {filteredUsers && filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <tr key={user.id || Math.random()}>
-                      <td>{user.nip|| "-"}</td>
-                      <td>
-                        <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', backgroundColor: user.role === 'verifikator' ? '#fef08a' : user.role === 'admin' ? '#fecaca' : '#e0e7ff', color: user.role === 'verifikator' ? '#a16207' : user.role === 'admin' ? '#b91c1c' : '#1d4ed8' }}>
-                          {user.role || "staff"}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
-                      <td>{user.wilayah_kerja || "-"}</td>
-                      <td>{user.email || "-"}</td>
-                      <td>{user.alamat || "-"}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        {(() => {
-                          const status = String(user.status || "").toLowerCase();
-                          const isApproved = status === "disetujui" || status === "approved";
-                          return (
-                            <span className={`status-badge ${isApproved ? "badge-active" : "badge-inactive"}`}>
-                              {isApproved ? "Disetujui" : "Menunggu"}
-                            </span>
-                          );
-                        })()}
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          {/* TOMBOL EDIT */}
-                          <button onClick={() => openEditModal(user)} className="btn-action-modern btn-edit-modern" title="Edit Pegawai">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          {/* TOMBOL HAPUS */}
-                          <button onClick={() => openDeleteModal(user)} className="btn-action-modern btn-delete-modern" title="Hapus Pegawai">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  filteredUsers.map((user) => {
+                    const status = String(user.status || "").toLowerCase();
+                    const isApproved = status === "disetujui" || status === "approved";
+
+                    return (
+                      <tr key={user.id || Math.random()}>
+                        <td>{user.nip || "-"}</td>
+                        <td>
+                          <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', backgroundColor: user.role === 'verifikator' ? '#fef08a' : user.role === 'admin' ? '#fecaca' : '#e0e7ff', color: user.role === 'verifikator' ? '#a16207' : user.role === 'admin' ? '#b91c1c' : '#1d4ed8' }}>
+                            {user.role || "staff"}
+                          </span>
+                        </td>
+                        <td style={{ fontWeight: '600' }}>{user.nama_lengkap || "-"}</td>
+                        <td>{user.wilayah_kerja || "-"}</td>
+                        <td>{user.email || "-"}</td>
+                        <td>{user.alamat || "-"}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className={`status-badge ${isApproved ? "badge-active" : "badge-inactive"}`}>
+                            {isApproved ? "Disetujui" : "Menunggu"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button onClick={() => openEditModal(user)} className="btn-action-modern btn-edit-modern" title="Edit Pegawai">
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            {!isApproved && (
+                              <button onClick={() => handleApprove(user.id)} className="btn-action-modern btn-success-modern" title="Setujui Akun">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </button>
+                            )}
+                            <button onClick={() => openDeleteModal(user)} className="btn-action-modern btn-delete-modern" title="Hapus Pegawai">
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr><td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
                     {isInitialLoad ? "Memuat data dari Supabase..." : "Tidak ada data pengguna yang ditemukan."}

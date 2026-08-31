@@ -138,21 +138,24 @@ def update_user_service(user_id, data):
         approved = False
 
         if "status" in payload:
+            raw_status = str(payload["status"]).strip().lower()
 
-            raw_status = str(
-                payload["status"]
-            ).strip().lower()
-
-            if raw_status in ["disetujui", "approved"]:
-
+            if raw_status in ["disetujui", "approved", "active", "aktif"]:
                 payload["status"] = "disetujui"
                 payload["is_active"] = True
                 approved = True
-
-            else:
-
+            elif raw_status in ["menunggu", "pending"]:
                 payload["status"] = "menunggu"
                 payload["is_active"] = False
+            elif raw_status in ["ditolak", "rejected", "tolak"]:
+                payload["status"] = "menunggu"
+                payload["is_active"] = False
+            else:
+                payload["status"] = "menunggu"
+                payload["is_active"] = False
+        elif "is_active" in payload:
+            payload["status"] = "disetujui" if bool(payload["is_active"]) else "menunggu"
+            approved = bool(payload["is_active"])
 
         print("DEBUG FINAL PAYLOAD:", payload)
 
