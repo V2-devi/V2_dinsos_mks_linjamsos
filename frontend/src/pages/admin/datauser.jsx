@@ -116,7 +116,7 @@ const [formData, setFormData] = useState({
 const fetchUsers = async () => {
   setIsInitialLoad(true);
   try {
-    const res = await axios.get(`${API_URL}admin/users`);
+    const res = await axios.get(`${API_URL}/admin/users`);
     setUsers(res.data);
     const data = Array.isArray(res.data)
       ? res.data
@@ -250,7 +250,8 @@ const handleApprove = async (id) => {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+    setErrorMessage("");
+
     const newUserPayload = {
       id: Date.now(),
       nip: formData.nip,
@@ -265,10 +266,20 @@ const handleApprove = async (id) => {
     };
 
     try {
-      const response = await axios.post(`${API_URL}admin/users`, newUserPayload, { headers: { "Content-Type": "application/json" } });
-      const createdUser = response.data && response.data[0] ? response.data[0] : null;
+      const response = await axios.post(`${API_URL}/admin/users`, newUserPayload, {
+        headers: { "Content-Type": "application/json" }
+      });
 
-      if (!createdUser) {
+      const serverData = response?.data;
+      const createdUser = Array.isArray(serverData)
+        ? serverData[0]
+        : serverData?.data || serverData;
+
+      if (serverData?.error) {
+        throw new Error(serverData.error);
+      }
+
+      if (!createdUser && !serverData) {
         throw new Error("Gagal membuat staff di server.");
       }
 
@@ -278,8 +289,14 @@ const handleApprove = async (id) => {
       showSuccess();
     } catch (err) {
       console.error("Error add staff:", err);
-      const serverMessage = err.response?.data?.detail || err.response?.data?.message || err.message;
-      setErrorMessage(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
+      const serverMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Gagal membuat staff di server.";
+
+      setErrorMessage(typeof serverMessage === "string" ? serverMessage : JSON.stringify(serverMessage));
     } finally {
       setIsLoading(false);
     }

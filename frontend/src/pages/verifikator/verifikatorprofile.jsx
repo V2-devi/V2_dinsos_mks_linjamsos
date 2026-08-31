@@ -41,7 +41,7 @@ function VerifikatorProfile() {
     try {
 
       const res = await fetch(
-        `${API_URL}profile/${user.id}`
+        `${API_URL}/profile/${user.id}`
       );
 
       const data = await res.json();
@@ -117,7 +117,7 @@ const handleOpenEdit = () => {
   const handleUpdateProfile = async () => {
     try {
       const res = await fetch(
-        `${API_URL}profile/${user.id}`,
+        `${API_URL}/profile/${user.id}`,
         {
           method: "PUT",
           headers: {
