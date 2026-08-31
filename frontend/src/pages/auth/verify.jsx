@@ -4,30 +4,60 @@ import { supabase } from "../../config/supabase";
 
 export default function Verify() {
   const navigate = useNavigate();
-  
-  // State untuk melacak proses: "loading", "success", atau "error"
+
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("Sedang memverifikasi email Anda. Mohon tunggu sebentar...");
 
   useEffect(() => {
     const handleVerify = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const hash = window.location.hash.replace(/^#/, "");
+        const params = new URLSearchParams(hash);
+        const authError = params.get("error_description") || params.get("error");
 
-        if (error) {
+        if (authError) {
           setStatus("error");
           setMessage("Tautan verifikasi tidak valid atau sudah kedaluwarsa.");
           return;
         }
 
-        if (data.session) {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          setStatus("error");
+          setMessage("Tautan verifikasi tidak valid atau sudah kedaluwarsa.");
+          return;
+        }
+
+        if (!session) {
+          setStatus("error");
+          setMessage("Sesi verifikasi tidak ditemukan. Silakan coba daftar atau login kembali.");
+          return;
+        }
+
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          setStatus("error");
+          setMessage("Verifikasi gagal. Token email tidak valid atau sudah kedaluwarsa.");
+          return;
+        }
+
+        if (user.email_confirmed_at) {
           setStatus("success");
           setMessage("Email Anda berhasil diverifikasi! Silakan tunggu persetujuan admin.");
         } else {
           setStatus("error");
-          setMessage("Sesi tidak ditemukan. Silakan coba daftar atau login kembali.");
+          setMessage("Email belum terverifikasi. Silakan cek ulang tautan yang dikirimkan oleh sistem.");
         }
       } catch (err) {
+        console.error("Verify error:", err);
         setStatus("error");
         setMessage("Terjadi kesalahan pada sistem jaringan.");
       }
