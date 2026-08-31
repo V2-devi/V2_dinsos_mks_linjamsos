@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../config/supabase";
 import API from "../../api/api";
-import { ExportButton, ImportButton } from '../staff/DataIO';
-import { parseAndMapCSV } from "../../utils/importCSV";
-import { exportToCSV } from "../../utils/exportCSV";
 
 function Dtsen({
   activeMenu,
@@ -23,6 +20,7 @@ function Dtsen({
   
 const API_URL = import.meta.env.VITE_API_URL;
 
+<<<<<<< HEAD
 const [isExporting, setIsExporting] = useState(false);
 
 const handleExport = async (tableName) => {
@@ -278,6 +276,8 @@ const handleImportFile = async (e, tableName, onSuccess) => {
 
 
 
+=======
+>>>>>>> 5000708ad75183aba0c1c26314cfadb108c248e7
   // === KAMUS DATA KECAMATAN & KELURAHAN (FILTER DINAMIS) ===
   const daftarWilayah = {
     "Tallo": ["Buloa", "Bunga Eja Baru", "Kaluku Bodoa", "Kalukuang", "La'latang", "Lakkang", "Lembo", "Panampu", "Rappokalling", "Suangga", "Tallo", "Tammua", "Ujung Pandang Baru", "Wala-walaya"],
@@ -747,7 +747,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
   });
 
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
-  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
+  const ppksSelesai = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Selesai Ditangani").length;
   const kategoriCount = {};
   dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori_ppks] = (kategoriCount[item.kategori_ppks] || 0) + 1; });
   const top5PPKS = Object.entries(kategoriCount).map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 5); 
@@ -1782,31 +1782,6 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
 
           <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
   
-  {/* TOMBOL EXPORT DENGAN IKON SEMPURNA */}
-  <button className="btn-action-data btn-export" onClick={() => handleExport("dtsen")} disabled={isExporting}>
-    {isExporting ? "⏳ Exporting..." : (
-      <>
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-        </svg>
-        Export
-      </>
-    )}
-  </button>
-
-  {/* TOMBOL IMPORT DENGAN IKON SEMPURNA SEJAJAR */}
-  <button className="btn-action-data btn-import" onClick={handleImportClick} disabled={isImporting}>
-    {isImporting ? "⏳ Importing..." : (
-      <>
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
-        Import
-      </>
-    )}
-  </button>
-
-  <input type="file" accept=".csv" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "keluarga", fetchKeluarga)} />
 
   <button className="btn-add-staff" onClick={() => setIsAddDtsenModalOpen(true)}>
     <span className="plus-icon">+</span> Tambah DTSEN
@@ -2157,8 +2132,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
               <div className="stat-number text-blue">{ppksAktif} <span>Kasus</span></div>
             </div>
             <div className="stat-card-outline">
-              <h4>Laporan Menunggu Validasi</h4>
-              <div className="stat-number text-dark">{ppksMenunggu} <span>Laporan</span></div>
+              <h4>Laporan Selesai Ditangani</h4>
+              <div className="stat-number text-dark">{ppksSelesai} <span>Laporan</span></div>
             </div>
           </div>
           <h3 className="section-title">Distribusi Kategori PPKS (Top 5)</h3>
@@ -2250,32 +2225,6 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
           
           <div className="action-row-right" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
   
-  {/* TOMBOL EXPORT */}
-  <button className="btn-action-data btn-export" onClick={() => handleExport("ppks")} disabled={isExporting}>
-    {isExporting ? "⏳ Exporting..." : (
-      <>
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-        </svg>
-        Export
-      </>
-    )}
-  </button>
-
-  {/* TOMBOL IMPORT */}
-  <button className="btn-action-data btn-import" onClick={handleImportClick} disabled={isImporting}>
-    {isImporting ? "⏳ Importing..." : (
-      <>
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-        </svg>
-        Import
-      </>
-    )}
-  </button>
-
-  <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" ref={importInputRef} style={{ display: 'none' }} onChange={(e) => handleImportFile(e, "ppks", fetchKeluarga)} />
-
   <button className="btn-add-staff" onClick={() => setIsAddPPKSModalOpen(true)}>
     <span className="plus-icon">+</span> Tambah Laporan PPKS
   </button>
