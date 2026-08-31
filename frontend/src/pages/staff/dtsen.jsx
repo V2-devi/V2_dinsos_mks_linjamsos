@@ -489,7 +489,7 @@ const handleSubmitFotoPPKS = async (ppksId = null) => {
   });
 
   const ppksAktif = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
-  const ppksMenunggu = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Kasus Aktif").length;
+  const ppksSelesai = dashboardPPKSFiltered.filter(i => i.status_penanganan === "Selesai Ditangani").length;
   const kategoriCount = {};
   dashboardPPKSFiltered.forEach(item => { kategoriCount[item.kategori_ppks] = (kategoriCount[item.kategori_ppks] || 0) + 1; });
   const top5PPKS = Object.entries(kategoriCount).map(([nama_lengkap, jumlah]) => ({ nama_lengkap, jumlah })).sort((a, b) => b.jumlah - a.jumlah).slice(0, 5); 
@@ -1841,8 +1841,8 @@ const handleUpdateStatusPPKS = async (e, statusBaru) => {
               <div className="stat-number text-blue">{ppksAktif} <span>Kasus</span></div>
             </div>
             <div className="stat-card-outline">
-              <h4>Laporan Menunggu Validasi</h4>
-              <div className="stat-number text-dark">{ppksMenunggu} <span>Laporan</span></div>
+              <h4>Laporan Selesai Ditangani</h4>
+              <div className="stat-number text-dark">{ppksSelesai} <span>Laporan</span></div>
             </div>
           </div>
           <h3 className="section-title">Distribusi Kategori PPKS (Top 5)</h3>
