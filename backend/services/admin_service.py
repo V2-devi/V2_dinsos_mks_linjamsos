@@ -61,6 +61,15 @@ def create_staff(data):
         if getattr(existing_user, "data", None):
             return {"error": "Email sudah terdaftar di sistem. Gunakan email lain."}
 
+        try:
+            auth_users = supabase.auth.admin.list_users()
+            if getattr(auth_users, "users", None):
+                for user in auth_users.users:
+                    if getattr(user, "email", "").strip().lower() == email:
+                        return {"error": "Email sudah terdaftar di Supabase Auth. Gunakan email lain."}
+        except Exception:
+            pass
+
         # ====================================
         # GENERATE PASSWORD RANDOM
         # ====================================
