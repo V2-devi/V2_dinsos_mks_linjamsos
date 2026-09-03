@@ -273,30 +273,43 @@ def update_user_service(user_id, data):
 
 
 def delete_user_service(user_id: str):
-
     try:
-
-        print("DELETE USER:", user_id)
+        normalized_user_id = str(user_id).strip()
+        if not normalized_user_id:
+            return {
+                "success": False,
+                "error": "ID user tidak boleh kosong"
+            }
 
         result = (
             supabase
             .table("pengguna")
             .delete()
-            .eq("id", str(user_id))
+            .eq("id", normalized_user_id)
+            .select("id")
             .execute()
         )
 
-        print("DELETE RESULT:", result.data)
+        deleted_profiles = result.data or []
+        if not deleted_profiles:
+            return {
+                "success": False,
+                "error": "User tidak ditemukan"
+            }
+
+        auth_delete_result = supabase.auth.admin.delete_user(normalized_user_id)
+        if hasattr(auth_delete_result, "error") and auth_delete_result.error:
+            return {
+                "success": False,
+                "error": getattr(auth_delete_result.error, "message", str(auth_delete_result.error))
+            }
 
         return {
             "success": True,
-            "data": result.data
+            "data": deleted_profiles
         }
 
     except Exception as e:
-
-        print("DELETE ERROR:", str(e))
-
         return {
             "success": False,
             "error": str(e)

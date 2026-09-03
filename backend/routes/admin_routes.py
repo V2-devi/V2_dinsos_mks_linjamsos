@@ -34,8 +34,11 @@ def create_staff_route(data: StaffSchema):
 
 @router.delete("/delete/{user_id}")
 async def delete_user(user_id: str):
-
-    return delete_user_service(user_id)
+    result = delete_user_service(user_id)
+    if not result.get("success"):
+        status_code = 404 if result.get("error") == "User tidak ditemukan" else 400
+        raise HTTPException(status_code=status_code, detail=result.get("error", "Gagal menghapus user"))
+    return result
 
 # @router.put("/admin/update/{user_id}")
 # async def update_user(

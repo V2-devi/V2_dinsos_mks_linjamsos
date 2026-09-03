@@ -407,18 +407,21 @@ const handleApprove = async (id) => {
 
 // === HANDLER HAPUS DATA (PERMANEN) ===
 const confirmDelete = async () => {
-
+  if (!userToDelete?.id) return;
   setIsLoading(true);
 
   try {
-
     console.log("DELETE USER:", userToDelete);
 
     const response = await axios.delete(
-      `${API_URL}admin/delete/${userToDelete.id}`
+      `${API_URL}/admin/delete/${userToDelete.id}`
     );
 
     console.log("DELETE RESPONSE:", response.data);
+
+    if (!response.data?.success) {
+      throw new Error(response.data?.error || "Gagal menghapus user");
+    }
 
     // refresh data dari backend
     await fetchUsers();
@@ -431,13 +434,10 @@ const confirmDelete = async () => {
     showSuccess();
 
   } catch (err) {
-
     console.error("DELETE ERROR:", err);
-
-    alert("Gagal menghapus user");
+    alert(err.response?.data?.detail || err.message || "Gagal menghapus user");
 
   } finally {
-
     setIsLoading(false);
   }
 };
