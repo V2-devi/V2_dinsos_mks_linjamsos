@@ -43,6 +43,7 @@ def generate_password(length=8):
 
 
 def create_staff(data):
+    auth_user_id = None
 
     try:
         email = str(data.email).strip().lower()
@@ -94,11 +95,13 @@ def create_staff(data):
         if not user:
             return {"error": "Gagal membuat akun auth"}
 
+        auth_user_id = str(user.id)
+
         # ====================================
         # SIMPAN PROFILE
         # ====================================
         result = insert_user_profile({
-            "id": str(user.id),
+            "id": auth_user_id,
             "email": email,
             "nama_lengkap": data.nama_lengkap,
             "nik": data.nik,
@@ -112,9 +115,17 @@ def create_staff(data):
         })
 
         if isinstance(result, dict) and result.get("error"):
+            try:
+                supabase.auth.admin.delete_user(auth_user_id)
+            except Exception as cleanup_error:
+                print("AUTH CLEANUP ERROR:", str(cleanup_error))
             return {"error": result["error"]}
 
         if not result:
+            try:
+                supabase.auth.admin.delete_user(auth_user_id)
+            except Exception as cleanup_error:
+                print("AUTH CLEANUP ERROR:", str(cleanup_error))
             return {"error": "Gagal menyimpan profil pengguna"}
 
         # ====================================
@@ -134,6 +145,11 @@ def create_staff(data):
 
     except Exception as e:
         print("CREATE STAFF ERROR:", str(e))
+        if auth_user_id:
+            try:
+                supabase.auth.admin.delete_user(auth_user_id)
+            except Exception as cleanup_error:
+                print("AUTH CLEANUP ERROR:", str(cleanup_error))
         return {"error": str(e)}
 
 
