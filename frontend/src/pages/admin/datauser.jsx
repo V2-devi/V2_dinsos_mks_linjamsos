@@ -4,165 +4,75 @@ import "./datauser.css";
 
 // ✅ IMPORT LOGO SICADAS VERSI LOGIN (LATAR GELAP / WARNA PUTIH) AGAR SERAGAM DENGAN ADMIN DASHBOARD
 import logoSicadas from "../../assets/logo_sicadas.png";
-
 import axios from "axios";
-
-
-// TESTING
-// function DataUser() {
-//   return <h1>HALAMAN USER</h1>;
-// }
-
-// export default DataUser;
-// TESTING
 
 function DataUser() {
   const API_URL = import.meta.env.VITE_API_URL;
-
   const navigate = useNavigate();
   const location = useLocation();
-  // const status = String(user.status_akun || user.status || "").toLowerCase();
 
-//   // === STATE NOTIFIKASI ===
+  // === STATE NOTIFIKASI ===
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-// === STATE DATA PENGGUNA ===
+  // === STATE DATA PENGGUNA ===
   const [users, setUsers] = useState([]);
 
-// Update status akun
-const handleUpdateStatus = async (userId, nextStatus) => {
-  if (!userId) return;
+  const [formData, setFormData] = useState({
+    nama_lengkap: "",
+    email: "",
+    role: "",
+    status: "menunggu"
+  });
 
-  try {
-    const normalizedStatus = nextStatus === "disetujui" ? "disetujui" : "menunggu";
+  // ✅ PERBAIKAN: Baca dari LocalStorage saat pertama render
+  const fetchUsers = async () => {
+    setIsInitialLoad(true);
+    try {
+      const res = await axios.get(`${API_URL}/admin/users`);
+      setUsers(res.data);
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : null;
 
-    const res = await fetch(
-      `${API_URL}admin/update/${userId}`,
-      {
-        method: "PUT",
+      if (data) {
+        setUsers(data);
+        localStorage.setItem("localUsers", JSON.stringify(data));
+      }
+    } catch (err) {
+      console.warn("Backend mati. Memuat dari memori lokal...");
+      const savedUsers = JSON.parse(localStorage.getItem("localUsers")) || [];
+      setUsers(savedUsers);
+    } finally {
+      setIsInitialLoad(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleAddStaff = async () => {
+    try {
+      await fetch(`${API_URL}admin/users`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          status: normalizedStatus,
-          is_active: normalizedStatus === "disetujui"
+          ...formData,
+          status: "menunggu",   // 🔥 penting
+          is_active: false      // 🔥 penting
         })
-      }
-    );
+      });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.error || "Gagal update status user");
+      fetchUsers(); // refresh data
+      alert("Staff berhasil ditambahkan");
+    } catch (error) {
+      console.error(error);
     }
-
-    await fetchUsers();
-    showSuccess();
-  } catch (error) {
-    console.error("Update status error:", error);
-    alert(error.message || "Gagal mengubah status user");
-  }
-};
-
-
-
-
-// Data tambah staff otomatis dari admin
-// const initialStaffForm = {
-//   nama_lengkap: "",
-//   email: "",
-//   password: "",
-//   role: "",
-//   nik: "",
-//   nip: "",
-//   no_hp: "",
-//   alamat: ""
-// };
-
-// const [formStaff, setFormStaff] = useState(initialStaffForm);
-
-
-// const handleAddStaff = async () => {
-//   try {
-//     const res = await fetch(
-//       "${API_URL}staff",
-
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json"
-//         },
-//         body: JSON.stringify(formStaff)
-//       }
-//     );
-//     const data = await res.json();
-//     console.log(data);
-//     alert("Staff berhasil ditambahkan");
-//   } catch (error) {
-//     console.error(error);
-//     alert("Gagal tambah staff");
-//   }
-
-// };
-
-const [formData, setFormData] = useState({
-  nama_lengkap: "",
-  email: "",
-  role: "",
-  status: "menunggu"
-});
-
-  // ✅ PERBAIKAN: Baca dari LocalStorage saat pertama render
-const fetchUsers = async () => {
-  setIsInitialLoad(true);
-  try {
-    const res = await axios.get(`${API_URL}/admin/users`);
-    setUsers(res.data);
-    const data = Array.isArray(res.data)
-      ? res.data
-      : Array.isArray(res.data?.data)
-        ? res.data.data
-        : null;
-
-    if (data) {
-      setUsers(data);
-      localStorage.setItem("localUsers", JSON.stringify(data));
-    }
-  } catch (err) {
-    console.warn("Backend mati. Memuat dari memori lokal...");
-    const savedUsers = JSON.parse(localStorage.getItem("localUsers")) || [];
-    setUsers(savedUsers);
-  } finally {
-    setIsInitialLoad(false);
-  }
-};
-
-useEffect(() => {
-  fetchUsers();
-}, []);
-
-
-const handleAddStaff = async () => {
-  try {
-    await fetch(`${API_URL}admin/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        ...formData,
-        status: "menunggu",   // 🔥 penting
-        is_active: false      // 🔥 penting
-      })
-    });
-
-    fetchUsers(); // refresh data
-    alert("Staff berhasil ditambahkan");
-
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
 
   // ✅ PERBAIKAN: Kalkulasi aman untuk statistik
   const totaldisetujui = users.filter(u => {
@@ -175,36 +85,23 @@ const handleAddStaff = async () => {
     return s === "menunggu";
   }).length;
 
-//   // === STATE FORM DATA (Untuk Tambah & Edit) ===
-const initialFormState = {
-  id: null,
-  nik: "",
-  nip: "",
-  role: "",
-  password: "",
-  no_hp: "",
-  nama_lengkap: "",
-  email: "",
-  alamat: "",
-  wilayah_kerja:"", 
-  status: "menunggu"
-};
+  // === STATE FORM DATA (Untuk Tambah & Edit) ===
+  const initialFormState = {
+    id: null,
+    nik: "",
+    nip: "",
+    role: "",
+    password: "",
+    no_hp: "",
+    nama_lengkap: "",
+    email: "",
+    alamat: "",
+    wilayah_kerja:"", 
+    status: "menunggu"
+  };
 
-// const [formData, setFormData] = useState(initialFormState);
-
-
-
-// email approve akun
-const handleApprove = async (id) => {
-  await handleUpdateStatus(id, "disetujui");
-};
-
-
-
-
-//   // === STATE MODAL POP-UP ===
+  // === STATE MODAL POP-UP ===
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  // const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -215,11 +112,11 @@ const handleApprove = async (id) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-//   // === STATE FILTER & PENCARIAN ===
+  // === STATE FILTER & PENCARIAN ===
   const [filterStatus, setFilterStatus] = useState("Semua Status");
   const [searchQuery, setSearchQuery] = useState("");
 
-// === LOGIKA FILTER ===
+  // === LOGIKA FILTER ===
   const filteredUsers = users.filter((user) => {
     // 1. Amankan status agar terbaca (cek data lama/baru/huruf besar/kecil)
     const rawStatus = String(user.status || "").toLowerCase();
@@ -238,15 +135,13 @@ const handleApprove = async (id) => {
     return matchStatus && matchSearch;
   });
 
-  console.log("FILTERED USERS:", filteredUsers.length, "from", users.length, "users");
-
-//   // === HANDLER INPUT FORM ===
+  // === HANDLER INPUT FORM ===
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-// === HANDLER TAMBAH DATA ===
+  // === HANDLER TAMBAH DATA ===
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -314,12 +209,10 @@ const handleApprove = async (id) => {
       role: user.role || "",
       status: user.status ||  "menunggu",
       wilayah_kerja: user.wilayah_kerja || "",
-
-    }); // Isi form dengan data user yang diklik
+    }); 
 
     setIsEditModalOpen(true);
   };
-
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -332,7 +225,6 @@ const handleApprove = async (id) => {
 
     setIsLoading(true);
     setErrorMessage("");
-    console.log("SUBMIT KEKLIK - Form Data:", formData);
     
     try {
       const payload = {
@@ -348,15 +240,11 @@ const handleApprove = async (id) => {
         wilayah_kerja: formData.wilayah_kerja,
       };
 
-      console.log("Payload dikirim:", payload);
-      
       const response = await axios.put(
         `${API_URL}/admin/update/${formData.id}`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
-
-      console.log("Response update:", response.data);
 
       // Update local cache segera agar user tidak perlu reload
       setUsers((prevUsers) => prevUsers.map((u) =>
@@ -382,16 +270,6 @@ const handleApprove = async (id) => {
     }
   };
 
-
-  // const handleEditSubmit = (e) => {
-  //   e.preventDefault();
-  //   const updatedUsers = users.map(u => (u.id === formData.id ? formData : u));
-  //   setUsers(updatedUsers);
-  //   setIsEditModalOpen(false);
-  //   setFormData(initialFormState);
-  //   showSuccess();
-  // };
-
   // === HANDLER GANTI PASSWORD ===
   const handlePassSubmit = (e) => {
     e.preventDefault();
@@ -405,42 +283,32 @@ const handleApprove = async (id) => {
     setIsDeleteModalOpen(true);
   };
 
-// === HANDLER HAPUS DATA (PERMANEN) ===
-const confirmDelete = async () => {
-  if (!userToDelete?.id) return;
-  setIsLoading(true);
+  // === HANDLER HAPUS DATA (PERMANEN) ===
+  const confirmDelete = async () => {
+    if (!userToDelete?.id) return;
+    setIsLoading(true);
 
-  try {
-    console.log("DELETE USER:", userToDelete);
+    try {
+      const response = await axios.delete(
+        `${API_URL}/admin/delete/${userToDelete.id}`
+      );
 
-    const response = await axios.delete(
-      `${API_URL}/admin/delete/${userToDelete.id}`
-    );
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Gagal menghapus user");
+      }
 
-    console.log("DELETE RESPONSE:", response.data);
+      await fetchUsers();
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+      showSuccess();
 
-    if (!response.data?.success) {
-      throw new Error(response.data?.error || "Gagal menghapus user");
+    } catch (err) {
+      console.error("DELETE ERROR:", err);
+      alert(err.response?.data?.detail || err.message || "Gagal menghapus user");
+    } finally {
+      setIsLoading(false);
     }
-
-    // refresh data dari backend
-    await fetchUsers();
-
-    // tutup modal
-    setIsDeleteModalOpen(false);
-
-    setUserToDelete(null);
-
-    showSuccess();
-
-  } catch (err) {
-    console.error("DELETE ERROR:", err);
-    alert(err.response?.data?.detail || err.message || "Gagal menghapus user");
-
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // Tampilkan Notifikasi Sukses
   const showSuccess = () => {
@@ -448,45 +316,21 @@ const confirmDelete = async () => {
     setTimeout(() => setIsSuccessModalOpen(false), 2500);
   };
 
-// console.log("DATA USER PAGE RENDER");
-
-// // TESTING 
-
-
-// return (
-//   <div>
-//     <h1>HALAMAN USER</h1>
-
-//     {users && users.length > 0 ? (
-//       users.map((user) => (
-//         <div key={user.id}>
-//           <p>{user.nama_lengkap}</p>
-//         </div>
-//       ))
-//     ) : (
-//       <p>Tidak ada data</p>
-//     )}
-//   </div>
-// );
-// TESTING 
-
   return (
     <div className="admin-layout relative">
       
       {/* ================= NAVBAR ADMIN ================= */}
       <nav className="admin-navbar">
         <div className="navbar-left">
-          
           {/* ✅ MENGGUNAKAN LOGO SICADAS VERSI PUTIH SEPERTI DI ADMIN DASHBOARD */}
           <div className="branding-container-small" style={{ display: 'flex', alignItems: 'center' }}>
-                      <img 
-                        src={logoSicadas} 
-                        alt="Logo SICADAS" 
-                        className="branding-logo-small" 
-                        style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
-                      />
-                    </div>
-          
+            <img 
+              src={logoSicadas} 
+              alt="Logo SICADAS" 
+              className="branding-logo-small" 
+              style={{ height: '70px', width: 'auto', objectFit: 'contain' }} 
+            />
+          </div>
         </div>
         <div className="navbar-right">
           <button className="nav-link-btn" onClick={() => navigate("/admin")}>Kembali Ke Halaman Utama</button>
@@ -512,16 +356,6 @@ const confirmDelete = async () => {
         </div>
 
         {/* TOMBOL TAMBAH STAFF */}
-
-        {/* <div className="action-row-right">
-          <button
-            className="btn-add-staff"
-            onClick={() => setIsAddStaffModalOpen(true)}>
-            <span className="plus-icon">+</span>
-            Tambah Staff
-          </button>
-        </div> */}
-
         <div className="action-row-right">
           <button className="btn-add-staff" onClick={() => { setFormData(initialFormState); setIsAddModalOpen(true); }}>
             <span className="plus-icon">+</span> Tambah Staff
@@ -568,19 +402,13 @@ const confirmDelete = async () => {
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {/* ✅ DI SINI PERUBAHANNYA: Block {!isApproved && ...} TELAH DIHAPUS, DITENGAHKAN */}
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
                             <button onClick={() => openEditModal(user)} className="btn-action-modern btn-edit-modern" title="Edit Pegawai">
                               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
-                            {!isApproved && (
-                              <button onClick={() => handleApprove(user.id)} className="btn-action-modern btn-success-modern" title="Setujui Akun">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                              </button>
-                            )}
                             <button onClick={() => openDeleteModal(user)} className="btn-action-modern btn-delete-modern" title="Hapus Pegawai">
                               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -592,7 +420,7 @@ const confirmDelete = async () => {
                     );
                   })
                 ) : (
-                  <tr><td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                  <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
                     {isInitialLoad ? "Memuat data dari Supabase..." : "Tidak ada data pengguna yang ditemukan."}
                   </td></tr>
                 )}
@@ -602,7 +430,7 @@ const confirmDelete = async () => {
         </div>
       </main>
 
-{/* ================= MODAL TAMBAH STAFF (INTERapproved) ================= */}
+      {/* ================= MODAL TAMBAH STAFF ================= */}
       {isAddModalOpen && (
         <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -610,7 +438,6 @@ const confirmDelete = async () => {
               <div className="modal-header-title"><h2>Tambah Staff Baru</h2></div>
             </div>
             <div className="modal-body">
-              {/* ✅ MENAMPILKAN KOTAK ERROR JIKA SERVER MENOLAK */}
               {errorMessage && (
                 <div style={{
                   padding: '12px 15px',
@@ -655,8 +482,7 @@ const confirmDelete = async () => {
                     <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat || ""} onChange={handleInputChange} required /></div>
                   </div>
                 </div>
-                {/* Field Baru */}
-                {/* GANTI MENJADI SEPERTI INI */}
+
                 <div className="form-group-modal">
                   <label>Wilayah Kerja (Kecamatan)*</label>
                   <div className="select-container-custom">
@@ -690,7 +516,6 @@ const confirmDelete = async () => {
 
                 <div className="modal-actions">
                   <button type="button" className="btn-modal-cancel" onClick={() => setIsAddModalOpen(false)} disabled={isLoading}>Batal</button>
-                  {/* ✅ TOMBOL OTOMATIS BERUBAH JADI 'Menyimpan...' AGAR TIDAK DIKLIK BERKALI-KALI */}
                   <button type="submit" className="btn-modal-submit" disabled={isLoading} style={{opacity: isLoading ? 0.6 : 1, cursor: isLoading ? 'not-allowed' : 'pointer'}}>
                     {isLoading ? 'Menyimpan...' : 'Buat Akun'}
                   </button>
@@ -701,7 +526,7 @@ const confirmDelete = async () => {
         </div>
       )}
 
-      {/* ================= MODAL EDIT STAFF (INTERapproved) ================= */}
+      {/* ================= MODAL EDIT STAFF ================= */}
       {isEditModalOpen && (
         <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -736,7 +561,7 @@ const confirmDelete = async () => {
                         value={formData.nip} 
                         onChange={handleInputChange} 
                         readOnly 
-                        style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} // Opsional: Beri warna abu-abu agar user tahu itu tidak bisa diedit
+                        style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }}
                       />
                     </div>
                     <div className="form-group-modal">
@@ -757,7 +582,6 @@ const confirmDelete = async () => {
                     <div className="form-group-modal"><label>Email Disetujui*</label><input type="email" name="email" value={formData.email} onChange={handleInputChange} required /></div>
                     <div className="form-group-modal"><label>Alamat / Domisili*</label><input type="text" name="alamat" value={formData.alamat} onChange={handleInputChange} required /></div>
                    
-                   {/* Jawaban kenapa wilayah kerja tidak */}
                     <div className="form-group-modal">
                       <label>Wilayah Kerja*</label>
                       <select name="wilayah_kerja" value={formData.wilayah_kerja} onChange={handleInputChange} style={{width:'100%', height:'40px', border:'1px solid #94a3b8', borderRadius:'6px', padding:'0 10px'}} required>
@@ -770,7 +594,6 @@ const confirmDelete = async () => {
                       </select>
                     </div>
 
-
                   </div>
                 </div>
 
@@ -780,8 +603,6 @@ const confirmDelete = async () => {
                     <div className="radio-group-inline">
                       <label className="radio-label"><input type="radio" name="status" value="disetujui" checked={formData.status === "disetujui"} onChange={handleInputChange} /><span>Disetujui</span></label>
                       <label className="radio-label"><input type="radio" name="status" value="menunggu" checked={formData.status === "menunggu"} onChange={handleInputChange} /><span>Menunggu</span></label>
-
-                    
                     </div>
                   </div>
                 </div>
