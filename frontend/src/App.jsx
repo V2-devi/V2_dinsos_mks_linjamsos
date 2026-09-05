@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 // Import sistem Router dari React Router DOM
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
@@ -20,6 +20,26 @@ import VerifikatorProfile from "./pages/verifikator/verifikatorprofile.jsx";
 
 import ForgotPassword from "./pages/auth/lupapass.jsx";
 import ResetPassword from "./pages/auth/resetpass.jsx";
+import { supabase } from "./config/supabase";
+
+function AuthSessionGuard() {
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_OUT") return;
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
+      }
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  return null;
+}
 
 
 
@@ -76,6 +96,7 @@ function AppRoutes() {
 function App() {
   return (
     <Router>
+      <AuthSessionGuard />
       <AppRoutes />
     </Router>
   );

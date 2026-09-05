@@ -32,7 +32,20 @@ export const login = async ({ email, password }) => {
 
     // Handle error dari backend
     if (!res.ok || data.error || data.detail) {
-      return { error: data.detail || data.error || "Login gagal" };
+      const errorMessage = String(data.detail || data.error || "Login gagal");
+      const normalizedError = errorMessage.toLowerCase();
+
+      if (
+        normalizedError.includes("user not allowed") ||
+        normalizedError.includes("sub claim") ||
+        normalizedError.includes("user from sub")
+      ) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        await supabase.auth.signOut();
+      }
+
+      return { error: errorMessage };
     }
 
     // ✅ SINKRONISASI SESSION SUPABASE DI FRONTEND (LEBIH EFISIEN!)

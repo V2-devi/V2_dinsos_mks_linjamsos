@@ -18,5 +18,7 @@ def get_current_user(authorization: Optional[str] = Header(None)):
 
         return user
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
