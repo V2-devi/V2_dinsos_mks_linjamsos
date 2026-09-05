@@ -281,7 +281,37 @@ def delete_user_service(user_id: str):
                 "error": "ID user tidak boleh kosong"
             }
 
-        result = (
+        profile_result = (
+            supabase
+            .table("pengguna")
+            .select("id")
+            .eq("id", normalized_user_id)
+            .execute()
+        )
+
+        profiles = profile_result.data or []
+        if not profiles:
+            return {
+                "success": False,
+                "error": "User tidak ditemukan"
+            }
+
+        try:
+            auth_delete_result = supabase.auth.admin.delete_user(normalized_user_id)
+        except Exception as auth_error:
+            return {
+                "success": False,
+                "error": f"Gagal menghapus user dari Supabase Auth: {auth_error}"
+            }
+
+        if hasattr(auth_delete_result, "error") and auth_delete_result.error:
+            auth_error = auth_delete_result.error
+            return {
+                "success": False,
+                "error": f"Gagal menghapus user dari Supabase Auth: {getattr(auth_error, 'message', str(auth_error))}"
+            }
+
+        profile_delete_result = (
             supabase
             .table("pengguna")
             .delete()
@@ -290,18 +320,11 @@ def delete_user_service(user_id: str):
             .execute()
         )
 
-        deleted_profiles = result.data or []
+        deleted_profiles = profile_delete_result.data or []
         if not deleted_profiles:
             return {
                 "success": False,
-                "error": "User tidak ditemukan"
-            }
-
-        auth_delete_result = supabase.auth.admin.delete_user(normalized_user_id)
-        if hasattr(auth_delete_result, "error") and auth_delete_result.error:
-            return {
-                "success": False,
-                "error": getattr(auth_delete_result.error, "message", str(auth_delete_result.error))
+                "error": "User Auth berhasil dihapus, tetapi profil pengguna gagal dihapus"
             }
 
         return {
