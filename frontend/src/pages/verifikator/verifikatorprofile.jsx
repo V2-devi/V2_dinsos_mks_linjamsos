@@ -165,22 +165,7 @@ const handleOpenEdit = () => {
     }
   };
 
-  // const handleSubmit = (e, type) => {
-  //   e.preventDefault();
-  //   if (type === "edit") {
-  //     setProfileData(profileData);
-  //     setIsEditModalOpen(false);
-  //   }
-  //   if (type === "pass") setIsPassModalOpen(false);
-    
-  //   setIsSuccessModalOpen(true);
-  //   setTimeout(() => setIsSuccessModalOpen(false), 2500);
-  // };
-
-
-
-
-
+ 
 
   return (
     <div className="profile-page-container">

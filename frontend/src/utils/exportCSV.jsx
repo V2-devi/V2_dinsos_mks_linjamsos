@@ -1,41 +1,41 @@
 // 📂 src/utils/exportCSV.js (atau di komponen)
-const HEADER_LABELS = {
-  no_kk: "No. KK",
-  nama_kepala_keluarga: "Nama Kepala Keluarga",
-  alamat: "Alamat Lengkap",
-  rt: "RT", rw: "RW",
-  desa_kelurahan: "Desa/Kelurahan",
-  kecamatan: "Kecamatan", kabupaten_kota: "Kabupaten/Kota",
-  nik: "NIK", nama_lengkap: "Nama Lengkap",
-  tanggal_lahir: "Tanggal Lahir", jenis_kelamin: "Jenis Kelamin",
-  pekerjaan: "Pekerjaan", penghasilan: "Penghasilan (Rp)",
-  kondisi_khusus: "Kondisi Khusus",
-  // Tambahkan sesuai tabel lain
-};
+// const HEADER_LABELS = {
+//   no_kk: "No. KK",
+//   nama_kepala_keluarga: "Nama Kepala Keluarga",
+//   alamat: "Alamat Lengkap",
+//   rt: "RT", rw: "RW",
+//   desa_kelurahan: "Desa/Kelurahan",
+//   kecamatan: "Kecamatan", kabupaten_kota: "Kabupaten/Kota",
+//   nik: "NIK", nama_lengkap: "Nama Lengkap",
+//   tanggal_lahir: "Tanggal Lahir", jenis_kelamin: "Jenis Kelamin",
+//   pekerjaan: "Pekerjaan", penghasilan: "Penghasilan (Rp)",
+//   kondisi_khusus: "Kondisi Khusus",
+//   // Tambahkan sesuai tabel lain
+// };
 
-const getLabel = (key) => HEADER_LABELS[key] || key;
+// const getLabel = (key) => HEADER_LABELS[key] || key;
 
-export const exportToCSV = (data, fileName = "export") => {
-  if (!data?.length) return alert("Tidak ada data");
+// export const exportToCSV = (data, fileName = "export") => {
+//   if (!data?.length) return alert("Tidak ada data");
   
-  const headers = Object.keys(data[0]);
-  const csvRows = [];
-  // ✅ Header Rapi
-  csvRows.push(headers.map(h => `"${getLabel(h)}"`).join(","));
+//   const headers = Object.keys(data[0]);
+//   const csvRows = [];
+//   // ✅ Header Rapi
+//   csvRows.push(headers.map(h => `"${getLabel(h)}"`).join(","));
   
-  for (const row of data) {
-    const values = headers.map(h => `"${String(row[h] ?? "").replace(/"/g, '""')}"`);
-    csvRows.push(values.join(","));
-  }
+//   for (const row of data) {
+//     const values = headers.map(h => `"${String(row[h] ?? "").replace(/"/g, '""')}"`);
+//     csvRows.push(values.join(","));
+//   }
 
-  const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName}_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  a.remove();
-};
+//   const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+//   const url = window.URL.createObjectURL(blob);
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = `${fileName}_${new Date().toISOString().slice(0,10)}.csv`;
+//   a.click();
+//   a.remove();
+// };
 // // 📂 src/utils/exportCSV.js
 // export const exportToCSV = (data, fileName = "export") => {
 //   if (!data || data.length === 0) {

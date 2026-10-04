@@ -46,8 +46,4 @@ class UpdateKondisiKhusus(BaseModel):
     surat_kematian: Optional[str] = None
 
 
-    
-    # ✅ Field flat dari frontend form
-    # hamil: Optional[str] = Field(default="Tidak Sedang Hamil")
-    # disabilitas: Optional[str] = Field(default="Tidak Ada Disabilitas")
-    # penyakit: Optional[str] = Field(default="")
+   

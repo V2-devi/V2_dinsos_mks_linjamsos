@@ -8,14 +8,6 @@ import logoSicadas from "../../assets/logo_sicadas.png";
 import axios from "axios";
 
 
-// TESTING
-// function DataUser() {
-//   return <h1>HALAMAN USER</h1>;
-// }
-
-// export default DataUser;
-// TESTING
-
 function DataUser() {
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -64,46 +56,6 @@ const handleUpdateStatus = async (userId, nextStatus) => {
   }
 };
 
-
-
-
-// Data tambah staff otomatis dari admin
-// const initialStaffForm = {
-//   nama_lengkap: "",
-//   email: "",
-//   password: "",
-//   role: "",
-//   nik: "",
-//   nip: "",
-//   no_hp: "",
-//   alamat: ""
-// };
-
-// const [formStaff, setFormStaff] = useState(initialStaffForm);
-
-
-// const handleAddStaff = async () => {
-//   try {
-//     const res = await fetch(
-//       "${API_URL}staff",
-
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json"
-//         },
-//         body: JSON.stringify(formStaff)
-//       }
-//     );
-//     const data = await res.json();
-//     console.log(data);
-//     alert("Staff berhasil ditambahkan");
-//   } catch (error) {
-//     console.error(error);
-//     alert("Gagal tambah staff");
-//   }
-
-// };
 
 const [formData, setFormData] = useState({
   nama_lengkap: "",
@@ -190,8 +142,6 @@ const initialFormState = {
   status: "menunggu"
 };
 
-// const [formData, setFormData] = useState(initialFormState);
-
 
 
 // email approve akun
@@ -204,7 +154,6 @@ const handleApprove = async (id) => {
 
 //   // === STATE MODAL POP-UP ===
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  // const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -383,15 +332,6 @@ const handleApprove = async (id) => {
   };
 
 
-  // const handleEditSubmit = (e) => {
-  //   e.preventDefault();
-  //   const updatedUsers = users.map(u => (u.id === formData.id ? formData : u));
-  //   setUsers(updatedUsers);
-  //   setIsEditModalOpen(false);
-  //   setFormData(initialFormState);
-  //   showSuccess();
-  // };
-
   // === HANDLER GANTI PASSWORD ===
   const handlePassSubmit = (e) => {
     e.preventDefault();
@@ -448,27 +388,6 @@ const confirmDelete = async () => {
     setTimeout(() => setIsSuccessModalOpen(false), 2500);
   };
 
-// console.log("DATA USER PAGE RENDER");
-
-// // TESTING 
-
-
-// return (
-//   <div>
-//     <h1>HALAMAN USER</h1>
-
-//     {users && users.length > 0 ? (
-//       users.map((user) => (
-//         <div key={user.id}>
-//           <p>{user.nama_lengkap}</p>
-//         </div>
-//       ))
-//     ) : (
-//       <p>Tidak ada data</p>
-//     )}
-//   </div>
-// );
-// TESTING 
 
   return (
     <div className="admin-layout relative">

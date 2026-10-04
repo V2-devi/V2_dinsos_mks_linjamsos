@@ -1,14 +1,8 @@
 import React, { useEffect } from "react";
-// Import sistem Router dari React Router DOM
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-
-// Sesuaikan path import dengan struktur folder Anda
 import Login from "./pages/auth/login.jsx";
 import Register from "./pages/auth/register.jsx";
-// import ForgotPassword from "./pages/auth/lupapass.jsx"; // Sesuaikan jika nama filenya huruf kecil semua
-
 import Verify from "./pages/auth/verify.jsx";
-
 import Admin from "./pages/admin/dashboard.jsx"; 
 import DataUser from "./pages/admin/datauser.jsx";
 import AdminProfile from "./pages/admin/adminprofile.jsx";
@@ -16,8 +10,6 @@ import StaffDashboard from "./pages/staff/staffdashboard.jsx";
 import StaffProfile from "./pages/staff/staffprofile";
 import VerifikatorDashboard from "./pages/verifikator/verifikatordashboard.jsx"; 
 import VerifikatorProfile from "./pages/verifikator/verifikatorprofile.jsx";
-
-
 import ForgotPassword from "./pages/auth/lupapass.jsx";
 import ResetPassword from "./pages/auth/resetpass.jsx";
 import { supabase } from "./config/supabase";

@@ -22,7 +22,7 @@ function Register() {
     no_hp: "",
     alamat: "",
     agreed: false,
-    wilayah_kerja: "", // ✅ DITAMBAHKAN: State untuk Wilayah Kerja
+    wilayah_kerja: "", 
   });
 
   useEffect(() => {

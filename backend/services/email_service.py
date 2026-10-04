@@ -1,74 +1,3 @@
-# import smtplib
-
-# from email.mime.text import MIMEText
-
-# from email.mime.multipart import MIMEMultipart
-
-# import os
-
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-# EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
-
-# EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-
-
-# def send_approval_email(to_email, nama):
-
-#     subject = "Akun Anda Telah Disetujui"
-
-#     body = f"""
-# Halo {nama},
-
-# Akun Anda telah disetujui oleh admin.
-
-# Silakan login menggunakan email dan kata sandi
-# yang telah Anda buat saat registrasi.
-
-# Terima kasih.
-
-# Sistem Informasi Perlindungan dan Jaminan Sosial
-# """
-
-#     msg = MIMEMultipart()
-
-#     msg["From"] = EMAIL_ADDRESS
-
-#     msg["To"] = to_email
-
-#     msg["Subject"] = subject
-
-#     msg.attach(MIMEText(body, "plain"))
-
-#     try:
-
-#         server = smtplib.SMTP(
-#             "smtp.gmail.com",
-#             587
-#         )
-
-#         server.starttls()
-
-#         server.login(
-#             EMAIL_ADDRESS,
-#             EMAIL_PASSWORD
-#         )
-
-#         server.send_message(msg)
-
-#         server.quit()
-
-#         print("EMAIL BERHASIL DIKIRIM")
-
-#     except Exception as e:
-
-#         print("EMAIL ERROR:", str(e))
-
-
-
-
 import smtplib
 
 from email.mime.text import MIMEText
@@ -108,8 +37,9 @@ yang telah Anda buat saat registrasi.
 
 Terima kasih.
 
-Link Login:
-https://sicadas-frontend.vercel.app/login
+<a href="https://sicadas-frontend.vercel.app/login">
+        Login Sekarang 
+</a>
 
 Sistem Informasi Perlindungan dan Jaminan Sosial
 """
@@ -158,19 +88,6 @@ Sistem Informasi Perlindungan dan Jaminan Sosial
     except Exception as e:
 
         print("EMAIL ERROR:", str(e))
-
-
-# =====================================
-# TEST MANUAL
-# =====================================
-# if __name__ == "__main__":
-
-#     send_approval_email(
-
-#         "email@gmail.com",
-
-#         "Devi"
-#     )
 
 
 def send_staff_account_email(
@@ -277,20 +194,13 @@ def send_reset_email(to_email: str, reset_link: str):
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2 style="color: #234a66;">Reset Password SICADAS</h2>
+        <h3>Reset Password SICADAS</h3>
         <p>Halo,</p>
         <p>Anda menerima email ini karena ada permintaan reset password untuk akun SICADAS Anda.</p>
         <p>Klik tombol di bawah untuk reset password:</p>
-        <p style="margin: 20px 0;">
-            <a href="{reset_link}" 
-               style="background-color: #234a66; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 5px; display: inline-block;">
+        <a href="{reset_link}" 
                 Reset Password
-            </a>
-        </p>
-        <p style="color: #64748b; font-size: 12px;">{reset_link}</p>
-        <hr>
-        <p style="color: #999; font-size: 11px;">© 2026 SICADAS - Dinas Sosial</p>
+        </a>
     </body>
     </html>
     """

@@ -8,7 +8,6 @@ class PPKS(BaseModel):
     lokasi_penemuan: str
     tanggal_penemuan: str
     status_penanganan: str
-    # detail_lokasi: str
     kecamatan: Optional[str] = None
     kelurahan: Optional[str] = None
 

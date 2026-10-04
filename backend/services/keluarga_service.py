@@ -104,30 +104,7 @@ def create_keluarga(data: Keluarga):
         "data": created
     }
 
-# =========================================
-# GET SEMUA KELUARGA
-# =========================================
-# def get_keluarga():
 
-#     result = (
-#         supabase
-#         .table("keluarga")
-#         .select("""
-#             *,
-#             anggota:anggota_keluarga(*)
-#         """)
-#         .execute()
-#     )
-
-#     return result.data
-
-
-# def get_keluarga():
-#     result = supabase.table("keluarga") \
-#         .select("*, anggota_keluarga(*)") \
-#         .execute()
-
-#     return result.data
 
 def get_keluarga():
 
@@ -153,70 +130,6 @@ def get_keluarga():
 
     return result.data
 
-# =========================================
-# GET ANGGOTA BERDASARKAN NO KK
-# =========================================
-# def get_anggota_keluarga(no_kk: str):
-
-#     result = supabase.table("anggota_keluarga") \
-#         .select("*") \
-#         .eq("no_kk", no_kk) \
-#         .execute()
-
-#     return result.data
-
-
-
-
-# # =========================================
-# # CREATE ANGGOTA KELUARGA
-# # =========================================
-# def create_anggota_keluarga(no_kk: str, data: Anggota):
-
-#     data_dict = data.model_dump(mode="json")
-
-#     payload = {
-
-#         # pastikan numeric/string valid
-#         "nik":
-#             str(data_dict.get("nik"))
-#             if data_dict.get("nik")
-#             else None,
-
-#         "no_kk":
-#             str(no_kk),
-
-#         "nama_anggota_keluarga":
-#             data_dict.get("nama_anggota_keluarga"),
-
-#         "hubungan_keluarga":
-#             data_dict.get("hubungan_keluarga"),
-
-#         "jenis_kelamin":
-#             data_dict.get("jenis_kelamin"),
-
-#         "tanggal_lahir":
-#             data_dict.get("tanggal_lahir"),
-
-#         "status_keadaan":
-#             data_dict.get("status_keadaan"),
-
-#         "kondisi_khusus":
-#             data_dict.get("kondisi_khusus")
-#     }
-
-#     print("PAYLOAD ANGGOTA:", payload)
-
-#     result = supabase.table("anggota_keluarga") \
-#         .insert(payload) \
-#         .execute()
-
-#     return result.data
-
-
-
-
-
 
 # =========================================
 # UPDATE KELUARGA
@@ -231,10 +144,6 @@ def update_keluarga(id: str, data: dict):
     return result.data
 
 
-
-
-
-
 # =========================================
 # DELETE ANGGOTA KELUARGA
 # =========================================
@@ -246,7 +155,6 @@ def delete_anggota_keluarga(id: str):
         .execute()
 
     return result.data
-
 
 
 def update_desil(no_kk: str, data):

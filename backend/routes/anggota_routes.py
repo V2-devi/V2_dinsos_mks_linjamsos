@@ -1,4 +1,3 @@
-# 📂 backend/routes/anggota_routes.py
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from config.database import supabase, SUPABASE_BUCKET_DOKUMEN
 from config.auth import security
@@ -15,8 +14,6 @@ from services.anggota_service import (
 router = APIRouter(prefix="/anggota", tags=["Anggota"])
 
 # ================= ANGGOTA =================
-# 📂 backend/routes/keluarga_routes.py
-
 
 @router.post("/{no_kk}")
 async def create_anggota_keluarga_route(
@@ -30,7 +27,7 @@ async def create_anggota_keluarga_route(
     # Panggil service function
     result = create_anggota_keluarga(no_kk, data)
     
-    # ✅ BUNGKUS RESULT AGAR SESUAI DENGAN FRONTEND
+    # BUNGKUS RESULT AGAR SESUAI DENGAN FRONTEND
     # Jika result sudah object, langsung return dengan key 'data'
     # Jika result adalah tuple (data, error), ambil data-nya saja
     if isinstance(result, tuple):
@@ -46,24 +43,24 @@ async def create_anggota_keluarga_route(
 @router.get("/{no_kk}")
 async def get_anggota_keluarga(no_kk: str, credentials=Depends(security)):
     try:
-        # ✅ PASTIKAN SELECT SEMUA FIELD termasuk surat_kematian
+        # PASTIKAN SELECT SEMUA FIELD termasuk surat_kematian
         response = supabase.table("anggota_keluarga") \
             .select("*") \
             .eq("no_kk", no_kk) \
             .execute()
         
         # Debug log
-        print(f"📦 Data anggota untuk {no_kk}: {response.data}")
+        print(f"Data anggota untuk {no_kk}: {response.data}")
         
         return response.data if response.data else []
         
     except Exception as e:
-        print(f"❌ Error GET anggota: {str(e)}")
+        print(f"Error GET anggota: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 
-# ✅ TAMBAHKAN ENDPOINT INI (YANG SEBELUMNYA HILANG)
+# TAMBAHKAN ENDPOINT INI (YANG SEBELUMNYA HILANG)
 @router.put("/{no_kk}/{anggota_id}")
 async def update_anggota_route(
     no_kk: str,
@@ -81,7 +78,7 @@ async def update_anggota_route(
         raise HTTPException(status_code=400, detail=str(e))
     
 
-# 📂 backend/routes/keluarga_routes.py
+# backend/routes/keluarga_routes.py
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from config.database import supabase
 from config.auth import security

@@ -1,31 +1,5 @@
 from config.database import supabase
 from uuid import UUID
-# from schemas.profile_schema import ProfileSchema
-
-# def save_profile_service(user_id: UUID, data: ProfileSchema):
-#     result = supabase.table("pengguna").upsert({
-#         "id": str(user_id),
-
-#         "status": "menunggu",
-#         "is_active": False,
-
-
-#         "nama_lengkap": data.get("nama_lengkap"),
-#         "status_pegawai": data.get("status_pegawai"),
-#         "nik": data.get("nik"),
-#         "nip": data.get("nik"),
-#         "email": data.get("email"),
-#         "no_hp": data.get("no_hp"),
-#         "alamat": data.get("alamat"),
-#         "role": data.get("role"),
-#         "instansi": data.get("instansi"),
-#         "alamat_instansi": data.get("alamat_instansi"),
-#         "nama_kepala_dinas": data.get("kepala_dinas"),
-#         "nip_kepala_dinas": data.get("nip_kepala_dinas")
-
-#     }).execute()
-
-#     return result.data
 
 # =========================================================
 # GET PROFILE

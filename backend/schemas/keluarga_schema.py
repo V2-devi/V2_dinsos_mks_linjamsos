@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional
 
 class Keluarga(BaseModel):
-  # user_id: Optional[int] = None
   no_kk: str
   alamat: str
   nama_kepala_keluarga: str
@@ -32,16 +31,4 @@ class UpdateDesil(BaseModel):
     tanggal_terakhir_update: Optional[str] = None
  
  
-  # nik: int
-  # pekerjaan: str
-  # nama_anggota_keluarga: str
-  # hubungan_keluarga: str
-  # status_keadaan : str
-  # status_kehamilan: str
-  # kategori_disabilitas : str
-  # penyakit_kronis : str
-  # lokasi_penemuan : str
-  # tanggal_laporan: datetime 
-  # kategori_ppks : str
-  # status_penanganan : str
-
+ 

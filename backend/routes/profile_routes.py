@@ -24,41 +24,6 @@ async def save_profile(data: ProfileSchema, user=Depends(get_current_user)):
         "data": result
     }
 
-# @router.get("/")
-# async def get_profile(user=Depends(get_current_user)):
-#     result = get_profile_service(user.id)
-
-#     return result
-
-# @router.get("/profile/{user_id}")
-# def get_profile(user_id: str):
-#     result = supabase.table("pengguna") \
-#         .select("*") \
-#         .eq("id", user_id) \
-#         .single() \
-#         .execute()
-
-#     return result.data
-
-
-# @router.put("/profile/{user_id}")
-# def update_profile(user_id: str, data: dict = ProfileSchema):
-
-#     result = supabase.table("pengguna") \
-#         .update({
-#             "nama_lengkap": data.get("nama_lengkap"),
-#             "nik": data.get("nik"),
-#             "nip": data.get("nip"),
-#             "no_hp": data.get("no_hp"),
-#             "alamat": data.get("alamat"),
-#             "instansi": data.get("instansi"),
-#             "alamat_instansi": data.get("alamat_instansi")
-#         }) \
-#         .eq("id", user_id) \
-#         .execute()
-
-#     return result.data
-
 
 @router.get("/{user_id}")
 def get_profile_route(user_id: str):
@@ -81,37 +46,3 @@ def update_profile_route(user_id: str, data: ProfileSchema):
 
 
 
-# from config.database import supabase
-# from fastapi import Depends
-# from fastapi import APIRouter
-# from dependencies.auth_dependency import get_current_user
-
-# router = APIRouter(prefix="/profile", tags=["Profile"])
-
-# @router.post("/")
-# async def save_profile(data: dict, user=Depends(get_current_user)):
-#     user_id = user.id
-
-#     result = supabase.table("profiles").upsert({
-#         "id": user_id,
-#         "name": data.get("name"),
-#         "phone": data.get("phone"),
-#         "address": data.get("address")
-#     }).execute()
-
-#     return {"message": "Profile saved", "data": result.data}
-
-
-# @router.get("/")
-# async def get_profile(user=Depends(get_current_user)):
-#     user_id = user.id
-
-#     result = supabase.table("profiles") \
-#         .select("*") \
-#         .eq("id", user_id) \
-#         .single() \
-#         .execute()
-
-#     return result.data
-
-# Bisa tambah put dan delete

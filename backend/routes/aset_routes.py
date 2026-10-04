@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from schemas.aset_schema import AsetCreate
-# from services.aset_service import create_aset, get_aset, update_aset
 from fastapi.security import HTTPBearer
-
 from services.aset_service import update_aset_service, get_aset_by_nokk_service
-# from dependencies.auth_dependency import get_current_user # Jika pakai auth
 
 router = APIRouter(prefix="/aset", tags=["Aset Keluarga"]) # ✅ Prefix langsung /aset
 

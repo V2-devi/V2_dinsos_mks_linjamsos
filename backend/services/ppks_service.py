@@ -1,4 +1,3 @@
-# from config.database import supabase, storage_client, SUPABASE_BUCKET
 from config.database import supabase, SUPABASE_BUCKET
 from schemas.ppks_schema import PPKS
 from typing import Optional
@@ -91,7 +90,6 @@ def delete_ppks_service(ppks_id: str):
 
     # Supabase delete biasanya return empty list jika sukses, atau error jika gagal
     return {"message": "PPKS berhasil dihapus"}
-
 
 
 
@@ -196,92 +194,3 @@ def upload_foto_ppks(ppks_id: str, files, SUPABASE_BUCKET: str):
 
 
 
-# from config.database import supabase
-# from schemas.ppks_schema import PPKS
-
-# # ==============================
-# # GET ALL PPKS
-# # ==============================
-# def get_all_ppks_service():
-
-#     response = supabase.table("ppks") \
-#         .select("*") \
-#         .order("id", desc=True) \
-#         .execute()
-
-#     return response.data
-
-
-# # ==============================
-# # GET DETAIL PPKS
-# # ==============================
-# def get_ppks_by_id_service(id: str):
-
-#     response = supabase.table("ppks") \
-#         .select("*") \
-#         .eq("id", id) \
-#         .single() \
-#         .execute()
-
-#     return response.data
-
-
-# # ==============================
-# # CREATE PPKS
-# # ==============================
-# def create_ppks_service(data: dict: PPKS):
-
-#     supabase.table("ppks") \
-#         .insert({
-#             "nama_lengkap": data["nama_lengkap"],
-#             "kategori_ppks": data["kategori_ppks"],
-#             "lokasi_penemuan": data["lokasi_penemuan"],
-#             "tanggal_penemuan": data["tanggal_penemuan"],
-#             "status_penanganan": data["status_penanganan"],
-#             "kecamatan": data["kecamatan"],
-#             "kelurahan": data["kelurahan"],
-#             "nik": data.get("nik")  
-            
-#         }) \
-#         .execute()
-
-#     return {
-#         "message": "PPKS berhasil ditambahkan"
-#     }
-
-
-# # ==============================
-# # UPDATE PPKS
-# # ==============================
-# def update_ppks_service(id: str, data: dict):
-
-#     supabase.table("ppks") \
-#         .update({
-#             "nama": data["nama"],
-#             "kategori_ppks": data["kategori_ppks"],
-#             "lokasi_penemuan": data["lokasi_penemuan"],
-#             "tgl_laporan": data["tgl_laporan"],
-#             "status": data["status"],
-#             "detail": data["detail"]
-#         }) \
-#         .eq("id", id) \
-#         .execute()
-
-#     return {
-#         "message": "PPKS berhasil diupdate"
-#     }
-
-
-# # ==============================
-# # DELETE PPKS
-# # ==============================
-# def delete_ppks_service(id: str):
-
-#     supabase.table("ppks") \
-#         .delete() \
-#         .eq("id", id) \
-#         .execute()
-
-#     return {
-#         "message": "PPKS berhasil dihapus"
-#     }
