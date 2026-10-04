@@ -163,7 +163,7 @@ def upload_foto_ppks(ppks_id: str, files, SUPABASE_BUCKET: str):
             print(f"\n✅ DATABASE UPDATED SUCCESSFULLY!")
             print(f"   Saved URL: {saved_url[:80] if saved_url else 'NULL'}...")
         else:
-            print(f"\n⚠️ WARNING: Update executed but no data returned!")
+            print(f"\n WARNING: Update executed but no data returned!")
             print(f"   Possible causes:")
             print(f"   1. ID {ppks_id} tidak ditemukan di tabel ppks")
             print(f"   2. RLS policy memblokir update")

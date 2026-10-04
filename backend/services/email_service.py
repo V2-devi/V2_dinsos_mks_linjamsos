@@ -1,16 +1,17 @@
 import smtplib
-
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
 import os
-
 from dotenv import load_dotenv
 
 # =====================================
 # LOAD ENV
 # =====================================
 load_dotenv()
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+if FRONTEND_URL.startswith(("http://localhost", "http://127.0.0.1")):
+    FRONTEND_URL = os.getenv("PRODUCTION_FRONTEND_URL", FRONTEND_URL).strip().rstrip("/")
 
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
@@ -37,7 +38,7 @@ yang telah Anda buat saat registrasi.
 
 Terima kasih.
 
-<a href="https://sicadas-frontend.vercel.app/login">
+<a href="{FRONTEND_URL}/login">
         Login Sekarang 
 </a>
 
@@ -125,7 +126,7 @@ def send_staff_account_email(
         Silakan login melalui link berikut:
         </p>
 
-        <a href="https://sicadas-frontend.vercel.app/login">
+        <a href="{FRONTEND_URL}/login">
             Login Sekarang
         </a>
 

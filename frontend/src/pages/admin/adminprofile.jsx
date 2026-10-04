@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "./adminprofile.css"; 
 import logoLinjamsos from "../../assets/logo_sicadas.png";
 
+
+
 function AdminProfile() {
+
+  const API_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
  // =================================================
@@ -40,7 +44,7 @@ function AdminProfile() {
     try {
 
       const res = await fetch(
-        `https://backend-fastapi-linjamsos-mks.vercel.app/profile/${user.id}`
+        `${API_URL}/profile/${user.id}`
       );
 
       const data = await res.json();
@@ -75,19 +79,12 @@ function AdminProfile() {
 
 
 
-
-
   // === STATE FORM & MODAL ===
   // const [profileData, setprofileData] = useState({ ...profileData });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  // === HANDLER ===
-  // const handleOpenEdit = () => {
-  //    setProfileData({ ...profileData });
-  //   setIsEditModalOpen(true);
-  // };
 
 
 const handleOpenEdit = () => {
@@ -116,7 +113,7 @@ const handleOpenEdit = () => {
   const handleUpdateProfile = async () => {
     try {
       const res = await fetch(
-        `https://backend-fastapi-linjamsos-mks.vercel.app/profile/${user.id}`,
+        `${API_URL}/profile/${user.id}`,
         {
           method: "PUT",
           headers: {
@@ -163,21 +160,6 @@ const handleOpenEdit = () => {
       setTimeout(() => setIsSuccessModalOpen(false), 2500);
     }
   };
-
-  // const handleSubmit = (e, type) => {
-  //   e.preventDefault();
-  //   if (type === "edit") {
-  //     setProfileData(profileData);
-  //     setIsEditModalOpen(false);
-  //   }
-  //   if (type === "pass") setIsPassModalOpen(false);
-    
-  //   setIsSuccessModalOpen(true);
-  //   setTimeout(() => setIsSuccessModalOpen(false), 2500);
-  // };
-
-
-
 
 
 

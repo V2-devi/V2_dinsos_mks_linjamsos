@@ -3,9 +3,8 @@ from schemas.aset_schema import AsetCreate
 from fastapi.security import HTTPBearer
 from services.aset_service import update_aset_service, get_aset_by_nokk_service
 
-router = APIRouter(prefix="/aset", tags=["Aset Keluarga"]) # ✅ Prefix langsung /aset
+router = APIRouter(prefix="/aset", tags=["Aset Keluarga"]) 
 
-# ==============================
 # UPDATE / INSERT ASET (UPSERT)
 # ==============================
 @router.put("/{no_kk}")

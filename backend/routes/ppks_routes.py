@@ -1,16 +1,14 @@
 # 📂 backend/routes/ppks_routes.py
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, status
-from typing import List, Optional
-import time
-import uuid
+from typing import List
+# import time
+# import uuid
 
 from config.database import supabase, SUPABASE_BUCKET
 from config.auth import security
 from schemas.ppks_schema import PPKS
 from services.ppks_service import (
     get_all_ppks_service,
-    get_ppks_by_id_service,
-    create_ppks_service,
     update_ppks_service,
     delete_ppks_service,
 )

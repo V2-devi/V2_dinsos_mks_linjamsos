@@ -9,7 +9,7 @@ from services.keluarga_service import (
     update_desil
 )
 
-from config.database import supabase, SUPABASE_BUCKET_DOKUMEN
+# from config.database import supabase, SUPABASE_BUCKET_DOKUMEN
 
 router = APIRouter(prefix="/keluarga", tags=["Keluarga"])
 security = HTTPBearer()

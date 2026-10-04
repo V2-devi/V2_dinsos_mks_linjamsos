@@ -3,9 +3,7 @@ from schemas.aset_schema import AsetCreate
 import os
 from dotenv import load_dotenv
 
-
 from config.database import supabase
-
 
 
 def update_aset_service(no_kk: str, data: dict):

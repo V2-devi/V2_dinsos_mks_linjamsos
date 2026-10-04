@@ -1,5 +1,5 @@
 ﻿from config.auth import sign_in
-from services.profile_service import insert_user_profile, update_user_profile, get_user_by_email
+from services.profile_service import insert_user_profile, get_user_by_email
 from config.database import supabase
 import os
 from dotenv import load_dotenv
@@ -9,14 +9,12 @@ from dotenv import load_dotenv
 # =========================================================
 load_dotenv()
 
-DEFAULT_FRONTEND_URL = "https://sicadas-frontend.vercel.app"
-configured_frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
 
-# Never generate production email links back to a local development server.
-if configured_frontend_url.startswith(("http://localhost", "http://127.0.0.1")):
-    FRONTEND_URL = DEFAULT_FRONTEND_URL
-else:
-    FRONTEND_URL = configured_frontend_url or DEFAULT_FRONTEND_URL
+# Prevent email verification links from pointing to a local development server
+# when the app is deployed to production.
+if FRONTEND_URL.startswith(("http://localhost", "http://127.0.0.1")):
+    FRONTEND_URL = os.getenv("PRODUCTION_FRONTEND_URL", FRONTEND_URL).strip().rstrip("/")
 
 def register_user(data):
 
@@ -268,7 +266,7 @@ def request_reset_password(email: str):
     }).execute()
 
     # 4) Buat link reset
-    reset_link = f"https://sicadas-frontend.vercel.app/reset-password?token={reset_token}"
+    reset_link = f"{FRONTEND_URL}/reset-password?token={reset_token}"
 
     # 5) ✅ PANGGIL FUNGSI KIRIM EMAIL (yang sudah Anda buat di email_service.py)
     email_status = send_reset_email(email, reset_link)
