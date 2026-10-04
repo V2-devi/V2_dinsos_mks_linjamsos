@@ -124,10 +124,11 @@ function Register() {
   return (
     <div className="register-container">
       <div className="register-left">
-        <div className="register-left-content">
+        {/* ✅ DITAMBAHKAN: display flex dan rata tengah di pembungkus utama konten kiri */}
+        <div className="register-left-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           
-          {/* ✅ LOGO DIPERBESAR SEDIKIT (240px) KARENA H1 SUDAH DIHAPUS */}
-          <div className="branding-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '20px' }}>
+          {/* ✅ UBAH: alignItems dari 'flex-start' menjadi 'center' */}
+          <div className="branding-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
             <img 
               src={logoSicadas} 
               alt="Logo SICADAS" 
@@ -138,7 +139,8 @@ function Register() {
 
           {/* ✅ TAG H1 DIHAPUS SEPENUHNYA */}
 
-          <p style={{ fontSize: '15px', lineHeight: '1.6', opacity: '0.9', marginTop: '10px' }}>
+          {/* ✅ UBAH: Tambahkan textAlign: 'center' pada paragraf */}
+          <p style={{ fontSize: '15px', lineHeight: '1.6', opacity: '0.9', marginTop: '10px', textAlign: 'center' }}>
             Pastikan data yang Anda masukkan sesuai dengan Kartu Tanda Penduduk (KTP) dan Kartu Keluarga (KK)
             terbaru agar verifikasi akun dan tanggung jawab sistem berjalan lancar.
           </p>

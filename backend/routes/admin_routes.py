@@ -14,7 +14,7 @@ def get_all_users():
 
 @router.put("/update/{user_id}")
 def update_user(user_id: str, data: StaffUpdateSchema):
-    print("DATA MASUK:", data)  # 🔥 DEBUG WAJIB
+    print("DATA MASUK:", data)  
 
     result = update_user_service(user_id, data)
     if isinstance(result, dict) and result.get("error"):
