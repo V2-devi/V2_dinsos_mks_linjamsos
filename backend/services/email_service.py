@@ -23,25 +23,43 @@ print("EMAIL ADDRESS:", EMAIL_ADDRESS)
 # FUNCTION KIRIM EMAIL
 # =====================================
 def send_approval_email(to_email, nama_lengkap):
-
     try:
-
         subject = "Akun Anda Telah Disetujui"
 
         body = f"""
-Halo {nama_lengkap},
+        <html>
+        <body>
+            <p>Halo {nama_lengkap},</p>
 
-Pengajuan akun Anda telah disetujui oleh admin.
+            <p>
+                Pengajuan akun Anda telah disetujui oleh admin.
+            </p>
 
-Silakan login menggunakan email dan kata sandi
-yang telah Anda buat saat registrasi.
+            <p>
+                Silakan login menggunakan email dan kata sandi
+                yang telah Anda buat saat registrasi.
+            </p>
 
-Terima kasih.
+            <p>
+                <a href="{FRONTEND_URL}/login"
+                   style="display:inline-block;
+                          padding:10px 20px;
+                          background-color:#2563eb;
+                          color:white;
+                          text-decoration:none;
+                          border-radius:6px;">
+                    Login Sekarang
+                </a>
+            </p>
 
-<a href="{FRONTEND_URL}/login">Login Sekarang</a>
+            <p>Terima kasih.</p>
 
-Sistem Informasi Perlindungan dan Jaminan Sosial
-"""
+            <p>
+                Sistem Informasi Perlindungan dan Jaminan Sosial
+            </p>
+        </body>
+        </html>
+        """
 
         # =====================================
         # BUAT MESSAGE
