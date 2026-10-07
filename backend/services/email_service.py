@@ -38,9 +38,7 @@ yang telah Anda buat saat registrasi.
 
 Terima kasih.
 
-<a href="{{ FRONTEND_URL }}/login">
-    Login Sekarang
-</a>
+<a href="{FRONTEND_URL}/login">Login Sekarang</a>
 
 Sistem Informasi Perlindungan dan Jaminan Sosial
 """
@@ -55,7 +53,7 @@ Sistem Informasi Perlindungan dan Jaminan Sosial
         msg["Subject"] = subject
 
         msg.attach(
-            MIMEText(body, "plain")
+            MIMEText(body, "html")
         )
 
         # =====================================
@@ -126,7 +124,7 @@ def send_staff_account_email(
         Silakan login melalui link berikut:
         </p>
 
-        <a href="{{ FRONTEND_URL }}/login">
+        <a href="{FRONTEND_URL}/login" style="color: #007bff;">
             Login Sekarang
         </a>
 
@@ -199,7 +197,7 @@ def send_reset_email(to_email: str, reset_link: str):
         <p>Halo,</p>
         <p>Anda menerima email ini karena ada permintaan reset password untuk akun SICADAS Anda.</p>
         <p>Klik tombol di bawah untuk reset password:</p>
-        <a href="{{ FRONTEND_URL }}/reset-password" 
+        <a href="{reset_link}"
                 style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
             Reset Password
         </a>

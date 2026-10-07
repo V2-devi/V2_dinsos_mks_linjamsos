@@ -332,20 +332,32 @@ def delete_user_service(user_id: str):
             .table("pengguna")
             .delete()
             .eq("id", normalized_user_id)
-            .select("id")
             .execute()
         )
 
-        deleted_profiles = profile_delete_result.data or []
-        if not deleted_profiles:
+        if hasattr(profile_delete_result, "error") and profile_delete_result.error:
             return {
                 "success": False,
-                "error": "User Auth berhasil dihapus, tetapi profil pengguna gagal dihapus"
+                "error": f"Gagal menghapus profil pengguna: {getattr(profile_delete_result.error, 'message', str(profile_delete_result.error))}"
+            }
+
+        remaining_profile_result = (
+            supabase
+            .table("pengguna")
+            .select("id")
+            .eq("id", normalized_user_id)
+            .execute()
+        )
+
+        if remaining_profile_result.data:
+            return {
+                "success": False,
+                "error": "Profil pengguna masih tersisa setelah proses hapus"
             }
 
         return {
             "success": True,
-            "data": deleted_profiles
+            "data": [{"id": normalized_user_id, "deleted": True}]
         }
 
     except Exception as e:
