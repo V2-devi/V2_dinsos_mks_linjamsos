@@ -205,7 +205,7 @@ def send_reset_email(to_email: str, reset_link: str):
         <p>Halo,</p>
         <p>Anda menerima email ini karena ada permintaan reset password untuk akun SICADAS Anda.</p>
         <p>Berikut tautan reset password Anda:</p>
-        <p><a href="{reset_link}">{reset_link}</a></p>
+        <p><a href="{reset_link}" style="color: #1a73e8; text-decoration: underline;">Reset Password</a></p>
     </body>
     </html>
     """
