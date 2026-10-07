@@ -41,15 +41,7 @@ def send_approval_email(to_email, nama_lengkap):
             </p>
 
             <p>
-                <a href="{FRONTEND_URL}/login"
-                   style="display:inline-block;
-                          padding:10px 20px;
-                          background-color:#2563eb;
-                          color:white;
-                          text-decoration:none;
-                          border-radius:6px;">
-                    Login Sekarang
-                </a>
+                <a href="{FRONTEND_URL}/login">Login Sekarang</a>
             </p>
 
             <p>Terima kasih.</p>
@@ -142,9 +134,7 @@ def send_staff_account_email(
         Silakan login melalui link berikut:
         </p>
 
-        <a href="{FRONTEND_URL}/login" style="color: #007bff;">
-            Login Sekarang
-        </a>
+        <a href="{FRONTEND_URL}/login">Login Sekarang</a>
 
         <p>
         Setelah berhasil login,
@@ -216,7 +206,6 @@ def send_reset_email(to_email: str, reset_link: str):
         <p>Anda menerima email ini karena ada permintaan reset password untuk akun SICADAS Anda.</p>
         <p>Klik tombol di bawah untuk reset password:</p>
         <a href="{reset_link}"
-                style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
             Reset Password
         </a>
     </body>
